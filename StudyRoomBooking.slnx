@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/StudyRoomBooking.Mvc/StudyRoomBooking.Mvc.csproj" />
+  </Folder>
+</Solution>
