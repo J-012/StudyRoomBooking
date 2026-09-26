@@ -1,0 +1,33 @@
+@model List<StudyRoomBooking.Models.Room>
+
+<h1>Study Rooms</h1>
+
+@if (Model.Count > 0)
+{
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Room Number</th>
+                <th>Building</th>
+                <th>Capacity</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var room in Model)
+            {
+                <tr>
+                    <td>@room.Id</td>
+                    <td>@room.RoomNumber</td>
+                    <td>@room.Building</td>
+                    <td>@room.Capacity</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No study rooms available.</p>
+}

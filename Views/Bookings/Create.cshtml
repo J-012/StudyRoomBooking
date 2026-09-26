@@ -1,0 +1,58 @@
+@model StudyRoomBooking.Models.BookingCreateViewModel
+
+<h1>Create Study Session</h1>
+
+<form asp-action="Create" method="post">
+
+    <div>
+        <label asp-for="Booking.Subject"></label>
+        <input asp-for="Booking.Subject" />
+        <span asp-validation-for="Booking.Subject"></span>
+    </div>
+
+    <div>
+        <label asp-for="Booking.Topic"></label>
+        <input asp-for="Booking.Topic" />
+        <span asp-validation-for="Booking.Topic"></span>
+    </div>
+
+    <div>
+        <label asp-for="Booking.StudentName"></label>
+        <input asp-for="Booking.StudentName" />
+        <span asp-validation-for="Booking.StudentName"></span>
+    </div>
+
+<div>
+    <label asp-for="Booking.RoomId">Study Room</label>
+
+    <select asp-for="Booking.RoomId">
+        <option value="">Select a room</option>
+
+        @foreach (var room in Model.Rooms)
+        {
+            <option value="@room.Id">
+                Room @room.RoomNumber - @room.Building (Capacity: @room.Capacity)
+            </option>
+        }
+    </select>
+
+    <span asp-validation-for="Booking.RoomId"></span>
+</div>
+
+    <div>
+        <label asp-for="Booking.StartTime"></label>
+        <input asp-for="Booking.StartTime" type="datetime-local" />
+        <span asp-validation-for="Booking.StartTime"></span>
+    </div>
+
+    <div>
+        <label asp-for="Booking.EndTime"></label>
+        <input asp-for="Booking.EndTime" type="datetime-local" />
+        <span asp-validation-for="Booking.EndTime"></span>
+    </div>
+
+    <button type="submit">Create Study Session</button>
+
+</form>
+
+<a asp-action="Index">Back to Study Sessions</a>
