@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+/*using Microsoft.AspNetCore.Mvc;
 using StudyRoomBooking.Models;
 
 namespace StudyRoomBooking.Controllers;
@@ -110,7 +110,7 @@ public class BookingsController : Controller
             var viewModel = new BookingCreateViewModel
             {
                 Booking = booking,
-                Rooms = RoomsController.Rooms,
+                Rooms = RoomsController.rooms,
             };
             return View(viewModel);
         }
@@ -149,3 +149,4 @@ public class BookingsController : Controller
         return RedirectToAction(nameof(Index));
     }
 }
+*/
