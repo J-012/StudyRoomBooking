@@ -1,25 +1,29 @@
-/*using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using StudyRoomBooking.Models;
 
 namespace StudyRoomBooking.Controllers;
 
 public class BookingsController : Controller
 {
-    private static List<Booking> bookings = new();
+    private readonly StudyRoomDbContext _context;
+
+    public BookingsController(StudyRoomDbContext context)
+    {
+        _context = context;
+    }
 
     // Next available booking ID
-    private static int nextId = 1;
 
     // GET all Bookings
     public IActionResult Index()
     {
-        return View(bookings);
+        return View(_context.Bookings.ToList());
     }
 
     // GET Booking by Id
     public IActionResult Details(int id)
     {
-        var booking = bookings.FirstOrDefault(b => b.Id == id);
+        var booking = _context.Bookings.FirstOrDefault(b => b.Id == id);
 
         if (booking == null)
         {
@@ -37,15 +41,14 @@ public class BookingsController : Controller
             // Default booking info, brukt for å fylle ut skjemaet raskere
             Booking = new Booking()
             {
-                Id = nextId++,
                 Subject = "Algorithms and Data Structures",
                 Topic = "Binary Trees",
                 StudentName = "Eyad Laza",
                 StartTime = DateTime.Now,
                 EndTime = DateTime.Now.AddHours(1),
             },
-            // Må byttes med rom som kommer fra databasen
-            Rooms = RoomsController.Rooms,
+
+            Rooms = _context.Rooms.ToList(),
         };
 
         return View(viewModel);
@@ -54,25 +57,23 @@ public class BookingsController : Controller
     // POST Create Booking
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(Booking booking)
+    public IActionResult Create(BookingCreateViewModel viewModel)
     {
+        var booking = viewModel.Booking;
+
         if (booking.EndTime <= booking.StartTime)
         {
-            ModelState.AddModelError("EndTime", "End time must be after start time.");
+            ModelState.AddModelError("Booking.EndTime", "End time must be after start time.");
         }
 
         if (!ModelState.IsValid)
         {
-            var viewModel = new BookingCreateViewModel
-            {
-                Booking = booking,
-                Rooms = RoomsController.Rooms,
-            };
+            viewModel.Rooms = _context.Rooms.ToList();
             return View(viewModel);
         }
 
-        booking.Id = nextId++;
-        bookings.Add(booking);
+        _context.Bookings.Add(booking);
+        _context.SaveChanges();
 
         return RedirectToAction(nameof(Index));
     }
@@ -80,14 +81,19 @@ public class BookingsController : Controller
     // GET Edit Booking by Id
     public IActionResult Edit(int id)
     {
-        var booking = bookings.FirstOrDefault(b => b.Id == id);
+        var booking = _context.Bookings.FirstOrDefault(b => b.Id == id);
 
         if (booking == null)
         {
             return NotFound();
         }
 
-        return View(booking);
+        var viewModel = new BookingCreateViewModel
+        {
+            Booking = booking,
+            Rooms = _context.Rooms.ToList(),
+        };
+        return View(viewModel);
     }
 
     // POST Edit Booking by Id
@@ -110,12 +116,13 @@ public class BookingsController : Controller
             var viewModel = new BookingCreateViewModel
             {
                 Booking = booking,
-                Rooms = RoomsController.rooms,
+                Rooms = _context.Rooms.ToList(),
             };
+            // Returnerer det brukeren har fylt ut i skjemaet slik at de kan rette feilene enklere
             return View(viewModel);
         }
 
-        var existingBooking = bookings.FirstOrDefault(b => b.Id == id);
+        var existingBooking = _context.Bookings.FirstOrDefault(b => b.Id == id);
 
         if (existingBooking == null)
         {
@@ -129,6 +136,7 @@ public class BookingsController : Controller
         existingBooking.StartTime = booking.StartTime;
         existingBooking.EndTime = booking.EndTime;
 
+        _context.SaveChanges();
         return RedirectToAction(nameof(Index));
     }
 
@@ -137,16 +145,16 @@ public class BookingsController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Delete(int id)
     {
-        var booking = bookings.FirstOrDefault(b => b.Id == id);
+        var booking = _context.Bookings.FirstOrDefault(b => b.Id == id);
 
         if (booking == null)
         {
             return NotFound();
         }
 
-        bookings.Remove(booking);
+        _context.Bookings.Remove(booking);
+        _context.SaveChanges();
 
         return RedirectToAction(nameof(Index));
     }
 }
-*/

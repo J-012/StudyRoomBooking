@@ -27,6 +27,5 @@ public class Booking
     [Required]
     public DateTime EndTime { get; set; }
 
-    [Required]
     public string OrganizerID { get; set; } = string.Empty;
 }
