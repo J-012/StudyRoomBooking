@@ -1,0 +1,82 @@
+@model StudyRoomBooking.Models.BookingCreateViewModel
+
+<h1>Edit Study Session</h1>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="Edit" method="post">
+
+    <input type="hidden" asp-for="Booking.Id" />
+
+    <div>
+        <label asp-for="Booking.Subject"></label>
+        <input asp-for="Booking.Subject" />
+        <span asp-validation-for="Booking.Subject"></span>
+    </div>
+
+    <div>
+        <label asp-for="Booking.Topic"></label>
+        <input asp-for="Booking.Topic" />
+        <span asp-validation-for="Booking.Topic"></span>
+    </div>
+
+    <div>
+        <label asp-for="Booking.StudentName"></label>
+        <input asp-for="Booking.StudentName" />
+        <span asp-validation-for="Booking.StudentName"></span>
+    </div>
+
+    <div>
+        <label asp-for="Booking.RoomId">Study Room</label>
+        <select asp-for="Booking.RoomId">
+            <option value="">Select a room</option>
+            @foreach (var room in Model.Rooms)
+            {
+                <option value="@room.Id">
+                    Room @room.RoomNumber - @room.Building (Capacity: @room.Capacity)
+                </option>
+            }
+        </select>
+        <span asp-validation-for="Booking.RoomId"></span>
+    </div>
+
+    <div>
+        <label asp-for="StartDate">Date</label>
+        <input asp-for="StartDate" type="date" />
+        <span asp-validation-for="StartDate"></span>
+    </div>
+
+    <div>
+    <label asp-for="StartClock">Start time</label>
+    <select asp-for="StartClock">
+        @for (int hour = 0; hour < 24; hour++)
+        {
+            foreach (var minute in new[] { 0, 15, 30, 45 })
+            {
+                var time = new TimeOnly(hour, minute);
+                <option value="@time.ToString("HH:mm")">@time.ToString("HH:mm")</option>
+            }
+            }
+        </select>
+        <span asp-validation-for="StartClock"></span>
+    </div>
+
+    <div>
+        <label asp-for="EndClock">End time</label>
+        <select asp-for="EndClock">
+            @for (int hour = 0; hour < 24; hour++)
+            {
+                foreach (var minute in new[] { 0, 15, 30, 45 })
+                {
+                    var time = new TimeOnly(hour, minute);
+                    <option value="@time.ToString("HH:mm")">@time.ToString("HH:mm")</option>
+                }
+            }
+        </select>
+        <span asp-validation-for="EndClock"></span>
+    </div>
+    <button type="submit">Save Changes</button>
+
+</form>
+
+<a asp-action="Index">Back to Study Sessions</a>
