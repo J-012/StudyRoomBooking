@@ -17,7 +17,9 @@
 # SQLite database files
 *.sqlite
 *.sqlite3
-*.db-*
+*.db
+*.db-shm
+*.db-wal
 
 # Mono auto generated files
 mono_crash.*
