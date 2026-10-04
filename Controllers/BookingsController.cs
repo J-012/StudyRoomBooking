@@ -6,10 +6,14 @@ namespace StudyRoomBooking.Controllers;
 public class BookingsController : Controller
 {
     private readonly StudyRoomDbContext _context;
+    private readonly ILogger<BookingsController> _logger;
 
-    public BookingsController(StudyRoomDbContext context)
+    public BookingsController(
+        StudyRoomDbContext context,
+        ILogger<BookingsController> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     // GET all Bookings
@@ -74,6 +78,12 @@ public class BookingsController : Controller
         _context.Bookings.Add(booking);
         _context.SaveChanges();
 
+        _logger.LogInformation(
+            "Booking {BookingId} created for room {RoomId}.",
+            booking.Id,
+            booking.RoomId
+        );
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -136,6 +146,12 @@ public class BookingsController : Controller
         existingBooking.EndTime = booking.EndTime;
 
         _context.SaveChanges();
+
+        _logger.LogInformation(
+            "Booking {BookingId} was updated.",
+            booking.Id
+        );
+
         return RedirectToAction(nameof(Index));
     }
 
@@ -191,11 +207,21 @@ public class BookingsController : Controller
 
         if (booking == null)
         {
+            _logger.LogWarning(
+                "Attempted to delete booking {BookingId}, but it was not found.",
+                id
+            );
+
             return NotFound();
         }
 
         _context.Bookings.Remove(booking);
         _context.SaveChanges();
+
+        _logger.LogInformation(
+            "Booking {BookingId} was deleted.",
+            id
+        );
 
         return RedirectToAction(nameof(Index));
     }
