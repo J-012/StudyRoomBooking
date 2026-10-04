@@ -31,21 +31,23 @@ public class BookingsController : Controller
         return View(booking);
     }
 
-// GET Create Booking
-public IActionResult Create()
+    // GET Create Booking
+    public IActionResult Create()
     {
+        // Round up to the next 15-minute slot so the default matches a dropdown option
+        var now = DateTime.Now;
+        var startMinutes = (now.Hour * 60 + now.Minute + 14) / 15 * 15;
+        var start = TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(Math.Min(startMinutes, 23 * 60 + 45)));
+        var end = TimeOnly.FromTimeSpan(
+            TimeSpan.FromMinutes(Math.Min(start.Hour * 60 + start.Minute + 60, 23 * 60 + 45))
+        );
+
         var viewModel = new BookingCreateViewModel
         {
-            Booking = new Booking()
-            {
-                Subject = "Algorithms and Data Structures",
-                Topic = "Binary Trees",
-                StudentName = "Eyad Laza",
-            },
             Rooms = _context.Rooms.ToList(),
             StartDate = DateOnly.FromDateTime(DateTime.Now),
-            StartClock = TimeOnly.FromDateTime(DateTime.Now),
-            EndClock = TimeOnly.FromDateTime(DateTime.Now.AddHours(1)),
+            StartClock = start,
+            EndClock = end,
         };
 
         return View(viewModel);
@@ -155,7 +157,10 @@ public IActionResult Create()
 
             if (duration.TotalMinutes > 180)
             {
-                ModelState.AddModelError("EndClock", "En booking kan ikke vare lenger enn 3 timer.");
+                ModelState.AddModelError(
+                    "EndClock",
+                    "En booking kan ikke vare lenger enn 3 timer."
+                );
             }
         }
 
@@ -165,14 +170,33 @@ public IActionResult Create()
         }
 
         bool hasConflict = _context.Bookings.Any(b =>
-            b.RoomId == booking.RoomId &&
-            b.Id != excludeId &&
-            booking.StartTime < b.EndTime &&
-            booking.EndTime > b.StartTime);
+            b.RoomId == booking.RoomId
+            && b.Id != excludeId
+            && booking.StartTime < b.EndTime
+            && booking.EndTime > b.StartTime
+        );
 
         if (hasConflict)
         {
             ModelState.AddModelError("", "Rommet er allerede booket i dette tidsrommet.");
         }
+    }
+
+    // POST Delete Booking by Id
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Delete(int id)
+    {
+        var booking = _context.Bookings.FirstOrDefault(b => b.Id == id);
+
+        if (booking == null)
+        {
+            return NotFound();
+        }
+
+        _context.Bookings.Remove(booking);
+        _context.SaveChanges();
+
+        return RedirectToAction(nameof(Index));
     }
 }

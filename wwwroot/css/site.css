@@ -1,5 +1,26 @@
+/* ------------------------------------------------------------------
+   StudyRoomBooking - design tokens
+   ------------------------------------------------------------------ */
+:root {
+  --srb-primary: #91a30f;
+  --srb-primary-dark: #6b7a0c;
+  --srb-ink: #1a1a1a;
+  --srb-muted: #6b7a0c;
+  --srb-bg: #f5f5f5;
+  --srb-border: #e0e0e0;
+  --srb-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --srb-shadow: 0 18px 40px -24px rgba(15, 23, 42, 0.38);
+  --srb-radius: 16px;
+  --srb-hero-bg: var(--srb-primary);
+}
+
+/* ------------------------------------------------------------------
+   Base
+   ------------------------------------------------------------------ */
 html {
-  font-size: 14px;
+  position: relative;
+  min-height: 100%;
+  font-size: 15px;
 }
 
 @media (min-width: 768px) {
@@ -8,24 +29,244 @@ html {
   }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
 body {
-  margin-bottom: 60px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  background-color: var(--srb-bg);
+  color: var(--srb-ink);
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+main {
+  flex: 1 0 auto;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+a {
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.text-secondary-emphasis {
+  color: var(--srb-muted) !important;
+}
+
+/* ------------------------------------------------------------------
+   Brand colours (Bootstrap overrides)
+   ------------------------------------------------------------------ */
+.btn-primary {
+  --bs-btn-bg: var(--srb-primary);
+  --bs-btn-border-color: var(--srb-primary);
+  --bs-btn-hover-bg: var(--srb-primary-dark);
+  --bs-btn-hover-border-color: var(--srb-primary-dark);
+  --bs-btn-active-bg: var(--srb-primary-dark);
+  --bs-btn-active-border-color: var(--srb-primary-dark);
+  --bs-btn-disabled-bg: var(--srb-primary);
+  --bs-btn-disabled-border-color: var(--srb-primary);
+  --bs-btn-focus-shadow-rgb: 79, 70, 229;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--srb-primary);
+  --bs-btn-border-color: var(--srb-primary);
+  --bs-btn-hover-bg: var(--srb-primary);
+  --bs-btn-hover-border-color: var(--srb-primary);
+  --bs-btn-active-bg: var(--srb-primary-dark);
+  --bs-btn-active-border-color: var(--srb-primary-dark);
+  --bs-btn-focus-shadow-rgb: 79, 70, 229;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.bg-primary {
+  background-color: var(--srb-primary) !important;
+}
+
+.text-primary {
+  color: var(--srb-primary) !important;
+}
+
+.border-primary {
+  border-color: var(--srb-primary) !important;
+}
+
+.link-primary {
+  color: var(--srb-primary) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--srb-primary);
+  box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.15);
+}
+
+
+
+/* ------------------------------------------------------------------
+   Cards, icons, badges
+   ------------------------------------------------------------------ */
+.card {
+  border: 1px solid var(--srb-border);
+  border-radius: var(--srb-radius);
+  box-shadow: var(--srb-shadow-sm);
+}
+
+.card-hover {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  border-color: #d9dcef;
+  box-shadow: var(--srb-shadow);
+}
+
+
+.section-eyebrow {
+  color: var(--srb-primary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+}
+
+.badge-soft-primary {
+  color: var(--srb-primary-dark);
+  background: rgba(79, 70, 229, 0.12);
+}
+
+.badge-soft-success {
+  color: #15803d;
+  background: rgba(22, 163, 74, 0.15);
+}
+
+.badge-soft-secondary {
+  color: #475569;
+  background: rgba(100, 116, 139, 0.16);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3.5rem 1.5rem;
+}
+
+.empty-state .icon-box {
+  width: 66px;
+  height: 66px;
+  border-radius: 20px;
+  margin: 0 auto 1rem;
+}
+
+/* ------------------------------------------------------------------
+   Tables
+   ------------------------------------------------------------------ */
+.table-srb {
+  margin-bottom: 0;
+}
+
+.table-srb thead th {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--srb-muted);
+  font-weight: 700;
+  background: #fafbff;
+  border-bottom-width: 1px;
+  white-space: nowrap;
+}
+
+.table-srb tbody td {
+  vertical-align: middle;
+}
+
+.table-srb tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.table-srb tbody tr:hover {
+  background-color: #f8f9ff;
+}
+
+/* ------------------------------------------------------------------
+   Forms + validation
+   ------------------------------------------------------------------ */
+.form-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--srb-ink);
+}
+
+.form-control,
+.form-select {
+  border-radius: 10px;
+  border-color: var(--srb-border);
+  padding: 0.6rem 0.85rem;
+}
+
+.field-validation-error {
+  display: block;
+  margin-top: 0.3rem;
+  color: #dc3545;
+  font-size: 0.85rem;
+}
+
+.input-validation-error {
+  border-color: #dc3545;
+}
+
+.validation-summary-errors {
+  background-color: #fdecec;
+  border: 1px solid #f3c3c3;
+  color: #8a1c1c;
+  border-radius: var(--srb-radius);
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.5rem;
+}
+
+.validation-summary-errors ul {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+/* ------------------------------------------------------------------
+   Footer
+   ------------------------------------------------------------------ */
+.footer {
+  flex-shrink: 0;
+  background-color: #fff;
+  border-top: 1px solid var(--srb-border);
+  color: var(--srb-muted);
+  padding: 1.75rem 0;
+  font-size: 0.9rem;
+}
+
+.footer a {
+  color: var(--srb-muted);
+  font-weight: 600;
+}
+
+.footer a:hover {
+  color: var(--srb-primary);
 }

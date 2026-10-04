@@ -1,8 +1,17 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="d-flex justify-content-center flex-column align-items-center text-center">
+    <div class="col-lg-7 justify-content-center d-flex flex-column align-items-center  ">
+        <h1 class="fw-bold mt-3 mb-3">Velkommen til Study Room Booking</h1>
+        <p class="lead mb-4">Her kan du reservere studieplasser på en enkel og effektiv måte. Finn et ledig rom, velg
+            tidspunkt, og sett i gang med studiet.</p>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-dark btn-lg px-4" asp-controller="Bookings" asp-action="Create">Opprett ny booking</a>
+                <a class="btn btn-outline-dark btn-lg px-4" asp-controller="Bookings" asp-action="Index">Se alle
+                    bookinger</a>
+                </div>
+            </div>
+        </section>
+

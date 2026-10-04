@@ -1,57 +1,105 @@
 @model List<StudyRoomBooking.Models.Booking>
+@{
+    ViewData["Title"] = "Bookings";
+    var now = DateTime.Now;
+}
 
-<h1>Study Sessions</h1>
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4">
+    <div>
+        <span class="section-eyebrow">Schedule</span>
+        <h1 class="h2 fw-bold mt-1 mb-2">Study Sessions</h1>
+        <p class="text-secondary-emphasis mb-0">
+            @if (Model.Count > 0)
+            {
+                <span>@Model.Count @(Model.Count == 1 ? "session" : "sessions") reserved.</span>
+            }
+            else
+            {
+                <span>Keep track of every reserved study session.</span>
+            }
+        </p>
+    </div>
+    <a class="btn btn-primary px-4" asp-action="Create">
 
-<a asp-action="Create">Create Study Session</a>
+        Create Study Session
+    </a>
+</div>
 
 @if (Model.Count == 0)
 {
-    <p>No study sessions have been created yet.</p>
-}
+    <div class="card">
+        <div class="card-body empty-state">
+            <h2 class="h5 fw-bold">No study sessions yet</h2>
+            <p class="text-secondary-emphasis mb-4">You haven&rsquo;t created any study sessions yet. Create your first one
+                to get started.</p>
+                <a class="btn btn-primary px-4" asp-action="Create">Create Study Session</a>
+            </div>
+        </div>
+    }
 else
-{
-    <table>
-        <thead>
-            <tr>
-                <th>Subject</th>
-                <th>Topic</th>
-                <th>Student</th>
-                <th>Room</th>
-                <th>Start</th>
-                <th>End</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
+    {
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-srb align-middle">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Subject</th>
+                            <th>Topic</th>
+                            <th>Student</th>
+                            <th>Room</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var booking in Model)
+                        {
+                            var isPast = booking.EndTime <= now;
+                            var isOngoing = !isPast && booking.StartTime <= now;
+                            var statusText = isPast ? "Completed" : isOngoing ? "In progress" : "Upcoming";
+                            var statusClass = isPast ? "badge-soft-secondary" : isOngoing ? "badge-soft-success" :
+            "badge-soft-primary";
 
-        <tbody>
-            @foreach (var booking in Model)
-            {
-                <tr>
-                    <td>@booking.Subject</td>
-                    <td>@booking.Topic</td>
-                    <td>@booking.StudentName</td>
-                    <td>@booking.RoomId</td>
-                    <td>@booking.StartTime</td>
-                    <td>@booking.EndTime</td>
-
-                    <td>
-                        <a asp-action="Details" asp-route-id="@booking.Id">
-                            Details
-                        </a>
-
-                        <a asp-action="Edit" asp-route-id="@booking.Id">
-                            Edit
-                        </a>
-
-                        <form asp-action="Delete"
-                              asp-route-id="@booking.Id"
-                              method="post"
-                              style="display:inline;">
-                            <button type="submit">Delete</button>
-                        </form>
-                    </td>
-                </tr>
+                            <tr>
+                                <td class="ps-4 fw-semibold">@booking.Subject</td>
+                                <td class="text-secondary-emphasis">@booking.Topic</td>
+                                <td>
+                                    <span class="d-inline-flex align-items-center">
+                              
+                                        @booking.StudentName
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-soft-primary rounded-pill px-3 py-2">
+                                        Room @booking.RoomId
+                                    </span>
+                                </td>
+                                <td class="text-nowrap">@booking.StartTime.ToString("dd.MM.yyyy") <span
+                                    class="text-secondary-emphasis">@booking.StartTime.ToString("HH:mm")</span></td>
+                                    <td class="text-nowrap">@booking.EndTime.ToString("dd.MM.yyyy") <span
+                                        class="text-secondary-emphasis">@booking.EndTime.ToString("HH:mm")</span></td>
+                                        <td>
+                                            <span class="badge @statusClass rounded-pill px-3 py-2">@statusText</span>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <div class="d-inline-flex gap-1">
+                                                <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@booking.Id"
+                                                   title="Edit">
+                                                    Edit
+                                                </a>
+                                                <form asp-action="Delete" asp-route-id="@booking.Id" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                        Delete
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             }
-        </tbody>
-    </table>
-}
