@@ -433,3 +433,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# git ignores all folders with name 'dist'
+**/dist/

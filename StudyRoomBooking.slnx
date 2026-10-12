@@ -1,3 +1,8 @@
 <Solution>
-    <Project Path="StudyRoomBooking.Mvc.csproj" />
+  <Folder Name="/Subapp1/">
+    <Project Path="Subapp1/StudyRoomBooking.Mvc/StudyRoomBooking.Mvc.csproj" />
+  </Folder>
+  <Folder Name="/Subapp2/">
+    <Project Path="Subapp2/StudyRoomBooking.Api/StudyRoomBooking.Api.csproj" />
+  </Folder>
 </Solution>
