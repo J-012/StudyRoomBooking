@@ -436,3 +436,8 @@ FodyWeavers.xsd
 
 # git ignores all folders with name 'dist'
 **/dist/
+
+# ...but client-side libraries (Bootstrap, jQuery, jQuery Validation) live in
+# wwwroot/lib/<lib>/dist and MUST be tracked. Without the exception below they
+# are silently dropped from the repo and every page renders unstyled.
+!**/wwwroot/lib/**/dist/
