@@ -10,7 +10,6 @@ namespace StudyRoomBooking.Models
         public DbSet<Room> Rooms { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<Booking> Bookings { get; set; }
-        public DbSet<User> Users { get; set; }
         
     } 
 }

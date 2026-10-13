@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using StudyRoomBooking.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,8 +12,9 @@ builder.Services.AddDbContext<StudyRoomDbContext>(options =>
 builder.Services.AddControllersWithViews();
 
 // Cookie authentication
-builder.Services.AddAuthentication("Cookies")
-    .AddCookie("Cookies", options =>
+builder.Services.AddAuthentication(
+    CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
     {
         options.LoginPath = "/Account/Login";
         options.AccessDeniedPath = "/Account/AccessDenied";
@@ -37,6 +39,12 @@ using (var scope = app.Services.CreateScope())
             Building = "Pilestredet 35",
             Capacity = 6
         });
+
+        db.SaveChanges();
+    }
+        if (!db.Students.Any())
+    {
+        db.Students.Add(new Student{});
 
         db.SaveChanges();
     }
