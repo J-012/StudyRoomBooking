@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudyRoomBooking.Models;
-using System.Security.Claims;
 
 namespace StudyRoomBooking.Mvc.Controllers
 {
@@ -23,6 +23,10 @@ namespace StudyRoomBooking.Mvc.Controllers
         [HttpGet]
         public IActionResult Login(bool registered = false)
         {
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Home");
+            }
             // Kommer fra register siden, viser suksessmelding
             if (registered)
             {
@@ -36,20 +40,21 @@ namespace StudyRoomBooking.Mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(string studentid, string password)
         {
-            if (string.IsNullOrWhiteSpace(studentid) ||
-                string.IsNullOrWhiteSpace(password))
+            if (string.IsNullOrWhiteSpace(studentid) || string.IsNullOrWhiteSpace(password))
             {
                 ViewBag.Error = "Enter your StudentID and password.";
                 return View();
             }
 
-            var student = await _context.Students
-                .FirstOrDefaultAsync(s => s.StudentId == studentid.Trim());
+            var student = await _context.Students.FirstOrDefaultAsync(s =>
+                s.StudentId == studentid.Trim()
+            );
 
-            if (student == null ||
-                _passwordHasher.VerifyHashedPassword(
-                    student, student.PasswordHash, password)
-                    == PasswordVerificationResult.Failed)
+            if (
+                student == null
+                || _passwordHasher.VerifyHashedPassword(student, student.PasswordHash, password)
+                    == PasswordVerificationResult.Failed
+            )
             {
                 ViewBag.Error = "Invalid username or password.";
                 return View();
@@ -59,16 +64,18 @@ namespace StudyRoomBooking.Mvc.Controllers
             {
                 new Claim(ClaimTypes.NameIdentifier, student.StudentId.ToString()),
                 new Claim(ClaimTypes.Email, student.Email),
-                new Claim(ClaimTypes.Name, student.Name)
+                new Claim(ClaimTypes.Name, student.Name),
             };
 
             var identity = new ClaimsIdentity(
                 claims,
-                CookieAuthenticationDefaults.AuthenticationScheme);
+                CookieAuthenticationDefaults.AuthenticationScheme
+            );
 
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(identity));
+                new ClaimsPrincipal(identity)
+            );
 
             return RedirectToAction("Index", "Home");
         }
@@ -87,7 +94,8 @@ namespace StudyRoomBooking.Mvc.Controllers
             string studentid,
             string name,
             string password,
-            string confirmPassword)
+            string confirmPassword
+        )
         {
             studentid = studentid?.Trim() ?? "";
 
@@ -108,7 +116,7 @@ namespace StudyRoomBooking.Mvc.Controllers
                 ViewBag.Error = "Name is required.";
                 return View();
             }
-    
+
             if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
             {
                 ViewBag.Error = "Password must be at least 8 characters.";
@@ -121,20 +129,15 @@ namespace StudyRoomBooking.Mvc.Controllers
                 return View();
             }
 
-            bool studentidExists = await _context.Students
-                .AnyAsync(s => s.StudentId == studentid);
+            bool studentidExists = await _context.Students.AnyAsync(s => s.StudentId == studentid);
 
             if (studentidExists)
             {
-                ViewBag.Error = "This StudentID is already taken.";
+                ViewBag.Error = "This StudentID is already registered.";
                 return View();
             }
 
-            var user = new Student
-            {
-                StudentId = studentid,
-                Name = name
-            };
+            var user = new Student { StudentId = studentid, Name = name };
 
             user.PasswordHash = _passwordHasher.HashPassword(user, password);
 
@@ -150,8 +153,7 @@ namespace StudyRoomBooking.Mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
             return RedirectToAction("Login");
         }
