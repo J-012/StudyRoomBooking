@@ -24,32 +24,6 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<StudyRoomDbContext>();
-
-    db.Database.EnsureCreated();
-
-    // Add a test room if the database is empty
-    if (!db.Rooms.Any())
-    {
-        db.Rooms.Add(new Room
-        {
-            RoomNumber = "101",
-            Building = "Pilestredet 35",
-            Capacity = 6
-        });
-
-        db.SaveChanges();
-    }
-        if (!db.Students.Any())
-    {
-        db.Students.Add(new Student{});
-
-        db.SaveChanges();
-    }
-}
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
