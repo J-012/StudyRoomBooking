@@ -27,7 +27,7 @@ namespace StudyRoomBooking.Mvc.Controllers
             {
                 return RedirectToAction("Index", "Home");
             }
-            // Kommer fra register siden, viser suksessmelding
+            // Hvis brukeren kommer fra register siden, vis suksessmelding
             if (registered)
             {
                 ViewBag.Success = "Account created successfully. You can now log in.";
@@ -45,6 +45,7 @@ namespace StudyRoomBooking.Mvc.Controllers
                 ViewBag.Error = "Enter your StudentID and password.";
                 return View();
             }
+
 
             var student = await _context.Students.FirstOrDefaultAsync(s =>
                 s.StudentId == studentid.Trim()
