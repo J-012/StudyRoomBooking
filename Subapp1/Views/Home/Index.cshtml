@@ -2,16 +2,120 @@
     ViewData["Title"] = "Home";
 }
 
-<section class="d-flex justify-content-center flex-column align-items-center text-center">
-    <div class="col-lg-7 justify-content-center d-flex flex-column align-items-center  ">
-        <h1 class="fw-bold mt-3 mb-3">Velkommen til Study Room Booking</h1>
-        <p class="lead mb-4">Her kan du reservere studieplasser på en enkel og effektiv måte. Finn et ledig rom, velg
-            tidspunkt, og sett i gang med studiet.</p>
-            <div class="d-flex flex-wrap gap-2">
-                <a class="btn btn-dark btn-lg px-4" asp-controller="Bookings" asp-action="Create">Opprett ny booking</a>
-                <a class="btn btn-outline-dark btn-lg px-4" asp-controller="Bookings" asp-action="Index">Se alle
-                    bookinger</a>
+<div class="container py-5">
+
+    <!-- Hero section -->
+
+    <section class="row align-items-center mb-5">
+        <div class="col-lg-6">
+
+
+            <h1 class="display-5 fw-bold mb-4">
+                Finn studierom og møt andre studenter
+                <span style="color: #b39700;">på samme kurs.</span>
+            </h1>
+
+            <p class="text-secondary mb-4">
+                Finn ledige studierom, reserver tidspunktet som passer deg,
+                og få en enklere studiehverdag. Studerer du samme kurs eller fag som andre? Finn et passende
+                rom for gruppearbeid, møt medstudenter og jobb sammen mot
+                felles studiemål. Enten du vil studere alene eller sammen
+                med andre, kan du finne et sted som passer dine behov.
+            </p>
+
+            <div class="d-flex flex-wrap gap-3">
+                <a class="btn btn-lg fw-semibold"
+                   style="background-color: #ffd500; color: #212529; border-color: #ffd500;" asp-controller="Bookings"
+                   asp-action="Create">
+                    Book et rom
+                </a>
+
+                <a class="btn btn-outline-dark btn-lg" asp-controller="Rooms" asp-action="Index">
+                    Utforsk rom
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <img src="https://images.openai.com/static-rsc-4/JfiD6r06M4C3X27xNxQYnRrDFK7JcGeFD82LExJpQ1C3uJNdCNNhBAwLw9ntn1iv85I2KwY2G6mCb_26t-7Qp0XCswIXOJ6yNrRpPTy_wcjgdVyxDkLcZNicsRzzaIFJ7eA00rW81hsu1O_P0JCXMi0L-d1kJV0c2ZfP3isZ0bFZ6IitfPHASk6Wz9uPXGr3?purpose=fullsize"
+                 alt="Moderne studierom med arbeidsplasser" class="img-fluid rounded-3 shadow-sm w-100"
+                 style="height: 450px; object-fit: cover;" />
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="py-4">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold">Gjør studiehverdagen enklere</h2>
+            <p class="text-secondary">
+                Finn medstudenter, bli med i studierom og planlegg studieøktene dine.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border rounded-3 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="mb-3" style="width: 35px; height: 4px; background-color: #ffd500;"></div>
+                        <h5 class="fw-bold">Bli med i et studierom</h5>
+                        <p class="text-secondary mb-0">
+                            Finn rom andre studenter har opprettet, og bli med
+                            medstudenter som tar samme kurs eller fag som deg.
+                        </p>
+                    </div>
                 </div>
             </div>
-        </section>
 
+            <div class="col-md-4">
+                <div class="card h-100 border rounded-3 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="mb-3" style="width: 35px; height: 4px; background-color: #ffd500;"></div>
+                        <h5 class="fw-bold">Opprett egen booking</h5>
+                        <p class="text-secondary mb-0">
+                            Velg et ledig rom, dato og tidspunkt som passer
+                            for din neste studieøkt.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 border rounded-3 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="mb-3" style="width: 35px; height: 4px; background-color: #ffd500;"></div>
+                        <h5 class="fw-bold">Hold oversikt over bookingene</h5>
+                        <p class="text-secondary mb-0">
+                            Se reservasjonene dine på ett sted og hold oversikt
+                            over planlagte studieøkter.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Call to action -->
+    <section
+        class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 rounded-3 p-4 p-md-5 mt-5"
+        style="background-color: #fff9db; border: 1px solid #f0e5a5;">
+
+        <div>
+            <h2 class="fw-bold mb-3">Klar for neste studieøkt?</h2>
+            <p class="text-secondary mb-0">
+                Finn et ledig rom og planlegg studieøkten din.
+            </p>
+        </div>
+
+        <div>
+            <a class="btn btn-lg fw-semibold text-nowrap"
+               style="background-color: #ffd500; color: #212529; border-color: #ffd500;" asp-controller="Bookings"
+               asp-action="Create">
+                Opprett ny booking
+            </a>
+        </div>
+
+    </section>
+
+
+</div>

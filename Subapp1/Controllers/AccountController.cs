@@ -46,7 +46,6 @@ namespace StudyRoomBooking.Mvc.Controllers
                 return View();
             }
 
-
             var student = await _context.Students.FirstOrDefaultAsync(s =>
                 s.StudentId == studentid.Trim()
             );

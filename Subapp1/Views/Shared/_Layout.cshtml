@@ -15,11 +15,12 @@
 </head>
 
 <body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-srb sticky-top">
+    <header class="bg-white border-bottom sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-light py-3">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                    <span>StudyRoomBooking</span>
+
+                <a class="navbar-brand fw-bold text-dark" asp-controller="Home" asp-action="Index">
+                    StudyRoomBooking
                 </a>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
@@ -28,48 +29,80 @@
                 </button>
 
                 <div class="collapse navbar-collapse" id="mainNav">
-                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-1">
+                    <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
 
+                        <li class="nav-item">
+                            <a class="nav-link text-secondary" asp-controller="Home" asp-action="Index">
+                                Home
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link text-secondary" asp-controller="Rooms" asp-action="Index">
+                                Rooms
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link text-secondary" asp-controller="Bookings" asp-action="Index">
+                                Bookings
+                            </a>
+                        </li>
 
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item">
-                                <a class="nav-link " asp-area="" asp-controller="Home" asp-action="Index">
+                                <span class="nav-link text-dark">
                                     @User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-                                </a>
+                                </span>
                             </li>
+
                             <li class="nav-item">
                                 <form asp-controller="Account" asp-action="Logout" method="post">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="nav-link btn btn-link">
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm">
                                         Logout
                                     </button>
                                 </form>
                             </li>
                         }
-                        <li class="nav-item">
-                            <a class="nav-link " asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link " asp-area="" asp-controller="Rooms" asp-action="Index">Rooms</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link " asp-area="" asp-controller="Bookings" asp-action="Index">Bookings</a>
-                        </li>
-                        <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
-                            <a class="btn btn-primary btn-sm px-3" asp-area="" asp-controller="Bookings"
-                               asp-action="Create">
+                        else
+                        {
 
+                            <li class="nav-item">
+                                <div class="d-flex align-items-center">
+                                    <a class="nav-link fw-semibold text-dark px-1 auth-link" asp-controller="Account"
+                                       asp-action="Login">
+                                        Login
+                                    </a>
+
+                                    <span class="text-secondary">/</span>
+
+                                    <a class="nav-link fw-semibold text-dark px-1 auth-link" asp-controller="Account"
+                                       asp-action="Register">
+                                        Register
+                                    </a>
+                                </div>
+                            </li>
+
+                        }
+
+                        <li class="nav-item mt-2 mt-lg-0">
+                            <a class="btn px-3 fw-semibold"
+                               style="background-color: #ffd500; color: #212529; border-color: #ffd500;"
+                               asp-controller="Bookings" asp-action="Create">
                                 New booking
                             </a>
                         </li>
+
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
 
-    <main role="main" class="container py-4 py-lg-5">
+
+    <main role="main" class="container ">
         @RenderBody()
     </main>
 

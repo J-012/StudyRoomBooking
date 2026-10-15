@@ -14,6 +14,15 @@
   --srb-hero-bg: var(--srb-primary);
 }
 
+.auth-link {
+  border-bottom: 2px solid transparent;
+}
+
+.auth-link:hover,
+.auth-link:focus {
+  border-bottom-color: #ffd500;
+}
+
 /* ------------------------------------------------------------------
    Base
    ------------------------------------------------------------------ */
@@ -119,8 +128,6 @@ h6 {
   box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.15);
 }
 
-
-
 /* ------------------------------------------------------------------
    Cards, icons, badges
    ------------------------------------------------------------------ */
@@ -142,7 +149,6 @@ h6 {
   border-color: #d9dcef;
   box-shadow: var(--srb-shadow);
 }
-
 
 .section-eyebrow {
   color: var(--srb-primary);
