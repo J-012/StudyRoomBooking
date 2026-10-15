@@ -1,8 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using StudyRoomBooking.Models;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace StudyRoomBooking.Controllers;
 
+
+[Authorize]
 public class BookingsController : Controller
 {
     private readonly StudyRoomDbContext _context;
@@ -63,6 +68,10 @@ public class BookingsController : Controller
     public IActionResult Create(BookingCreateViewModel viewModel)
     {
         var booking = viewModel.Booking;
+
+        ModelState.Remove("Booking.StudentName");
+        booking.StudentName = User.Identity?.Name ?? "";
+        booking.StudentID = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
 
         booking.StartTime = viewModel.StartDate.ToDateTime(viewModel.StartClock);
         booking.EndTime = viewModel.StartDate.ToDateTime(viewModel.EndClock);
@@ -155,6 +164,13 @@ public class BookingsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    private bool IsBookingOwner(Booking booking)
+    {
+        var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        return !string.IsNullOrEmpty(studentId)
+            && booking.StudentID == studentId;
+    }
     // Felles valideringslogikk for Create og Edit
     private void ValidateBooking(Booking booking, BookingCreateViewModel viewModel, int? excludeId)
     {
@@ -214,7 +230,6 @@ public class BookingsController : Controller
 
             return NotFound();
         }
-
         _context.Bookings.Remove(booking);
         _context.SaveChanges();
 

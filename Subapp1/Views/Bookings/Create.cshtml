@@ -41,23 +41,37 @@
                             </div>
 
                             <div class="col-12 col-md-6">
-                                <label asp-for="Booking.StudentName" class="form-label"></label>
-                                <input asp-for="Booking.StudentName" class="form-control" placeholder="Full name" />
-                                <span asp-validation-for="Booking.StudentName" class="field-validation-error"></span>
+                                <label class="form-label">Booking For</label>
+                                <input type="text"
+                                    class="form-control"
+                                    value="@User.Identity?.Name"
+                                    readonly />
                             </div>
 
                             <div class="col-12 col-md-6">
                                 <label asp-for="Booking.RoomId" class="form-label">Study Room</label>
+
                                 <select asp-for="Booking.RoomId" class="form-select">
                                     <option value="">Select a room</option>
-                                    @foreach (var room in Model.Rooms)
+
+                                    @foreach (var buildingGroup in Model.Rooms
+                                        .OrderBy(room => room.Building)
+                                        .ThenBy(room => room.RoomNumber)
+                                        .GroupBy(room => room.Building))
                                     {
-                                        <option value="@room.Id">
-                                            Room @room.RoomNumber - @room.Building (Capacity: @room.Capacity)
-                                        </option>
+                                        <optgroup label="@buildingGroup.Key">
+                                            @foreach (var room in buildingGroup)
+                                            {
+                                                <option value="@room.Id">
+                                                    Room @room.RoomNumber (Capacity: @room.Capacity)
+                                                </option>
+                                            }
+                                        </optgroup>
                                     }
                                 </select>
-                                <span asp-validation-for="Booking.RoomId" class="field-validation-error"></span>
+
+                                <span asp-validation-for="Booking.RoomId"
+                                    class="field-validation-error"></span>
                             </div>
                         </div>
                     </div>
