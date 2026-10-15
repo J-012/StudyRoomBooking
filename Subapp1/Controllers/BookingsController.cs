@@ -164,13 +164,6 @@ public class BookingsController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    private bool IsBookingOwner(Booking booking)
-    {
-        var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        return !string.IsNullOrEmpty(studentId)
-            && booking.StudentID == studentId;
-    }
     // Felles valideringslogikk for Create og Edit
     private void ValidateBooking(Booking booking, BookingCreateViewModel viewModel, int? excludeId)
     {
