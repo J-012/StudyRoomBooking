@@ -14,6 +14,15 @@
   --srb-hero-bg: var(--srb-primary);
 }
 
+.nav-link {
+  border-bottom: 2px solid transparent;
+}
+
+.nav-link:hover,
+.nav-link:focus {
+  border-bottom-color: black;
+}
+
 .auth-link {
   border-bottom: 2px solid transparent;
 }
