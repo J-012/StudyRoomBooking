@@ -101,9 +101,10 @@
                                     foreach (var minute in new[] { 0, 15, 30, 45 })
                                     {
                                         var time = new TimeOnly(hour, minute);
+                                        var value = time.ToString("HH:mm");
 
-                                        <option value="@time.ToString("HH:mm")">
-                                            @time.ToString("HH:mm")
+                                        <option value="@value" selected="@(time == Model.StartClock)">
+                                            @value
                                         </option>
                                     }
                                 }
@@ -123,9 +124,10 @@
                                     foreach (var minute in new[] { 0, 15, 30, 45 })
                                     {
                                         var time = new TimeOnly(hour, minute);
+                                        var value = time.ToString("HH:mm");
 
-                                        <option value="@time.ToString("HH:mm")">
-                                            @time.ToString("HH:mm")
+                                        <option value="@value" selected="@(time == Model.EndClock)">
+                                            @value
                                         </option>
                                     }
                                 }

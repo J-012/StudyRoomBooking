@@ -158,10 +158,13 @@ public class BookingsController : Controller
 
         var viewModel = new BookingCreateViewModel
         {
+            BookingId = booking.BookingId,
             Subject = booking.Subject,
             Topic = booking.Topic,
             RoomId = booking.RoomId,
             Rooms = _context.Rooms.ToList(),
+
+            // Hent eksisterende dato og klokkeslett fra databasen
             StartDate = DateOnly.FromDateTime(booking.StartTime),
             StartClock = TimeOnly.FromDateTime(booking.StartTime),
             EndClock = TimeOnly.FromDateTime(booking.EndTime)
