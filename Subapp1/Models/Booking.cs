@@ -4,7 +4,7 @@ namespace StudyRoomBooking.Models;
 
 public class Booking
 {
-    public int Id { get; set; }
+    public int BookingId { get; set; }
 
     [Required]
     [StringLength(100)]
