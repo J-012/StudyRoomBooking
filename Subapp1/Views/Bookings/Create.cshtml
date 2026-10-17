@@ -3,7 +3,7 @@
     ViewData["Title"] = "Create Booking";
 }
 
-<div class="row justify-content-center">
+<div class="row justify-content-center py-5">
     <div class="col-12 col-xl-9">
         <nav aria-label="breadcrumb" class="mb-3">
             <ol class="breadcrumb mb-0 small">
@@ -12,11 +12,16 @@
             </ol>
         </nav>
 
+
         <div class="mb-4">
             <span class="section-eyebrow">New reservation</span>
             <h1 class="h2 fw-bold mt-1 mb-2">Create Study Session</h1>
             <p class="text-secondary-emphasis mb-0">Fill in the details below to reserve a study room. Fields marked
                 with <span class="text-danger">*</span> are required.</p>
+            </div>
+            <div class="col-12 col-md-6 mb-2">
+                <label class="form-label">Booking For</label>
+                <input disabled type="text" class="form-control" value="@User.Identity?.Name" readonly />
             </div>
 
             <div asp-validation-summary="All"></div>
@@ -41,14 +46,6 @@
                             </div>
 
                             <div class="col-12 col-md-6">
-                                <label class="form-label">Booking For</label>
-                                <input type="text"
-                                    class="form-control"
-                                    value="@User.Identity?.Name"
-                                    readonly />
-                            </div>
-
-                            <div class="col-12 col-md-6">
                                 <label asp-for="Booking.RoomId" class="form-label">Study Room</label>
 
                                 <select asp-for="Booking.RoomId" class="form-select">
@@ -70,8 +67,7 @@
                                     }
                                 </select>
 
-                                <span asp-validation-for="Booking.RoomId"
-                                    class="field-validation-error"></span>
+                                <span asp-validation-for="Booking.RoomId" class="field-validation-error"></span>
                             </div>
                         </div>
                     </div>
@@ -130,7 +126,7 @@
                             <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end">
                                 <a class="btn btn-light px-4 order-sm-1" asp-action="Index">Cancel</a>
                                 <button type="submit" class="btn btn-primary px-4 order-sm-2">
-     
+
                                     Create Study Session
                                 </button>
                             </div>

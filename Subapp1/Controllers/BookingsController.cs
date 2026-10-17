@@ -24,13 +24,23 @@ public class BookingsController : Controller
     // GET all Bookings
     public IActionResult Index()
     {
-        return View(_context.Bookings.ToList());
+        // Finner studentens ID fra pålogget bruker
+        var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        // Henter alle bookinger som tilhører den påloggede studenten
+        var bookings = _context.Bookings.Where(b => b.StudentID == studentId).ToList();
+        return View(bookings);
     }
 
     // GET Booking by Id
     public IActionResult Details(int id)
     {
-        var booking = _context.Bookings.FirstOrDefault(b => b.Id == id);
+        // Finner studentens ID fra pålogget bruker
+        var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        // Henter bookingen som tilhører den påloggede studenten
+        var booking = _context.Bookings
+            .FirstOrDefault(b => b.Id == id && b.StudentID == studentId);
 
         if (booking == null)
         {
@@ -69,9 +79,31 @@ public class BookingsController : Controller
     {
         var booking = viewModel.Booking;
 
-        ModelState.Remove("Booking.StudentName");
-        booking.StudentName = User.Identity?.Name ?? "";
-        booking.StudentID = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+        if (booking == null)
+        {
+            return BadRequest();
+        }
+
+        // Henter ID-en til den innloggede studenten
+        var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(studentId))
+        {
+            return Forbid();
+        }
+
+        // Henter studentens lagrede informasjon fra databasen
+        var student = _context.Students
+            .FirstOrDefault(s => s.StudentId == studentId);
+
+        if (student == null)
+        {
+            return Forbid();
+        }
+
+        // Setter studentinformasjon fra databasen
+        booking.StudentID = student.StudentId;
+        booking.StudentName = student.Name;
 
         booking.StartTime = viewModel.StartDate.ToDateTime(viewModel.StartClock);
         booking.EndTime = viewModel.StartDate.ToDateTime(viewModel.EndClock);
@@ -94,12 +126,11 @@ public class BookingsController : Controller
         );
 
         return RedirectToAction(nameof(Index));
-    }
-
-    // GET Edit Booking by Id
+    } // GET Edit Booking by Id
     public IActionResult Edit(int id)
     {
-        var booking = _context.Bookings.FirstOrDefault(b => b.Id == id);
+        var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var booking = _context.Bookings.FirstOrDefault(b => b.Id == id && b.StudentID == studentId);
 
         if (booking == null)
         {
@@ -129,6 +160,19 @@ public class BookingsController : Controller
             return NotFound();
         }
 
+        // Henter ID-en til den innloggede studenten
+        var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        // Sjekker at bookingen tilhører studenten
+        var existingBooking = _context.Bookings
+            .FirstOrDefault(b => b.Id == id && b.StudentID == studentId);
+
+        if (existingBooking == null)
+        {
+            return NotFound();
+        }
+
+        // Oppdaterer tidspunkt
         booking.StartTime = viewModel.StartDate.ToDateTime(viewModel.StartClock);
         booking.EndTime = viewModel.StartDate.ToDateTime(viewModel.EndClock);
 
@@ -140,16 +184,9 @@ public class BookingsController : Controller
             return View(viewModel);
         }
 
-        var existingBooking = _context.Bookings.FirstOrDefault(b => b.Id == id);
-
-        if (existingBooking == null)
-        {
-            return NotFound();
-        }
-
+        // Oppdaterer kun feltene studenten har lov til å endre
         existingBooking.Subject = booking.Subject;
         existingBooking.Topic = booking.Topic;
-        existingBooking.StudentName = booking.StudentName;
         existingBooking.RoomId = booking.RoomId;
         existingBooking.StartTime = booking.StartTime;
         existingBooking.EndTime = booking.EndTime;
@@ -158,7 +195,7 @@ public class BookingsController : Controller
 
         _logger.LogInformation(
             "Booking {BookingId} was updated.",
-            booking.Id
+            existingBooking.Id
         );
 
         return RedirectToAction(nameof(Index));
@@ -212,7 +249,11 @@ public class BookingsController : Controller
     [ValidateAntiForgeryToken]
     public IActionResult Delete(int id)
     {
-        var booking = _context.Bookings.FirstOrDefault(b => b.Id == id);
+        // Henter ID-en til den innloggede studenten
+        var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        // Sjekker at bookingen tilhører studenten
+        var booking = _context.Bookings.FirstOrDefault(b => b.Id == id && b.StudentID == studentId);
 
         if (booking == null)
         {
