@@ -1,20 +1,39 @@
+using Microsoft.EntityFrameworkCore;
+using StudyRoomBooking.Api.DAL;
+using StudyRoomBooking.Api.Repositories;
+using StudyRoomBooking.Api.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
 builder.Services.AddOpenApi();
+
+builder.Services.AddDbContext<StudyRoomBookingDbContext>(options =>
+{
+    string? connectionString =
+        builder.Configuration.GetConnectionString("DefaultConnection");
+
+    options.UseSqlite(connectionString);
+});
+
+builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IRoomService, RoomService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    StudyRoomBookingDbContext context =
+        scope.ServiceProvider.GetRequiredService<StudyRoomBookingDbContext>();
+
+    await context.Database.MigrateAsync();
+}
 
 app.UseAuthorization();
 

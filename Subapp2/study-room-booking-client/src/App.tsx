@@ -1,122 +1,95 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import RoomsPage from './pages/RoomsPage'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+    return (
+        <div className="app-shell">
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+            <header className="bg-white border-bottom sticky-top">
+                <nav className="navbar navbar-expand-lg navbar-light py-3">
+                    <div className="container">
 
-      <div className="ticks"></div>
+                        <a className="navbar-brand fw-bold text-dark" href="/">
+                            StudyRoomBooking
+                        </a>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+                        <button
+                            className="navbar-toggler"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#mainNav"
+                            aria-controls="mainNav"
+                            aria-expanded="false"
+                            aria-label="Toggle navigation"
+                        >
+                            <span className="navbar-toggler-icon"></span>
+                        </button>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+                        <div
+                            className="collapse navbar-collapse"
+                            id="mainNav"
+                        >
+                            <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+
+                                <li className="nav-item">
+                                    <a
+                                        className="nav-link text-secondary"
+                                        href="/"
+                                    >
+                                        Home
+                                    </a>
+                                </li>
+
+                                <li className="nav-item">
+                                    <a
+                                        className="nav-link text-secondary"
+                                        href="/"
+                                    >
+                                        Rooms
+                                    </a>
+                                </li>
+
+                                <li className="nav-item">
+                                    <a
+                                        className="nav-link text-secondary"
+                                        href="/"
+                                    >
+                                        Bookings
+                                    </a>
+                                </li>
+
+                                <li className="nav-item mt-2 mt-lg-0">
+                                    <button className="btn btn-primary px-3">
+                                        New booking
+                                    </button>
+                                </li>
+
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+            </header>
+
+            <RoomsPage />
+
+            <footer className="footer">
+                <div className="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+
+                    <div>
+                        © 2026 - StudyRoomBooking
+                    </div>
+
+                    <div className="d-flex gap-4">
+                        <a href="/">Rooms</a>
+                        <a href="/">Bookings</a>
+                        <a href="/">Privacy</a>
+                    </div>
+
+                </div>
+            </footer>
+
+        </div>
+    )
 }
 
 export default App
