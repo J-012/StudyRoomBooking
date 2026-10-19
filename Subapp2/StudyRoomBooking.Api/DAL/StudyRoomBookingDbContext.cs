@@ -12,6 +12,9 @@ public class StudyRoomBookingDbContext : DbContext
     }
 
     public DbSet<Room> Rooms { get; set; }
+    public DbSet<Student> Students { get; set; }
+    public DbSet<StudySession> StudySessions { get; set; }
+    public DbSet<SessionParticipant> SessionParticipants { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,5 +43,19 @@ public class StudyRoomBookingDbContext : DbContext
                 Capacity = 4
             }
         );
+
+        // Sammensatt primærnøkkel for kobletabellen (ren N:M)
+        modelBuilder.Entity<SessionParticipant>()
+            .HasKey(sp => new { sp.StudySessionId, sp.StudentId });
+
+        modelBuilder.Entity<SessionParticipant>()
+            .HasOne(sp => sp.StudySession)
+            .WithMany(s => s.Participants)
+            .HasForeignKey(sp => sp.StudySessionId);
+
+        modelBuilder.Entity<SessionParticipant>()
+            .HasOne(sp => sp.Student)
+            .WithMany(s => s.Participations)
+            .HasForeignKey(sp => sp.StudentId);
     }
 }
