@@ -1,4 +1,7 @@
+import { Routes, Route, Link } from 'react-router-dom'
+
 import RoomsPage from './pages/RoomsPage'
+import StudentsPage from './pages/StudentsPage'
 import './App.css'
 
 function App() {
@@ -9,9 +12,9 @@ function App() {
                 <nav className="navbar navbar-expand-lg navbar-light py-3">
                     <div className="container">
 
-                        <a className="navbar-brand fw-bold text-dark" href="/">
+                        <Link className="navbar-brand fw-bold text-dark" to="/">
                             StudyRoomBooking
-                        </a>
+                        </Link>
 
                         <button
                             className="navbar-toggler"
@@ -32,21 +35,21 @@ function App() {
                             <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-2">
 
                                 <li className="nav-item">
-                                    <a
+                                    <Link
                                         className="nav-link text-secondary"
-                                        href="/"
+                                        to="/"
                                     >
-                                        Home
-                                    </a>
+                                        Rooms
+                                    </Link>
                                 </li>
 
                                 <li className="nav-item">
-                                    <a
+                                    <Link
                                         className="nav-link text-secondary"
-                                        href="/"
+                                        to="/students"
                                     >
-                                        Rooms
-                                    </a>
+                                        Students
+                                    </Link>
                                 </li>
 
                                 <li className="nav-item">
@@ -70,7 +73,10 @@ function App() {
                 </nav>
             </header>
 
-            <RoomsPage />
+            <Routes>
+                <Route path="/" element={<RoomsPage />} />
+                <Route path="/students" element={<StudentsPage />} />
+            </Routes>
 
             <footer className="footer">
                 <div className="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
@@ -80,8 +86,8 @@ function App() {
                     </div>
 
                     <div className="d-flex gap-4">
-                        <a href="/">Rooms</a>
-                        <a href="/">Bookings</a>
+                        <Link to="/">Rooms</Link>
+                        <Link to="/students">Students</Link>
                         <a href="/">Privacy</a>
                     </div>
 
