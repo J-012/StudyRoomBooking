@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 using StudyRoomBooking.Api.DAL;
 using StudyRoomBooking.Api.Repositories;
 using StudyRoomBooking.Api.Services;
@@ -19,12 +20,15 @@ builder.Services.AddDbContext<StudyRoomBookingDbContext>(options =>
 
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
 builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IStudentRepository, StudentRepository>();
+builder.Services.AddScoped<IStudentService, StudentService>();
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 using (IServiceScope scope = app.Services.CreateScope())
