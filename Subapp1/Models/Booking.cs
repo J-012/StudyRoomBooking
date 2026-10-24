@@ -16,7 +16,7 @@ public class Booking
 
     [Required]
     [StringLength(100)]
-    public string StudentName { get; set; } = string.Empty;
+    public string UserName { get; set; } = string.Empty;
 
     [Required]
     public int RoomId { get; set; }
@@ -27,5 +27,10 @@ public class Booking
     [Required]
     public DateTime EndTime { get; set; }
 
-    public string StudentID { get; set; } = string.Empty;
+    [Required]
+    public string UserId { get; set; } = string.Empty;
+
+    public User? User { get; set; }
+
+    public Room? Room { get; set; }
 }

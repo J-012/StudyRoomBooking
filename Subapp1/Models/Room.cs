@@ -17,4 +17,6 @@ public class Room
     [Required]
     [Range(1, 100)]
     public int Capacity { get; set; }
+
+    public List<Booking> Bookings { get; set; } = new();
 }

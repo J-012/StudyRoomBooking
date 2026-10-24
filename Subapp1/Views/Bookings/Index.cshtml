@@ -46,7 +46,7 @@ else
                         <tr>
                             <th class="ps-4">Subject</th>
                             <th>Topic</th>
-                            <th>Student</th>
+                            <th>User</th>
                             <th>Room</th>
                             <th>Start</th>
                             <th>End</th>
@@ -69,7 +69,7 @@ else
                                 <td>
                                     <span class="d-inline-flex align-items-center">
 
-                                        @booking.StudentName
+                                        @booking.UserName
                                     </span>
                                 </td>
                                 <td>
@@ -85,7 +85,7 @@ else
                                             <span class="badge @statusClass rounded-pill px-3 py-2">@statusText</span>
                                         </td>
                                         <td class="text-end pe-4">
-                                            @if (booking.StudentID == User.FindFirstValue(ClaimTypes.NameIdentifier))
+                                            @if (booking.UserId == User.FindFirstValue(ClaimTypes.NameIdentifier))
                                             {
                                                 <div class="d-inline-flex gap-1">
                                                     <a class="btn btn-sm btn-outline-primary" asp-action="Edit"

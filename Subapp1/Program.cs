@@ -1,15 +1,23 @@
 using Microsoft.EntityFrameworkCore;
 using StudyRoomBooking.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using StudyRoomBooking.Repositories;
+using StudyRoomBooking.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Legg til tjenester i containeren.
 builder.Services.AddDbContext<StudyRoomDbContext>(options =>
     options.UseSqlite(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Legg til MVC-tjenester.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
 
 // Cookie authentication
 builder.Services.AddAuthentication(
@@ -24,7 +32,16 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Utfør database-migrering ved oppstart.
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    StudyRoomDbContext context =
+        scope.ServiceProvider.GetRequiredService<StudyRoomDbContext>();
+
+    await context.Database.MigrateAsync();
+}
+
+// Konfigurer HTTP-forespørselsrørledningen.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");

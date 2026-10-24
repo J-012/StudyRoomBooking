@@ -1,26 +1,26 @@
 using Microsoft.AspNetCore.Mvc;
-using StudyRoomBooking.Models;
+using StudyRoomBooking.Repositories;
 
 public class RoomsController : Controller
 {
 
-    private readonly StudyRoomDbContext _context;
-    public RoomsController(StudyRoomDbContext context)
+    private readonly IRoomRepository _roomRepository;
+    public RoomsController(IRoomRepository roomRepository)
     {
-        _context = context;
+        _roomRepository = roomRepository;
     }
 
     // GET all Rooms
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        var rooms = _context.Rooms.ToList();
+        var rooms = await _roomRepository.GetAllAsync();
         return View(rooms);
     }
 
     // GET Room by Id
-    public IActionResult Details(int id)
+    public async Task<IActionResult> Details(int id)
     {
-        var room = _context.Rooms.FirstOrDefault(r => r.Id == id);
+        var room = await _roomRepository.GetByIdAsync(id);
 
         if (room == null)
         {
@@ -30,4 +30,3 @@ public class RoomsController : Controller
         return View(room);
     }
 }
-    

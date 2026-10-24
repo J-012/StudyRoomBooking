@@ -18,6 +18,7 @@ public class BookingCreateViewModel
     [Required]
     public int RoomId { get; set; }
 
+    // Måtte inkludere listen over rom for å kunne vise dem i dropdown i viewet.
     public List<Room> Rooms { get; set; } = new();
 
     public DateOnly StartDate { get; set; } =
