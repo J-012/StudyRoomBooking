@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using StudyRoomBooking.Api.DTOs;
 using StudyRoomBooking.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace StudyRoomBooking.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Admin")]
 public class RoomsController : ControllerBase
 {
     private readonly IRoomService _roomService;

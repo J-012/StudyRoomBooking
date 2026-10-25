@@ -15,6 +15,8 @@ builder.Services.AddControllers();
 
 builder.Services.AddOpenApi();
 
+builder.Services.AddScoped<ITokenService, TokenService>();
+
 builder.Services.AddDbContext<StudyRoomBookingDbContext>(options =>
 {
     string? connectionString =
@@ -84,6 +86,29 @@ using (IServiceScope scope = app.Services.CreateScope())
         if (!await roleManager.RoleExistsAsync(role))
         {
             await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+    UserManager<ApplicationUser> userManager =
+    scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    string adminEmail = "admin@studyroombooking.no";
+
+    if (await userManager.FindByEmailAsync(adminEmail) == null)
+    {
+        ApplicationUser adminUser = new ApplicationUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            FullName = "Admin",
+            StudentNumber = "ADMIN"
+        };
+
+        IdentityResult result =
+            await userManager.CreateAsync(adminUser, "Admin123");
+
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(adminUser, "Admin");
         }
     }
 }
