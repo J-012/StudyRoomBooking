@@ -1,28 +1,28 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudyRoomBooking.Models;
-using StudyRoomBooking.Repositories;
+using StudyRoomBooking.Services;
 
 public class RoomsController : Controller
 {
-    private readonly IRoomRepository _roomRepository;
+    private readonly IRoomService _roomService;
 
-    public RoomsController(IRoomRepository roomRepository)
+    public RoomsController(IRoomService roomService)
     {
-        _roomRepository = roomRepository;
+        _roomService = roomService;
     }
 
     // GET all Rooms
     public async Task<IActionResult> Index()
     {
-        var rooms = await _roomRepository.GetAllAsync();
+        var rooms = await _roomService.GetAllAsync();
         return View(rooms);
     }
 
     // GET Room by Id
     public async Task<IActionResult> Details(int id)
     {
-        var room = await _roomRepository.GetByIdAsync(id);
+        var room = await _roomService.GetByIdAsync(id);
 
         if (room == null)
         {
@@ -51,7 +51,7 @@ public class RoomsController : Controller
             return View(room);
         }
 
-        await _roomRepository.AddAsync(room);
+        await _roomService.AddAsync(room);
 
         return RedirectToAction(nameof(Index));
     }
@@ -61,7 +61,7 @@ public class RoomsController : Controller
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Edit(int id)
     {
-        var room = await _roomRepository.GetByIdAsync(id);
+        var room = await _roomService.GetByIdAsync(id);
 
         if (room == null)
         {
@@ -84,7 +84,7 @@ public class RoomsController : Controller
             return View(input);
         }
 
-        var room = await _roomRepository.GetByIdAsync(id);
+        var room = await _roomService.GetByIdAsync(id);
 
         if (room == null)
         {
@@ -95,7 +95,7 @@ public class RoomsController : Controller
         room.Building = input.Building;
         room.Capacity = input.Capacity;
 
-        await _roomRepository.UpdateAsync(room);
+        await _roomService.UpdateAsync(room);
 
         return RedirectToAction(nameof(Index));
     }
@@ -106,14 +106,14 @@ public class RoomsController : Controller
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
-        var room = await _roomRepository.GetByIdAsync(id);
+        var room = await _roomService.GetByIdAsync(id);
 
         if (room == null)
         {
             return NotFound();
         }
 
-        await _roomRepository.DeleteAsync(room);
+        await _roomService.DeleteAsync(room);
 
         return RedirectToAction(nameof(Index));
     }
