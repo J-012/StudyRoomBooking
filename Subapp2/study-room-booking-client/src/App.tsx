@@ -1,10 +1,15 @@
 import { Routes, Route, Link } from 'react-router-dom'
 
 import RoomsPage from './pages/RoomsPage'
-import StudentsPage from './pages/StudentsPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import ProtectedRoute from './components/ProtectedRoute'
+import { useAuth } from './context/AuthContext'
 import './App.css'
 
 function App() {
+    const { isAuthenticated, isAdmin, fullName, logout } = useAuth()
+
     return (
         <div className="app-shell">
 
@@ -34,23 +39,16 @@ function App() {
                         >
                             <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-2">
 
-                                <li className="nav-item">
-                                    <Link
-                                        className="nav-link text-secondary"
-                                        to="/"
-                                    >
-                                        Rooms
-                                    </Link>
-                                </li>
-
-                                <li className="nav-item">
-                                    <Link
-                                        className="nav-link text-secondary"
-                                        to="/students"
-                                    >
-                                        Students
-                                    </Link>
-                                </li>
+                                {isAdmin && (
+                                    <li className="nav-item">
+                                        <Link
+                                            className="nav-link text-secondary"
+                                            to="/"
+                                        >
+                                            Rooms
+                                        </Link>
+                                    </li>
+                                )}
 
                                 <li className="nav-item">
                                     <a
@@ -61,11 +59,40 @@ function App() {
                                     </a>
                                 </li>
 
-                                <li className="nav-item mt-2 mt-lg-0">
-                                    <button className="btn btn-primary px-3">
-                                        New booking
-                                    </button>
-                                </li>
+                                {isAuthenticated ? (
+                                    <li className="nav-item mt-2 mt-lg-0 d-flex align-items-center gap-2">
+                                        <span className="text-secondary small">
+                                            {fullName}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-secondary px-3"
+                                            onClick={logout}
+                                        >
+                                            Logg ut
+                                        </button>
+                                    </li>
+                                ) : (
+                                    <>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link text-secondary"
+                                                to="/login"
+                                            >
+                                                Logg inn
+                                            </Link>
+                                        </li>
+
+                                        <li className="nav-item mt-2 mt-lg-0">
+                                            <Link
+                                                className="btn btn-primary px-3"
+                                                to="/register"
+                                            >
+                                                Registrer deg
+                                            </Link>
+                                        </li>
+                                    </>
+                                )}
 
                             </ul>
                         </div>
@@ -74,8 +101,16 @@ function App() {
             </header>
 
             <Routes>
-                <Route path="/" element={<RoomsPage />} />
-                <Route path="/students" element={<StudentsPage />} />
+                <Route
+                    path="/"
+                    element={
+                        <ProtectedRoute>
+                            <RoomsPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
             </Routes>
 
             <footer className="footer">
@@ -86,8 +121,7 @@ function App() {
                     </div>
 
                     <div className="d-flex gap-4">
-                        <Link to="/">Rooms</Link>
-                        <Link to="/students">Students</Link>
+                        <a href="/">Bookings</a>
                         <a href="/">Privacy</a>
                     </div>
 

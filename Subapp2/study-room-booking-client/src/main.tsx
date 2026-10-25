@@ -7,11 +7,14 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 
 import './index.css'
 import App from './App.tsx'
+import { AuthProvider } from './context/AuthContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <BrowserRouter>
-            <App />
+            <AuthProvider>
+                <App />
+            </AuthProvider>
         </BrowserRouter>
     </StrictMode>,
 )
