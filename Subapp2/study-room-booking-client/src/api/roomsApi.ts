@@ -1,9 +1,31 @@
 import type { Room, RoomRequest } from '../types/Room'
+import { clearStoredAuth } from '../context/AuthContext'
 
 const roomsUrl = '/api/rooms'
 
+function authHeaders(): HeadersInit {
+    const raw = localStorage.getItem('auth')
+    const token = raw ? JSON.parse(raw).token : null
+
+    return {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    }
+}
+
+function handleUnauthorized(response: Response) {
+    if (response.status === 401) {
+        clearStoredAuth()
+        window.location.href = '/login'
+    }
+}
+
 export async function getRooms(): Promise<Room[]> {
-    const response = await fetch(roomsUrl)
+    const response = await fetch(roomsUrl, {
+        headers: authHeaders(),
+    })
+
+    handleUnauthorized(response)
 
     if (!response.ok) {
         throw new Error('Could not load rooms')
@@ -19,11 +41,11 @@ export async function createRoom(
 ): Promise<Room> {
     const response = await fetch(roomsUrl, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: authHeaders(),
         body: JSON.stringify(room),
     })
+
+    handleUnauthorized(response)
 
     if (!response.ok) {
         throw new Error('Could not create room')
@@ -40,11 +62,11 @@ export async function updateRoom(
 ): Promise<void> {
     const response = await fetch(`${roomsUrl}/${id}`, {
         method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: authHeaders(),
         body: JSON.stringify(room),
     })
+
+    handleUnauthorized(response)
 
     if (!response.ok) {
         throw new Error('Could not update room')
@@ -56,7 +78,10 @@ export async function deleteRoom(
 ): Promise<void> {
     const response = await fetch(`${roomsUrl}/${id}`, {
         method: 'DELETE',
+        headers: authHeaders(),
     })
+
+    handleUnauthorized(response)
 
     if (!response.ok) {
         throw new Error('Could not delete room')
