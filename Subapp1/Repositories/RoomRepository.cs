@@ -29,4 +29,24 @@ public class RoomRepository : IRoomRepository
     {
         return _context.Rooms.AnyAsync(room => room.Id == id);
     }
+
+    public async Task AddAsync(Room room)
+    {
+        _context.Rooms.Add(room);
+        await _context.SaveChangesAsync();
+    }
+
+    // Oppdater et eksisterende rom
+    public async Task UpdateAsync(Room room)
+    {
+        _context.Rooms.Update(room);
+        await _context.SaveChangesAsync();
+    }
+
+    // Slett et eksisterende rom
+    public async Task DeleteAsync(Room room)
+    {
+        _context.Rooms.Remove(room);
+        await _context.SaveChangesAsync();
+    }
 }

@@ -12,4 +12,13 @@ public interface IRoomRepository
 
     // Sjekk om et rom eksisterer basert på ID
     Task<bool> ExistsAsync(int id);
+
+    // Legg til et nytt rom
+    Task AddAsync(Room room);
+
+    // Oppdater et eksisterende rom
+    Task UpdateAsync(Room room);
+
+    // Slett et eksisterende rom
+    Task DeleteAsync(Room room);
 }
