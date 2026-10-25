@@ -20,12 +20,12 @@ namespace StudyRoomBooking.Mvc.Controllers
         [HttpGet]
         public IActionResult Login(bool registered = false)
         {
-            // Hvis brukeren allerede er logget inn, omdiriger til hjem-siden.
+            // Redirect authenticated users to the home page.
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
                 return RedirectToAction("Index", "Home");
             }
-            // Hvis brukeren kommer fra register siden, vis suksessmelding
+            // Show a success message after registration.
             if (registered)
             {
                 ViewBag.Success = "Account created successfully. You can now log in.";

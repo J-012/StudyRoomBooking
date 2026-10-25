@@ -7,19 +7,19 @@ public interface IBookingRepository
     // Get all bookings for a specific user by their user ID
     Task<List<Booking>> GetByUserIdAsync(string userId);
 
-    // Få et spesifikt booking for en bruker basert på booking ID og bruker ID
+    // Get a specific booking for a user by booking ID and user ID.
     Task<Booking?> GetByIdForUserAsync(int bookingId, string? userId);
 
-    // Sjekk om en booking har konflikt med eksisterende bookinger
-    // excludedBookingId brukes for å ekskludere en spesifikk booking fra konflikten (f.eks. når man oppdaterer en booking)
+    // Check whether a booking conflicts with existing bookings.
+    // excludedBookingId excludes a specific booking from the conflict check, for example during an update.
     Task<bool> HasConflictAsync(Booking booking, int? excludedBookingId);
 
-    // Legg til en ny booking
+    // Add a new booking.
     Task<Booking> AddAsync(Booking booking);
 
-    // Lagre endringer i databasen
+    // Save changes to the database.
     Task SaveChangesAsync();
 
-    // Slett en eksisterende booking
+    // Delete an existing booking.
     Task DeleteAsync(Booking booking);
 }

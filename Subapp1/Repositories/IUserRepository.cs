@@ -4,12 +4,12 @@ namespace StudyRoomBooking.Repositories;
 
 public interface IUserRepository
 {
-    // Hent en bruker basert på bruker ID
+    // Get a user by user ID.
     Task<User?> GetByUserIdAsync(string userId);
 
-    // Sjekk om en bruker eksisterer basert på bruker ID
+    // Check whether a user exists by user ID.
     Task<bool> ExistsAsync(string userId);
 
-    // Legg til en ny bruker
+    // Add a new user.
     Task<User> AddAsync(User user);
 }

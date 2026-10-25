@@ -6,12 +6,12 @@ using StudyRoomBooking.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Legg til tjenester i containeren.
+// Add services to the container.
 builder.Services.AddDbContext<StudyRoomDbContext>(options =>
     options.UseSqlite(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Legg til MVC-tjenester.
+// Add MVC services.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
@@ -33,7 +33,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Utfør database-migrering ved oppstart.
+// Apply database migrations at startup.
 using (IServiceScope scope = app.Services.CreateScope())
 {
     StudyRoomDbContext context =
@@ -42,7 +42,7 @@ using (IServiceScope scope = app.Services.CreateScope())
     await context.Database.MigrateAsync();
 }
 
-// Konfigurer HTTP-forespørselsrørledningen.
+// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");

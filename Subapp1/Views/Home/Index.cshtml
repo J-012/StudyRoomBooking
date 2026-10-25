@@ -3,35 +3,27 @@
 }
 
 <div class="container py-5">
-
-    <!-- Hero section -->
-
     <section class="row align-items-center mb-5">
-        <div class="col-lg-6">
-
-
+        <div class="col-lg-6 mb-5 mb-lg-0">
             <h1 class="display-5 fw-bold mb-4">
-                Finn studierom og møt andre studenter
-                <span style="color: #b39700;">på samme kurs.</span>
+                Find study rooms and meet other students
+                <span style="color: #b39700;">in the same course.</span>
             </h1>
 
             <p class="text-secondary mb-4">
-                Finn ledige studierom, reserver tidspunktet som passer deg,
-                og få en enklere studiehverdag. Studerer du samme kurs eller fag som andre? Finn et passende
-                rom for gruppearbeid, møt medstudenter og jobb sammen mot
-                felles studiemål. Enten du vil studere alene eller sammen
-                med andre, kan du finne et sted som passer dine behov.
+                Find available study rooms, reserve a time that suits you, and make your study day easier.
+                Are you taking the same course or subject as other students? Find a suitable room for group work,
+                meet fellow students, and work together toward shared study goals. Whether you want to study alone
+                or with others, you can find a space that meets your needs.
             </p>
 
             <div class="d-flex flex-wrap gap-3">
-                <a class="btn btn-lg fw-semibold"
-                   style="background-color: #ffd500; color: #212529; border-color: #ffd500;" asp-controller="Bookings"
-                   asp-action="Create">
-                    Book et rom
+                <a class="btn btn-lg fw-semibold" style="background-color: #ffd500; color: #212529; border-color: #ffd500;"
+                   asp-controller="Bookings" asp-action="Create">
+                    Book a room
                 </a>
-
                 <a class="btn btn-outline-dark btn-lg" asp-controller="Rooms" asp-action="Index">
-                    Utforsk rom
+                    Explore rooms
                 </a>
             </div>
         </div>
@@ -40,42 +32,39 @@
             <div id="heroCarousel" class="carousel slide carousel-fade shadow-sm rounded-3 overflow-hidden"
                  data-bs-ride="carousel" data-bs-interval="5000">
                 <div class="carousel-indicators">
-                    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0"
-                            class="active" aria-current="true" aria-label="Bilde 1"></button>
+                    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"
+                            aria-current="true" aria-label="Image 1"></button>
                     <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"
-                            aria-label="Bilde 2"></button>
+                            aria-label="Image 2"></button>
                 </div>
 
                 <div class="carousel-inner">
                     <div class="carousel-item active">
-                        <img src="~/images/img1.jpg" class="d-block w-100" alt="Studenter som arbeider sammen"
+                        <img src="~/images/img1.jpg" class="d-block w-100" alt="Students working together"
                              style="height: 450px; object-fit: cover;" />
                     </div>
                     <div class="carousel-item">
-                        <img src="~/images/img2.jpg" class="d-block w-100" alt="Moderne studierom"
+                        <img src="~/images/img2.jpg" class="d-block w-100" alt="Modern study room"
                              style="height: 450px; object-fit: cover;" />
                     </div>
                 </div>
 
                 <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
                     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Forrige bilde</span>
+                    <span class="visually-hidden">Previous image</span>
                 </button>
                 <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
                     <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Neste bilde</span>
+                    <span class="visually-hidden">Next image</span>
                 </button>
             </div>
         </div>
     </section>
 
-    <!-- Features -->
     <section class="py-4">
         <div class="text-center mb-4">
-            <h2 class="fw-bold">Gjør studiehverdagen enklere</h2>
-            <p class="text-secondary">
-                Finn medstudenter, bli med i studierom og planlegg studieøktene dine.
-            </p>
+            <h2 class="fw-bold">Make your study day easier</h2>
+            <p class="text-secondary">Find fellow students, join study rooms, and plan your study sessions.</p>
         </div>
 
         <div class="row g-4">
@@ -83,65 +72,41 @@
                 <div class="card h-100 border rounded-3 shadow-sm">
                     <div class="card-body p-4">
                         <div class="mb-3" style="width: 35px; height: 4px; background-color: #ffd500;"></div>
-                        <h5 class="fw-bold">Bli med i et studierom</h5>
-                        <p class="text-secondary mb-0">
-                            Finn rom andre studenter har opprettet, og bli med
-                            medstudenter som tar samme kurs eller fag som deg.
-                        </p>
+                        <h5 class="fw-bold">Join a study room</h5>
+                        <p class="text-secondary mb-0">Find rooms created by other students and join fellow students taking the same course or subject.</p>
                     </div>
                 </div>
             </div>
-
             <div class="col-md-4">
                 <div class="card h-100 border rounded-3 shadow-sm">
                     <div class="card-body p-4">
                         <div class="mb-3" style="width: 35px; height: 4px; background-color: #ffd500;"></div>
-                        <h5 class="fw-bold">Opprett egen booking</h5>
-                        <p class="text-secondary mb-0">
-                            Velg et ledig rom, dato og tidspunkt som passer
-                            for din neste studieøkt.
-                        </p>
+                        <h5 class="fw-bold">Create your own booking</h5>
+                        <p class="text-secondary mb-0">Choose an available room, date, and time for your next study session.</p>
                     </div>
                 </div>
             </div>
-
             <div class="col-md-4">
                 <div class="card h-100 border rounded-3 shadow-sm">
                     <div class="card-body p-4">
                         <div class="mb-3" style="width: 35px; height: 4px; background-color: #ffd500;"></div>
-                        <h5 class="fw-bold">Hold oversikt over bookingene</h5>
-                        <p class="text-secondary mb-0">
-                            Se reservasjonene dine på ett sted og hold oversikt
-                            over planlagte studieøkter.
-                        </p>
+                        <h5 class="fw-bold">Keep track of your bookings</h5>
+                        <p class="text-secondary mb-0">View all your reservations in one place and keep track of upcoming study sessions.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-
-    <!-- Call to action -->
-    <section
-        class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 rounded-3 p-4 p-md-5 mt-5"
-        style="background-color: #fff9db; border: 1px solid #f0e5a5;">
-
+    <section class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 rounded-3 p-4 p-md-5 mt-5"
+             style="background-color: #fff9db; border: 1px solid #f0e5a5;">
         <div>
-            <h2 class="fw-bold mb-3">Klar for neste studieøkt?</h2>
-            <p class="text-secondary mb-0">
-                Finn et ledig rom og planlegg studieøkten din.
-            </p>
+            <h2 class="fw-bold mb-3">Ready for your next study session?</h2>
+            <p class="text-secondary mb-0">Find an available room and plan your study session.</p>
         </div>
-
-        <div>
-            <a class="btn btn-lg fw-semibold text-nowrap"
-               style="background-color: #ffd500; color: #212529; border-color: #ffd500;" asp-controller="Bookings"
-               asp-action="Create">
-                Opprett ny booking
-            </a>
-        </div>
-
+        <a class="btn btn-lg fw-semibold text-nowrap" style="background-color: #ffd500; color: #212529; border-color: #ffd500;"
+           asp-controller="Bookings" asp-action="Create">
+            Create a new booking
+        </a>
     </section>
-
-
 </div>

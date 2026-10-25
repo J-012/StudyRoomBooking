@@ -18,8 +18,7 @@ public class User
     [EmailAddress]
     public string Email { get; set; } = string.Empty;
 
-    // Lagde en UserRole enum istedenfor å bruke string direkte,
-    // for å gjøre det enklere å håndtere, kalle og ungå skrivefeil.
+    // Use a UserRole enum instead of a string to make roles easier to manage and avoid typos.
     [Required]
     public UserRole Role { get; set; } = UserRole.Student;
 

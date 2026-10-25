@@ -44,7 +44,8 @@ public class RoomsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Create([Bind("RoomNumber,Building,Capacity")] Room room) // Bruker Bind for å begrense hvilke felter som kan settes via POST, f.eks brukeren bør ikke kunne fylle id
+    // Bind limits the fields that can be posted, so users cannot set the room ID.
+    public async Task<IActionResult> Create([Bind("RoomNumber,Building,Capacity")] Room room)
     {
         if (!ModelState.IsValid)
         {

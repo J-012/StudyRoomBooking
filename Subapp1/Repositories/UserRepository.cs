@@ -11,19 +11,19 @@ public class UserRepository : IUserRepository
     {
         _context = context;
     }
-    // Hent en bruker basert på bruker ID
+    // Get a user by user ID.
     public Task<User?> GetByUserIdAsync(string userId)
     {
         return _context.Users.FirstOrDefaultAsync(user => user.UserId == userId);
     }
 
-    // Sjekk om en bruker eksisterer basert på bruker ID
+    // Check whether a user exists by user ID.
     public Task<bool> ExistsAsync(string userId)
     {
         return _context.Users.AnyAsync(user => user.UserId == userId);
     }
 
-    // Legg til en ny bruker
+    // Add a new user.
     public async Task<User> AddAsync(User user)
     {
         _context.Users.Add(user);

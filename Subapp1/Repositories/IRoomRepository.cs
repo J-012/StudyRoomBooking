@@ -7,18 +7,18 @@ public interface IRoomRepository
     // Get all rooms
     Task<List<Room>> GetAllAsync();
 
-    // Hent et spesifikt rom basert på ID
+    // Get a specific room by ID.
     Task<Room?> GetByIdAsync(int id);
 
-    // Sjekk om et rom eksisterer basert på ID
+    // Check whether a room exists by ID.
     Task<bool> ExistsAsync(int id);
 
-    // Legg til et nytt rom
+    // Add a new room.
     Task AddAsync(Room room);
 
-    // Oppdater et eksisterende rom
+    // Update an existing room.
     Task UpdateAsync(Room room);
 
-    // Slett et eksisterende rom
+    // Delete an existing room.
     Task DeleteAsync(Room room);
 }

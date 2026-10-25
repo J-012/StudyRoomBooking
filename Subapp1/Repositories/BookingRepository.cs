@@ -18,15 +18,15 @@ public class BookingRepository : IBookingRepository
         return _context.Bookings.Where(booking => booking.UserId == userId).ToListAsync();
     }
 
-    // Få et spesifikt booking for en bruker basert på booking ID og bruker ID
+    // Get a specific booking for a user by booking ID and user ID.
     public Task<Booking?> GetByIdForUserAsync(int bookingId, string? userId)
     {
         return _context.Bookings.FirstOrDefaultAsync(booking =>
             booking.BookingId == bookingId && booking.UserId == userId);
     }
 
-    // Sjekk om en booking har konflikt med eksisterende bookinger
-    // excludedBookingId brukes for å ekskludere en spesifikk booking fra konflikten (f.eks. når man oppdaterer en booking)
+    // Check whether a booking conflicts with existing bookings.
+    // excludedBookingId excludes a specific booking from the conflict check, for example during an update.
     public Task<bool> HasConflictAsync(Booking booking, int? excludedBookingId)
     {
         return _context.Bookings.AnyAsync(existingBooking =>
@@ -36,7 +36,7 @@ public class BookingRepository : IBookingRepository
             booking.EndTime > existingBooking.StartTime);
     }
 
-    // Legg til en ny booking
+    // Add a new booking.
     public async Task<Booking> AddAsync(Booking booking)
     {
         _context.Bookings.Add(booking);
@@ -45,13 +45,13 @@ public class BookingRepository : IBookingRepository
         return booking;
     }
 
-    // Lagre endringer i databasen
+    // Save changes to the database.
     public Task SaveChangesAsync()
     {
         return _context.SaveChangesAsync();
     }
 
-    // Slett en eksisterende booking
+    // Delete an existing booking.
     public async Task DeleteAsync(Booking booking)
     {
         _context.Bookings.Remove(booking);

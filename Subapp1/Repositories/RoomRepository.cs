@@ -12,19 +12,19 @@ public class RoomRepository : IRoomRepository
         _context = context;
     }
 
-    // Hent alle rom
+    // Get all rooms.
     public Task<List<Room>> GetAllAsync()
     {
         return _context.Rooms.ToListAsync();
     }
 
-    // Hent et spesifikt rom basert på ID
+    // Get a specific room by ID.
     public Task<Room?> GetByIdAsync(int id)
     {
         return _context.Rooms.FirstOrDefaultAsync(room => room.Id == id);
     }
 
-    // Sjekk om et rom eksisterer basert på ID
+    // Check whether a room exists by ID.
     public Task<bool> ExistsAsync(int id)
     {
         return _context.Rooms.AnyAsync(room => room.Id == id);
@@ -36,14 +36,14 @@ public class RoomRepository : IRoomRepository
         await _context.SaveChangesAsync();
     }
 
-    // Oppdater et eksisterende rom
+    // Update an existing room.
     public async Task UpdateAsync(Room room)
     {
         _context.Rooms.Update(room);
         await _context.SaveChangesAsync();
     }
 
-    // Slett et eksisterende rom
+    // Delete an existing room.
     public async Task DeleteAsync(Room room)
     {
         _context.Rooms.Remove(room);

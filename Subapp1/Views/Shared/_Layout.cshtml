@@ -31,11 +31,7 @@
                 <div class="collapse navbar-collapse" id="mainNav">
                     <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
 
-                        <li class="nav-item">
-                            <a class="nav-link text-secondary" asp-controller="Home" asp-action="Index">
-                                Home
-                            </a>
-                        </li>
+
 
                         <li class="nav-item">
                             <a class="nav-link text-secondary" asp-controller="Rooms" asp-action="Index">
@@ -43,11 +39,7 @@
                             </a>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link text-secondary" asp-controller="Bookings" asp-action="Index">
-                                Bookings
-                            </a>
-                        </li>
+
 
                         @if (User.Identity?.IsAuthenticated == true)
                         {
@@ -72,10 +64,13 @@
 
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
+                                        <a class="dropdown-item" asp-controller="Bookings" asp-action="Index">
+                                            My Bookings
+                                        </a>
+                                    </li>
+                                    <li>
                                         <form asp-controller="Account" asp-action="Logout" method="post">
-
                                             <button type="submit" class="dropdown-item text-danger">
-                                                <i class="bi bi-box-arrow-right me-2"></i>
                                                 Logout
                                             </button>
                                         </form>

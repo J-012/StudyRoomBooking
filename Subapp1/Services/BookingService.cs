@@ -8,7 +8,7 @@ public class BookingService : IBookingService
     private readonly IBookingRepository _bookingRepository;
     private readonly IRoomRepository _roomRepository;
 
-    // Konstruktør for BookingService
+    // Constructor for BookingService.
     public BookingService(
         IBookingRepository bookingRepository,
         IRoomRepository roomRepository)
@@ -16,7 +16,7 @@ public class BookingService : IBookingService
         _bookingRepository = bookingRepository;
         _roomRepository = roomRepository;
     }
-    // Valider en booking
+    // Validate a booking.
     public async Task<BookingValidationResult> ValidateAsync(
         Booking booking,
         int? excludedBookingId)

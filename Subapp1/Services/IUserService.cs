@@ -4,10 +4,10 @@ namespace StudyRoomBooking.Services;
 
 public interface IUserService
 {
-    // Autentiser en bruker basert på bruker ID og passord
+    // Authenticate a user by user ID and password.
     Task<User?> AuthenticateAsync(string? userId, string? password);
 
-    // Registrer en ny bruker
+    // Register a new user.
     Task<UserRegistrationResult> RegisterAsync(
         string? userId,
         string? name,
