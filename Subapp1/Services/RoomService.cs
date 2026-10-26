@@ -36,4 +36,15 @@ public class RoomService : IRoomService
     {
         return _roomRepository.DeleteAsync(room);
     }
+
+    public Task<List<Room>> SearchAndFilterAsync(
+    string? searchTerm,
+    string? building,
+    int? minCapacity)
+{
+    return _roomRepository.SearchAndFilterAsync(
+        searchTerm,
+        building,
+        minCapacity);
+}
 }

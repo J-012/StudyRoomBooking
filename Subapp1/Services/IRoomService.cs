@@ -13,4 +13,8 @@ public interface IRoomService
     Task UpdateAsync(Room room);
 
     Task DeleteAsync(Room room);
+    Task<List<Room>> SearchAndFilterAsync(
+        string? searchTerm,
+        string? building,
+        int? minCapacity);
 }

@@ -12,10 +12,21 @@ public class RoomsController : Controller
         _roomService = roomService;
     }
 
-    // GET all Rooms
-    public async Task<IActionResult> Index()
+    // GET all Rooms, with optional search and filters
+    public async Task<IActionResult> Index(
+        string? searchTerm,
+        string? building,
+        int? minCapacity)
     {
-        var rooms = await _roomService.GetAllAsync();
+        var rooms = await _roomService.SearchAndFilterAsync(
+            searchTerm,
+            building,
+            minCapacity);
+
+        ViewBag.SearchTerm = searchTerm;
+        ViewBag.Building = building;
+        ViewBag.MinCapacity = minCapacity;
+
         return View(rooms);
     }
 

@@ -21,4 +21,10 @@ public interface IRoomRepository
 
     // Delete an existing room.
     Task DeleteAsync(Room room);
+
+    //Search and filter rooms
+    Task<List<Room>> SearchAndFilterAsync(
+        string? searchTerm,
+        string? building,
+        int? minCapacity);
 }
