@@ -1,4 +1,4 @@
-@model StudyRoomBooking.Models.BookingCreateViewModel
+@model StudyRoomBooking.Models.BookingFormViewModel
 
 @{
     ViewData["Title"] = "Edit Booking";
@@ -38,10 +38,22 @@
 
                     <div class="row g-3">
                         <div class="col-12 col-md-6">
-                            <label asp-for="Subject" class="form-label"></label>
-                            <input asp-for="Subject" class="form-control"
-                                   placeholder="e.g. Algorithms and Data Structures" />
-                            <span asp-validation-for="Subject" class="field-validation-error"></span>
+                            <label asp-for="CourseCode" class="form-label">
+                                Course <span class="text-danger">*</span>
+                            </label>
+
+                            <select asp-for="CourseCode" class="form-select">
+                                <option value="">Select a course</option>
+
+                                @foreach (var course in Model.Courses.OrderBy(c => c.CourseCode))
+                                {
+                                    <option value="@course.CourseCode">
+                                        @course.CourseCode - @course.Name
+                                    </option>
+                                }
+                            </select>
+
+                            <span asp-validation-for="CourseCode" class="field-validation-error"></span>
                         </div>
 
                         <div class="col-12 col-md-6">

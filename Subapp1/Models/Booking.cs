@@ -6,9 +6,10 @@ public class Booking
 {
     public int BookingId { get; set; }
 
-    [Required]
-    [StringLength(100)]
-    public string Subject { get; set; } = string.Empty;
+    [StringLength(20)]
+    public string? CourseCode { get; set; }
+
+    public Course? Course { get; set; }
 
     [Required]
     [StringLength(200)]
@@ -33,4 +34,6 @@ public class Booking
     public User? User { get; set; }
 
     public Room? Room { get; set; }
+
+
 }

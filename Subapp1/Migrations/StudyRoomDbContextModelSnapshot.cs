@@ -23,6 +23,10 @@ namespace StudyRoomBooking.Mvc.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("CourseCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("TEXT");
 
@@ -30,11 +34,6 @@ namespace StudyRoomBooking.Mvc.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("StartTime")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Subject")
-                        .IsRequired()
-                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Topic")
@@ -53,11 +52,34 @@ namespace StudyRoomBooking.Mvc.Migrations
 
                     b.HasKey("BookingId");
 
+                    b.HasIndex("CourseCode");
+
                     b.HasIndex("RoomId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("Bookings");
+                });
+
+            modelBuilder.Entity("StudyRoomBooking.Models.Course", b =>
+                {
+                    b.Property<string>("CourseCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("CourseCode");
+
+                    b.ToTable("Courses");
                 });
 
             modelBuilder.Entity("StudyRoomBooking.Models.Room", b =>
@@ -166,6 +188,11 @@ namespace StudyRoomBooking.Mvc.Migrations
 
             modelBuilder.Entity("StudyRoomBooking.Models.Booking", b =>
                 {
+                    b.HasOne("StudyRoomBooking.Models.Course", "Course")
+                        .WithMany("Bookings")
+                        .HasForeignKey("CourseCode")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("StudyRoomBooking.Models.Room", "Room")
                         .WithMany("Bookings")
                         .HasForeignKey("RoomId")
@@ -178,9 +205,16 @@ namespace StudyRoomBooking.Mvc.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("Course");
+
                     b.Navigation("Room");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("StudyRoomBooking.Models.Course", b =>
+                {
+                    b.Navigation("Bookings");
                 });
 
             modelBuilder.Entity("StudyRoomBooking.Models.Room", b =>

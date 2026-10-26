@@ -3,7 +3,7 @@
    ------------------------------------------------------------------ */
 :root {
   --srb-primary: #ffd500;
-  --srb-primary-dark: #b39700;
+  --srb-primary-dark: #ebc800;
   --srb-ink: #212529;
   --srb-muted: #6c757d;
   --srb-bg: #ffffff;
@@ -144,6 +144,7 @@ h6 {
    ------------------------------------------------------------------ */
 .btn-primary {
   --bs-btn-bg: var(--srb-primary);
+  --bs-btn-color: black;
   --bs-btn-border-color: var(--srb-primary);
   --bs-btn-hover-bg: var(--srb-primary-dark);
   --bs-btn-hover-border-color: var(--srb-primary-dark);
@@ -156,8 +157,14 @@ h6 {
   font-weight: 600;
 }
 
+.btn-primary:hover {
+  background-color: var(--srb-primary-dark);
+  color: black;
+}
+
 .btn-outline-primary {
   --bs-btn-color: var(--srb-primary);
+  --bs-btn-hover-color: black;
   --bs-btn-border-color: var(--srb-primary);
   --bs-btn-hover-bg: var(--srb-primary);
   --bs-btn-hover-border-color: var(--srb-primary);

@@ -63,6 +63,14 @@
                                 </a>
 
                                 <ul class="dropdown-menu dropdown-menu-end">
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Courses" asp-action="Index">
+                                                Courses
+                                            </a>
+                                        </li>
+                                    }
                                     <li>
                                         <a class="dropdown-item" asp-controller="Bookings" asp-action="Index">
                                             My Bookings
@@ -100,9 +108,7 @@
                         }
 
                         <li class="nav-item mt-2 mt-lg-0">
-                            <a class="btn px-3 fw-semibold"
-                               style="background-color: #ffd500; color: #212529; border-color: #ffd500;"
-                               asp-controller="Bookings" asp-action="Create">
+                            <a class="btn btn-primary px-3 " asp-controller="Bookings" asp-action="Create">
                                 New booking
                             </a>
                         </li>

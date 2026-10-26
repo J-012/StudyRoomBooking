@@ -15,7 +15,11 @@ public class BookingRepository : IBookingRepository
     // Get all bookings for a specific user by their user ID
     public Task<List<Booking>> GetByUserIdAsync(string userId)
     {
-        return _context.Bookings.Where(booking => booking.UserId == userId).ToListAsync();
+        return _context.Bookings
+            .AsNoTracking()
+            .Include(booking => booking.Course)
+            .Where(booking => booking.UserId == userId)
+            .ToListAsync();
     }
 
     // Get a specific booking for a user by booking ID and user ID.
