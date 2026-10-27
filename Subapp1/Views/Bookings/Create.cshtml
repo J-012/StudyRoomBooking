@@ -7,17 +7,65 @@
 <div class="row justify-content-center py-5">
     <div class="col-12 col-xl-9">
 
-        <h1 class="h2 fw-bold mb-4">Create Study Session</h1>
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-end gap-3 mb-4">
+            <div>
+                <h1 class="h2 fw-bold mb-1">Confirm study session</h1>
+                <p class="text-secondary mb-0">Add the course and topic for your selected room and time.</p>
+            </div>
+            <a asp-controller="Rooms" asp-action="Index" class="btn btn-outline-secondary">Change room or time</a>
+        </div>
 
-        <form asp-action="Create" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <form asp-controller="Bookings" asp-action="Create" method="post">
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+            }
 
-            <partial name="_BookingForm" model="Model" />
+            <div class="card mb-4 border rounded-3">
+                <div class="card-body p-4">
+                    <h2 class="h5 fw-bold mb-3">Your selection</h2>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3 text-secondary fw-normal">Room</dt>
+                        <dd class="col-sm-9 fw-semibold">@Model.SelectedRoom?.Building — Room @Model.SelectedRoom?.RoomNumber</dd>
+                        <dt class="col-sm-3 text-secondary fw-normal">Date</dt>
+                        <dd class="col-sm-9">@Model.StartDate.ToString("dddd, dd MMMM yyyy")</dd>
+                        <dt class="col-sm-3 text-secondary fw-normal">Time</dt>
+                        <dd class="col-sm-9">@Model.StartClock.ToString("HH:mm") – @Model.EndClock.ToString("HH:mm")</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <input asp-for="RoomId" type="hidden" />
+            <input asp-for="StartDate" type="hidden" />
+            <input asp-for="StartClock" type="hidden" />
+            <input asp-for="EndClock" type="hidden" />
+
+            <div class="card mb-4 border rounded-3">
+                <div class="card-body p-4">
+                    <h2 class="h5 fw-bold mb-4">Session details</h2>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label asp-for="CourseCode" class="form-label">Course</label>
+                            <select asp-for="CourseCode" class="form-select">
+                                <option value="">Select a course</option>
+                                @foreach (var course in Model.Courses)
+                                {
+                                    <option value="@course.CourseCode">@course.CourseCode - @course.Name</option>
+                                }
+                            </select>
+                            <span asp-validation-for="CourseCode" class="text-danger"></span>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label asp-for="Topic" class="form-label"></label>
+                            <input asp-for="Topic" class="form-control" />
+                            <span asp-validation-for="Topic" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="d-flex justify-content-end gap-2">
-                <a asp-action="Index" class="btn btn-light">
-                    Cancel
-                </a>
+                <a asp-controller="Rooms" asp-action="Index" class="btn btn-light">Cancel</a>
 
                 <button type="submit" class="btn btn-primary">
                     Create Study Session

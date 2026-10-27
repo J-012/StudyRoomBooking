@@ -34,10 +34,12 @@ public class UserService : IUserService
         string? userId,
         string? name,
         string? password,
+        string? email,
         string? confirmPassword)
     {
         userId = userId?.Trim() ?? string.Empty;
         name = name?.Trim() ?? string.Empty;
+        email = email?.Trim() ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(userId))
         {
@@ -52,6 +54,16 @@ public class UserService : IUserService
         if (string.IsNullOrWhiteSpace(name))
         {
             return UserRegistrationResult.Failure("Name is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return UserRegistrationResult.Failure("Email is required.");
+        }
+
+        if (!email.Contains("@"))
+        {
+            return UserRegistrationResult.Failure("Email is not valid.");
         }
 
         if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
@@ -69,7 +81,7 @@ public class UserService : IUserService
             return UserRegistrationResult.Failure("This user ID is already registered.");
         }
 
-        var user = new User { UserId = userId, Name = name, Role = UserRole.Student };
+        var user = new User { UserId = userId, Name = name, Role = UserRole.Student, Email = email };
         user.PasswordHash = _passwordHasher.HashPassword(user, password);
 
         await _userRepository.AddAsync(user);

@@ -27,4 +27,15 @@ public interface IRoomRepository
         string? searchTerm,
         string? building,
         int? minCapacity);
+
+    Task<List<Room>> GetRoomsWithBookingsAsync(
+        DateTime startTime,
+        DateTime endTime);
+
+    Task<List<Room>> SearchWithBookingsAsync(
+        string? searchTerm,
+        string? building,
+        int? minCapacity,
+        DateTime startTime,
+        DateTime endTime);
 }

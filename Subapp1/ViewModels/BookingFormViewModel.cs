@@ -19,8 +19,10 @@ public class BookingFormViewModel
     [Required]
     public int RoomId { get; set; }
 
-    // Include rooms so they can be displayed in the view's dropdown.
+    // Used by the edit form and the create confirmation summary.
     public List<Room> Rooms { get; set; } = new();
+
+    public Room? SelectedRoom { get; set; }
 
     public DateOnly StartDate { get; set; } = DateOnly.FromDateTime(DateTime.Now);
 

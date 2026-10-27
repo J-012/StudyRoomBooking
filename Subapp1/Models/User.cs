@@ -23,4 +23,6 @@ public class User
     public UserRole Role { get; set; } = UserRole.Student;
 
     public List<Booking> Bookings { get; set; } = new();
+
+    public Participant? Participant { get; set; }
 }

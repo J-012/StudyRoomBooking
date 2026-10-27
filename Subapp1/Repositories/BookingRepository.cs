@@ -18,7 +18,39 @@ public class BookingRepository : IBookingRepository
         return _context.Bookings
             .AsNoTracking()
             .Include(booking => booking.Course)
+            .Include(booking => booking.Room)
             .Where(booking => booking.UserId == userId)
+            .ToListAsync();
+    }
+
+    public Task<List<Booking>> GetJoinedByUserIdAsync(string userId)
+    {
+        return _context.Bookings
+            .AsNoTracking()
+            .Include(booking => booking.Course)
+            .Include(booking => booking.Room)
+            .Include(booking => booking.Participants)
+                .ThenInclude(participant => participant.Participant)
+            .Where(booking => booking.Participants.Any(participant =>
+                participant.Participant.UserId == userId))
+            .ToListAsync();
+    }
+
+    public Task<List<Booking>> GetJoinableBookingsAsync(string userId)
+    {
+        var now = DateTime.Now;
+
+        return _context.Bookings
+            .AsNoTracking()
+            .Include(booking => booking.Course)
+            .Include(booking => booking.Room)
+            .Include(booking => booking.Participants)
+                .ThenInclude(participant => participant.Participant)
+            .Where(booking => booking.StartTime > now &&
+                booking.UserId != userId &&
+                !booking.Participants.Any(participant =>
+                    participant.Participant.UserId == userId))
+            .OrderBy(booking => booking.StartTime)
             .ToListAsync();
     }
 
@@ -60,5 +92,15 @@ public class BookingRepository : IBookingRepository
     {
         _context.Bookings.Remove(booking);
         await _context.SaveChangesAsync();
+    }
+
+    public Task<Booking?> GetWithParticipantsAsync(int bookingId)
+    {
+        return _context.Bookings
+            .Include(b => b.Room)
+            .Include(b => b.Course)
+            .Include(b => b.Participants)
+                .ThenInclude(bp => bp.Participant)
+            .FirstOrDefaultAsync(b => b.BookingId == bookingId);
     }
 }

@@ -17,4 +17,12 @@ public interface IRoomService
         string? searchTerm,
         string? building,
         int? minCapacity);
+
+    Task<List<Room>> SearchAndFilterByAvailabilityAsync(
+        string? searchTerm,
+        string? building,
+        int? minCapacity,
+        DateTime startTime,
+        DateTime endTime,
+        string status);
 }

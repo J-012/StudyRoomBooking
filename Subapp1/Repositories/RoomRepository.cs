@@ -85,4 +85,69 @@ public class RoomRepository : IRoomRepository
 
         return await query.ToListAsync();
     }
+
+    public async Task<List<Room>> GetRoomsWithBookingsAsync(
+    DateTime startTime,
+    DateTime endTime)
+    {
+        return await _context.Rooms
+            .AsNoTracking()
+            .Include(r => r.Bookings
+                .Where(b => b.StartTime < endTime &&
+                            b.EndTime > startTime))
+                .ThenInclude(b => b.Participants)
+                    .ThenInclude(bp => bp.Participant)
+            .ToListAsync();
+    }
+
+    public async Task<List<Room>> SearchWithBookingsAsync(
+        string? searchTerm,
+        string? building,
+        int? minCapacity,
+        DateTime startTime,
+        DateTime endTime)
+    {
+        var query = _context.Rooms
+            .AsNoTracking()
+            .AsQueryable();
+
+        // Search by room number or building.
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            searchTerm = searchTerm.Trim();
+
+            query = query.Where(room =>
+                room.RoomNumber.Contains(searchTerm) ||
+                room.Building.Contains(searchTerm));
+        }
+
+        // Filter by building.
+        if (!string.IsNullOrWhiteSpace(building))
+        {
+            building = building.Trim();
+
+            query = query.Where(room =>
+                room.Building == building);
+        }
+
+        // Filter by minimum capacity.
+        if (minCapacity.HasValue)
+        {
+            query = query.Where(room =>
+                room.Capacity >= minCapacity.Value);
+        }
+
+        // Load bookings that overlap the selected time interval.
+        return await query
+            .Include(room => room.Bookings
+                .Where(booking =>
+                    booking.StartTime < endTime &&
+                    booking.EndTime > startTime))
+                .ThenInclude(booking => booking.Participants)
+                    .ThenInclude(bp => bp.Participant)
+            .OrderBy(room => room.Building)
+            .ThenBy(room => room.RoomNumber)
+            .ToListAsync();
+    }
+
 }

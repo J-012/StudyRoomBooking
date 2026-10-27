@@ -7,6 +7,10 @@ public interface IBookingRepository
     // Get all bookings for a specific user by their user ID
     Task<List<Booking>> GetByUserIdAsync(string userId);
 
+    Task<List<Booking>> GetJoinedByUserIdAsync(string userId);
+
+    Task<List<Booking>> GetJoinableBookingsAsync(string userId);
+
     // Get a specific booking for a user by booking ID and user ID.
     Task<Booking?> GetByIdForUserAsync(int bookingId, string? userId);
 
@@ -22,4 +26,7 @@ public interface IBookingRepository
 
     // Delete an existing booking.
     Task DeleteAsync(Booking booking);
+
+        Task<Booking?> GetWithParticipantsAsync(int bookingId);
+
 }

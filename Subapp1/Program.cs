@@ -21,6 +21,9 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<
+    IParticipantRepository,
+    ParticipantRepository>();
 
 // Cookie authentication
 builder.Services.AddAuthentication(

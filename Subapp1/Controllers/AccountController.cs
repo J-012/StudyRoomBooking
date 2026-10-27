@@ -16,7 +16,6 @@ namespace StudyRoomBooking.Mvc.Controllers
         }
 
         // LOGIN
-
         [HttpGet]
         public IActionResult Login(bool registered = false)
         {
@@ -80,11 +79,12 @@ namespace StudyRoomBooking.Mvc.Controllers
         public async Task<IActionResult> Register(
             string userId,
             string name,
+            string email,
             string password,
             string confirmPassword
         )
         {
-            var result = await _userService.RegisterAsync(userId, name, password, confirmPassword);
+            var result = await _userService.RegisterAsync(userId, name, password, email, confirmPassword);
 
             if (!result.Succeeded)
             {

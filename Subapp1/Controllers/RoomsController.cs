@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudyRoomBooking.Models;
 using StudyRoomBooking.Services;
-
+using StudyRoomBooking.ViewModels;
 public class RoomsController : Controller
 {
     private readonly IRoomService _roomService;
@@ -14,20 +14,51 @@ public class RoomsController : Controller
 
     // GET all Rooms, with optional search and filters
     public async Task<IActionResult> Index(
-        string? searchTerm,
-        string? building,
-        int? minCapacity)
+        [FromQuery] RoomsIndexViewModel filters)
     {
-        var rooms = await _roomService.SearchAndFilterAsync(
-            searchTerm,
-            building,
-            minCapacity);
+        var allRooms = await _roomService.GetAllAsync();
+        filters.Buildings = allRooms
+            .Select(room => room.Building)
+            .Where(building => !string.IsNullOrWhiteSpace(building))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(building => building)
+            .ToList();
 
-        ViewBag.SearchTerm = searchTerm;
-        ViewBag.Building = building;
-        ViewBag.MinCapacity = minCapacity;
+        if (filters.Date == default)
+            filters.Date = DateTime.Today;
 
-        return View(rooms);
+        if (filters.StartTime >= filters.EndTime)
+        {
+            ModelState.AddModelError(
+                nameof(filters.EndTime),
+                "End time must be later than start time.");
+        }
+
+        if (filters.Status is not ("all" or "available" or "booked"))
+        {
+            ModelState.AddModelError(
+                nameof(filters.Status),
+                "Invalid room status.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            filters.Rooms = new List<Room>();
+            return View(filters);
+        }
+
+        var startDateTime = filters.Date.Date + filters.StartTime;
+        var endDateTime = filters.Date.Date + filters.EndTime;
+
+        filters.Rooms = await _roomService.SearchAndFilterByAvailabilityAsync(
+            filters.SearchTerm,
+            filters.Building,
+            filters.MinCapacity,
+            startDateTime,
+            endDateTime,
+            filters.Status);
+
+        return View(filters);
     }
 
     // GET Room by Id

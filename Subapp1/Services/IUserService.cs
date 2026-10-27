@@ -12,5 +12,6 @@ public interface IUserService
         string? userId,
         string? name,
         string? password,
+        string? email,
         string? confirmPassword);
 }

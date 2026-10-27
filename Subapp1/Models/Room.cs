@@ -19,4 +19,6 @@ public class Room
     public int Capacity { get; set; }
 
     public List<Booking> Bookings { get; set; } = new();
+
+
 }

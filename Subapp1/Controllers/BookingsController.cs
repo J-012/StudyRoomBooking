@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using StudyRoomBooking.Models;
 using StudyRoomBooking.Repositories;
 using StudyRoomBooking.Services;
+using StudyRoomBooking.ViewModels;
 
 namespace StudyRoomBooking.Controllers;
 
@@ -34,45 +35,66 @@ public class BookingsController : Controller
         _courseService = courseService;
     }
 
+    // GET: /Bookings
+    [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+        // Get the current user's ID from the claims.
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        var bookings = await _bookingRepository.GetByUserIdAsync(userId);
+        // If the user ID is not found in the claims, return Unauthorized.
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
 
-        return View(bookings);
-    }
+        var viewModel = new BookingsIndexViewModel
+        {
+            MyBookings = await _bookingRepository.GetByUserIdAsync(userId),
+            JoinedBookings = await _bookingRepository.GetJoinedByUserIdAsync(userId),
+            JoinableBookings = await _bookingRepository.GetJoinableBookingsAsync(userId)
+        };
 
-    public async Task<IActionResult> Details(int id)
-    {
-        var booking = await GetBookingForCurrentUserAsync(id);
-
-        return booking is null ? NotFound() : View(booking);
+        return View(viewModel);
     }
 
     [HttpGet]
-    public async Task<IActionResult> Create()
+    public async Task<IActionResult> Create(
+        int? roomId,
+        DateOnly? date,
+        TimeOnly? startTime,
+        TimeOnly? endTime)
     {
-        var now = DateTime.Now;
+        if (!roomId.HasValue || !date.HasValue || !startTime.HasValue || !endTime.HasValue)
+        {
+            TempData["Error"] = "Choose an available room, date, and time before creating a study session.";
+            return RedirectToAction("Index", "Rooms");
+        }
 
-        var startMinutes = (now.Hour * 60 + now.Minute + 14) / 15 * 15;
+        var selectedRoom = await _roomRepository.GetByIdAsync(roomId.Value);
+        var candidate = new Booking
+        {
+            RoomId = roomId.Value,
+            StartTime = date.Value.ToDateTime(startTime.Value),
+            EndTime = date.Value.ToDateTime(endTime.Value)
+        };
 
-        var start = TimeOnly.FromTimeSpan(
-            TimeSpan.FromMinutes(Math.Min(startMinutes, 23 * 60 + 45))
-        );
-
-        var end = TimeOnly.FromTimeSpan(
-            TimeSpan.FromMinutes(Math.Min(start.Hour * 60 + start.Minute + 60, 23 * 60 + 45))
-        );
+        var validation = await _bookingService.ValidateAsync(candidate, null);
+        if (selectedRoom is null || !validation.IsValid)
+        {
+            TempData["Error"] = validation.Errors.FirstOrDefault()?.Message ??
+                "That room is no longer available for the selected time.";
+            return RedirectToRooms(date, startTime, endTime);
+        }
 
         var viewModel = new BookingFormViewModel
         {
-            Rooms = await _roomRepository.GetAllAsync(),
             Courses = await _courseService.GetAllAsync(),
-
-            StartDate = DateOnly.FromDateTime(now),
-            StartClock = start,
-            EndClock = end,
+            SelectedRoom = selectedRoom,
+            RoomId = selectedRoom.Id,
+            StartDate = date.Value,
+            StartClock = startTime.Value,
+            EndClock = endTime.Value
         };
 
         return View(viewModel);
@@ -80,7 +102,7 @@ public class BookingsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(BookingFormViewModel viewModel)
+    public async Task<IActionResult> Create([Bind("CourseCode,Topic,RoomId,StartDate,StartClock,EndClock")] BookingFormViewModel viewModel)
     {
         var user = await GetCurrentUserAsync();
 
@@ -260,8 +282,7 @@ public class BookingsController : Controller
 
     private async Task<IActionResult> ReturnBookingFormAsync(BookingFormViewModel viewModel)
     {
-        viewModel.Rooms = await _roomRepository.GetAllAsync();
-
+        viewModel.SelectedRoom = await _roomRepository.GetByIdAsync(viewModel.RoomId);
         viewModel.Courses = await _courseService.GetAllAsync();
 
         return View(viewModel);
@@ -291,4 +312,96 @@ public class BookingsController : Controller
             EndTime = viewModel.StartDate.ToDateTime(viewModel.EndClock),
         };
     }
+
+    private IActionResult RedirectToRooms(DateOnly? date, TimeOnly? startTime, TimeOnly? endTime)
+    {
+        return RedirectToAction("Index", "Rooms", new
+        {
+            date,
+            startTime,
+            endTime
+        });
+    }
+
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Join(int id, bool returnToRooms = false)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Challenge();
+        }
+
+        var result = await _bookingService.JoinAsync(id, userId);
+
+        if (result.IsSuccess)
+        {
+            TempData["Success"] = "You successfully joined the study session.";
+
+            _logger.LogInformation(
+                "User {UserId} joined booking {BookingId}.",
+                userId,
+                id
+            );
+        }
+        else
+        {
+            TempData["Error"] = result.Error ?? "Unable to join the session.";
+
+            _logger.LogWarning(
+                "User {UserId} could not join booking {BookingId}: {Reason}",
+                userId,
+                id,
+                result.Error
+            );
+        }
+
+        return returnToRooms
+            ? RedirectToAction("Index", "Rooms")
+            : RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Leave(int id, bool returnToRooms = false)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Challenge();
+        }
+
+        var result = await _bookingService.LeaveAsync(id, userId);
+
+        if (result.IsSuccess)
+        {
+            TempData["Success"] = "You successfully left the study session.";
+
+            _logger.LogInformation(
+                "User {UserId} left booking {BookingId}.",
+                userId,
+                id
+            );
+        }
+        else
+        {
+            TempData["Error"] = result.Error ?? "Unable to leave the session.";
+
+            _logger.LogWarning(
+                "User {UserId} could not leave booking {BookingId}: {Reason}",
+                userId,
+                id,
+                result.Error
+            );
+        }
+
+        return returnToRooms
+            ? RedirectToAction("Index", "Rooms")
+            : RedirectToAction(nameof(Index));
+    }
+
 }
