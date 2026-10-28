@@ -1,5 +1,6 @@
 import { Routes, Route, Link } from 'react-router-dom'
 
+import HomePage from './pages/HomePage'
 import RoomsPage from './pages/RoomsPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -43,7 +44,7 @@ function App() {
                                     <li className="nav-item">
                                         <Link
                                             className="nav-link text-secondary"
-                                            to="/"
+                                            to="/rooms"
                                         >
                                             Rooms
                                         </Link>
@@ -101,8 +102,9 @@ function App() {
             </header>
 
             <Routes>
+                <Route path="/" element={<HomePage />} />
                 <Route
-                    path="/"
+                    path="/rooms"
                     element={
                         <ProtectedRoute>
                             <RoomsPage />
