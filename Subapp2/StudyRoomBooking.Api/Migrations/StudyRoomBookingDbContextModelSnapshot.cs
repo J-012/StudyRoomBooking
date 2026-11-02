@@ -288,19 +288,30 @@ namespace StudyRoomBooking.Api.Migrations
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("OrganizerUserId")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("RoomId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Topic")
+                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RoomId");
+                    b.HasIndex("OrganizerUserId");
+
+                    b.HasIndex("RoomId", "StartTime", "EndTime");
 
                     b.ToTable("StudySessions");
                 });
@@ -377,17 +388,26 @@ namespace StudyRoomBooking.Api.Migrations
 
             modelBuilder.Entity("StudyRoomBooking.Api.Models.StudySession", b =>
                 {
+                    b.HasOne("StudyRoomBooking.Api.Models.ApplicationUser", "Organizer")
+                        .WithMany("OrganizedSessions")
+                        .HasForeignKey("OrganizerUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("StudyRoomBooking.Api.Models.Room", "Room")
                         .WithMany()
                         .HasForeignKey("RoomId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Organizer");
+
                     b.Navigation("Room");
                 });
 
             modelBuilder.Entity("StudyRoomBooking.Api.Models.ApplicationUser", b =>
                 {
+                    b.Navigation("OrganizedSessions");
+
                     b.Navigation("Participations");
                 });
 

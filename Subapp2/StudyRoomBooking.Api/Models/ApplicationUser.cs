@@ -8,4 +8,5 @@ public class ApplicationUser : IdentityUser
     public string StudentNumber { get; set; } = string.Empty;
 
     public List<SessionParticipant> Participations { get; set; } = new();
+    public List<StudySession> OrganizedSessions { get; set; } = new();
 }

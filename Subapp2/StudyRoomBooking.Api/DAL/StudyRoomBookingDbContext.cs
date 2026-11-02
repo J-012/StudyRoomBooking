@@ -20,6 +20,20 @@ public class StudyRoomBookingDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<StudySession>()
+            .HasOne(session => session.Organizer)
+            .WithMany(user => user.OrganizedSessions)
+            .HasForeignKey(session => session.OrganizerUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<StudySession>()
+            .HasIndex(session => new
+            {
+                session.RoomId,
+                session.StartTime,
+                session.EndTime
+            });
+
         modelBuilder.Entity<Room>().HasData(
             new Room { Id = 1, RoomNumber = "PH170", Building = "Pilestredet 35", Capacity = 6 },
             new Room { Id = 2, RoomNumber = "PH171", Building = "Pilestredet 35", Capacity = 8 },
