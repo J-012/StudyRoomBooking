@@ -2,6 +2,7 @@ import { Routes, Route, Link } from 'react-router-dom'
 
 import HomePage from './pages/HomePage'
 import RoomsPage from './pages/RoomsPage'
+import BookingsPage from './pages/BookingsPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -51,14 +52,14 @@ function App() {
                                     </li>
                                 )}
 
-                                <li className="nav-item">
-                                    <a
-                                        className="nav-link text-secondary"
-                                        href="/"
-                                    >
-                                        Bookings
-                                    </a>
-                                </li>
+                                    <li className="nav-item">
+                                        <Link
+                                            className="nav-link text-secondary"
+                                            to="/bookings"
+                                        >
+                                            Bookings
+                                        </Link>
+                                    </li>
 
                                 {isAuthenticated ? (
                                     <li className="nav-item mt-2 mt-lg-0 d-flex align-items-center gap-2">
@@ -102,17 +103,40 @@ function App() {
             </header>
 
             <Routes>
-                <Route path="/" element={<HomePage />} />
+
+                <Route
+                    path="/"
+                    element={<HomePage />}
+                />
+
                 <Route
                     path="/rooms"
                     element={
-                        <ProtectedRoute>
+                        <ProtectedRoute adminOnly>
                             <RoomsPage />
                         </ProtectedRoute>
                     }
                 />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
+
+                <Route
+                    path="/bookings"
+                    element={
+                        <ProtectedRoute>
+                            <BookingsPage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/login"
+                    element={<LoginPage />}
+                />
+
+                <Route
+                    path="/register"
+                    element={<RegisterPage />}
+                />
+
             </Routes>
 
             <footer className="footer">

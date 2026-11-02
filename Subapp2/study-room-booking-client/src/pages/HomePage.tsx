@@ -40,10 +40,17 @@ function HomePage() {
                                         Administrer rom
                                     </Link>
                                 ) : (
-                                    <span className="text-secondary fst-italic">
-                                        Booking av studierom kommer
-                                        snart
-                                    </span>
+                                    <Link
+                                        to="/bookings"
+                                        className="btn btn-lg fw-semibold"
+                                        style={{
+                                            backgroundColor: '#ffd500',
+                                            color: '#212529',
+                                            borderColor: '#ffd500',
+                                        }}
+                                    >
+                                        Book studierom
+                                    </Link>
                                 )
                             ) : (
                                 <>
