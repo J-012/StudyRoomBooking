@@ -6,6 +6,7 @@ import BookingsPage from './pages/BookingsPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import RoomOverviewPage from './pages/RoomOverviewPage'
 import { useAuth } from './context/AuthContext'
 import './App.css'
 
@@ -124,6 +125,14 @@ function App() {
                         <ProtectedRoute>
                             <BookingsPage />
                         </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    
+                path="/room-overview"
+                    element={
+                            <RoomOverviewPage />
                     }
                 />
 

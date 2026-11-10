@@ -191,10 +191,10 @@ function HomePage() {
                                             Registrer deg
                                         </Link>
                                         <Link
-                                            to="/login"
+                                            to="/room-overview"
                                             className="btn btn-outline-dark btn-lg px-4"
                                         >
-                                            Logg inn
+                                            Se romoversikt
                                         </Link>
                                     </>
                                 )}
@@ -288,7 +288,10 @@ function HomePage() {
                                 Klar for neste studieøkt?
                             </h2>
                             <p className="text-secondary mb-0">
-                                Lag en bruker og finn et ledig rom i dag.
+                                Lag en bruker for å booke rom. Har du allerede en?{' '}
+                                <Link to="/login" className="hp-inline-link">
+                                    Logg inn
+                                </Link>
                             </p>
                         </div>
                         <Link

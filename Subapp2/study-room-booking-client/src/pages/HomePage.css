@@ -29,6 +29,20 @@
   margin-bottom: 1.25rem;
 }
 
+/* "Overstrekningstusj"-effekt i stedet for olivenfarget tekst */
+.hp-title-accent {
+  background: linear-gradient(transparent 60%, rgba(255, 213, 0, 0.6) 60%);
+  padding: 0 0.08em;
+}
+
+.hp-lead {
+  max-width: 34rem;
+  margin-bottom: 2rem;
+  color: var(--srb-muted);
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
 /* Høyre side av hero: panel med en gul flate bak */
 
 .hp-visual {
@@ -301,4 +315,13 @@
     align-items: center;
     padding: 2rem 2.5rem;
   }
+}
+
+.hp-inline-link {
+  color: var(--srb-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--srb-primary);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
 }
