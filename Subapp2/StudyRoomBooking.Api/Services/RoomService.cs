@@ -7,10 +7,14 @@ namespace StudyRoomBooking.Api.Services;
 public class RoomService : IRoomService
 {
     private readonly IRoomRepository _roomRepository;
+    private readonly IBookingRepository _bookingRepository;
 
-    public RoomService(IRoomRepository roomRepository)
+    public RoomService(
+        IRoomRepository roomRepository,
+        IBookingRepository bookingRepository)
     {
         _roomRepository = roomRepository;
+        _bookingRepository = bookingRepository;
     }
 
     public async Task<List<RoomDto>> GetAllAsync()
@@ -25,6 +29,47 @@ public class RoomService : IRoomService
         }
 
         return roomDtos;
+    }
+
+    // Returnerer rom som ikke har noen booking som overlapper med
+    // tidsrommet. excludedSessionId brukes når en booking endres,
+    // så den ikke kolliderer med seg selv.
+    public async Task<List<RoomDto>> GetAvailableAsync(
+        DateTime startTime,
+        DateTime endTime,
+        int? excludedSessionId)
+    {
+        if (endTime <= startTime)
+        {
+            throw new ArgumentException(
+                "The end time must be after the start time."
+            );
+        }
+
+        List<Room> rooms = await _roomRepository.GetAllAsync();
+
+        List<RoomDto> availableRooms = new List<RoomDto>();
+
+        foreach (Room room in rooms)
+        {
+            bool hasConflict =
+                await _bookingRepository.HasConflictAsync(
+                    room.Id,
+                    startTime,
+                    endTime,
+                    excludedSessionId
+                );
+
+            if (!hasConflict)
+            {
+                availableRooms.Add(ToDto(room));
+            }
+        }
+
+        return availableRooms
+            .OrderBy(room => room.Building)
+            .ThenBy(room => room.RoomNumber)
+            .ToList();
     }
 
     public async Task<RoomDto?> GetByIdAsync(int id)

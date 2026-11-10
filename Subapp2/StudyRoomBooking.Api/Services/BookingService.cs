@@ -29,6 +29,15 @@ public class BookingService : IBookingService
 
         foreach (StudySession session in sessions)
         {
+            // Studenter ser bare sine egne bookinger, admin ser alle.
+            if (!CanManage(
+                session,
+                currentUserId,
+                isAdmin))
+            {
+                continue;
+            }
+
             bookingDtos.Add(
                 ToDto(
                     session,
@@ -49,7 +58,13 @@ public class BookingService : IBookingService
         StudySession? session =
             await _bookingRepository.GetByIdAsync(id);
 
-        if (session == null)
+        // Andres bookinger behandles som "finnes ikke" (404),
+        // så man ikke kan hente dem ved å gjette en id.
+        if (session == null
+            || !CanManage(
+                session,
+                currentUserId,
+                isAdmin))
         {
             return null;
         }

@@ -13,4 +13,5 @@ public interface IRoomService
     Task<bool> UpdateAsync(int id, UpdateRoomDto roomDto);
 
     Task<bool> DeleteAsync(int id);
+    Task<List<RoomDto>> GetAvailableAsync(DateTime startTime, DateTime endTime, int? excludedSessionId);
 }

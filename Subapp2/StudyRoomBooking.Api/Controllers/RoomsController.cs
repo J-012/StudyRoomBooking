@@ -29,6 +29,33 @@ public class RoomsController : ControllerBase
         return Ok(rooms);
     }
 
+    // GET /api/rooms/available?startTime=...&endTime=...&excludeBookingId=...
+    [HttpGet("available")]
+    public async Task<ActionResult<List<RoomDto>>> GetAvailable(
+        [FromQuery] DateTime startTime,
+        [FromQuery] DateTime endTime,
+        [FromQuery] int? excludeBookingId)
+    {
+        try
+        {
+            List<RoomDto> rooms =
+                await _roomService.GetAvailableAsync(
+                    startTime,
+                    endTime,
+                    excludeBookingId
+                );
+
+            return Ok(rooms);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new
+            {
+                message = exception.Message
+            });
+        }
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<RoomDto>> GetById(int id)
     {

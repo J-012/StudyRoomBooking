@@ -1,201 +1,303 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { getBookings } from '../api/bookingsApi'
 import { useAuth } from '../context/AuthContext'
+import type { Booking } from '../types/Booking'
+
+import './HomePage.css'
+
+const steps = [
+    {
+        title: 'Velg tidspunkt',
+    },
+    {
+        title: 'Finn et ledig rom',
+    },
+    {
+        title: 'Book og møt opp',
+    },
+]
+
+function formatTime(iso: string) {
+    return new Date(iso).toLocaleTimeString('nb-NO', {
+        hour: '2-digit',
+        minute: '2-digit',
+    })
+}
+
+// Viser studentens neste tre økter i hero-seksjonen
+function UpcomingSessions() {
+    const [items, setItems] = useState<Booking[] | null>(null)
+    const [failed, setFailed] = useState(false)
+
+    useEffect(() => {
+        let cancelled = false
+
+        getBookings()
+            .then((data) => {
+                if (cancelled) return
+                const now = Date.now()
+                setItems(
+                    data
+                        .filter((b) => new Date(b.endTime).getTime() >= now)
+                        .sort(
+                            (a, b) =>
+                                new Date(a.startTime).getTime() -
+                                new Date(b.startTime).getTime()
+                        )
+                        .slice(0, 3)
+                )
+            })
+            .catch(() => {
+                if (!cancelled) setFailed(true)
+            })
+
+        return () => {
+            cancelled = true
+        }
+    }, [])
+
+    return (
+        <div className="hp-panel">
+            <div className="hp-panel-head">
+                <span className="hp-panel-title">Dine neste økter</span>
+                <Link to="/bookings" className="hp-panel-link">
+                    Se alle
+                </Link>
+            </div>
+
+            {failed ? (
+                <p className="hp-panel-empty">
+                    Kunne ikke hente bookingene dine akkurat nå.
+                </p>
+            ) : items === null ? (
+                <ul className="hp-sessions">
+                    {[0, 1, 2].map((i) => (
+                        <li key={i} className="hp-session hp-skeleton" />
+                    ))}
+                </ul>
+            ) : items.length === 0 ? (
+                <div className="hp-panel-empty">
+                    <p className="mb-3">Du har ingen kommende økter.</p>
+                    <Link to="/bookings" className="btn btn-primary btn-sm px-3">
+                        Book et rom
+                    </Link>
+                </div>
+            ) : (
+                <ul className="hp-sessions">
+                    {items.map((booking) => {
+                        const start = new Date(booking.startTime)
+                        const month = start
+                            .toLocaleDateString('nb-NO', { month: 'short' })
+                            .replace('.', '')
+
+                        return (
+                            <li key={booking.id} className="hp-session">
+                                <div className="hp-session-date">
+                                    <span>{month}</span>
+                                    <strong>{start.getDate()}</strong>
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="hp-session-title">
+                                        {booking.subject}
+                                    </p>
+                                    <p className="hp-session-meta">
+                                        {formatTime(booking.startTime)}–
+                                        {formatTime(booking.endTime)} ·{' '}
+                                        {booking.roomNumber}, {booking.building}
+                                    </p>
+                                </div>
+                            </li>
+                        )
+                    })}
+                </ul>
+            )}
+        </div>
+    )
+}
+
+// Illustrasjon av booking-flyten for besøkende som ikke er logget inn
+function BookingPreview() {
+    const rooms = [
+        { number: 'A2-14', building: 'Bygg A', selected: false },
+        { number: 'B1-05', building: 'Bygg B', selected: true },
+        { number: 'B3-22', building: 'Bygg B', selected: false },
+    ]
+
+    return (
+        <div className="hp-panel" aria-hidden="true">
+            <div className="hp-panel-head">
+                <span className="hp-panel-title">Ny booking</span>
+                <span className="hp-preview-tag">Eksempel</span>
+            </div>
+
+            <div className="hp-preview-fields">
+                <div className="hp-preview-field">
+                    <span>Dato</span>
+                    <strong>Tirsdag 18. nov.</strong>
+                </div>
+                <div className="hp-preview-field">
+                    <span>Tid</span>
+                    <strong>14:00–16:00</strong>
+                </div>
+            </div>
+
+            <span className="hp-preview-label">Ledige rom (3)</span>
+
+            <div className="hp-preview-rooms">
+                {rooms.map((room) => (
+                    <div
+                        key={room.number}
+                        className={`hp-preview-room ${room.selected ? 'is-selected' : ''}`}
+                    >
+                        <strong>{room.number}</strong>
+                        <span>{room.building}</span>
+                    </div>
+                ))}
+            </div>
+
+            <div className="hp-preview-button">Book rom</div>
+        </div>
+    )
+}
 
 function HomePage() {
     const { isAuthenticated, isAdmin, fullName } = useAuth()
+    const isStudent = isAuthenticated && !isAdmin
 
     return (
         <main>
-            <section className="container py-5">
-                <div className="row align-items-center mb-5">
-                    <div className="col-lg-6 mb-5 mb-lg-0">
-                        <h1 className="display-5 fw-bold mb-4">
-                            Finn studierom og møt andre studenter{' '}
-                            <span style={{ color: '#b39700' }}>
-                                på samme kurs.
+            <section className="hp-hero">
+                <div className="container">
+                    <div className="row align-items-center g-5">
+                        <div className="col-lg-6">
+                            <span className="hp-eyebrow">
+                                {isAuthenticated
+                                    ? `Hei, ${fullName}`
+                                    : 'Grupperom for studenter'}
                             </span>
-                        </h1>
 
-                        <p className="text-secondary mb-4">
-                            Finn ledige studierom, reserver et tidspunkt
-                            som passer deg, og gjør studiehverdagen
-                            enklere. Enten du vil studere alene eller
-                            sammen med andre, finner du et rom som
-                            dekker behovet ditt.
-                        </p>
+                            <h1 className="hp-title">
+                                Finn et ledig grupperom
+                            </h1>
+                            <div className="d-flex flex-wrap gap-2">
+                                {!isAuthenticated && (
+                                    <>
+                                        <Link
+                                            to="/register"
+                                            className="btn btn-primary btn-lg px-4"
+                                        >
+                                            Registrer deg
+                                        </Link>
+                                        <Link
+                                            to="/login"
+                                            className="btn btn-outline-dark btn-lg px-4"
+                                        >
+                                            Logg inn
+                                        </Link>
+                                    </>
+                                )}
 
-                        <div className="d-flex flex-wrap gap-3">
-                            {isAuthenticated ? (
-                                isAdmin ? (
-                                    <Link
-                                        to="/rooms"
-                                        className="btn btn-lg fw-semibold"
-                                        style={{
-                                            backgroundColor: '#ffd500',
-                                            color: '#212529',
-                                            borderColor: '#ffd500',
-                                        }}
-                                    >
-                                        Administrer rom
-                                    </Link>
+                                {isStudent && (
+                                    <>
+                                        <Link
+                                            to="/bookings"
+                                            className="btn btn-primary btn-lg px-4"
+                                        >
+                                            Book et rom
+                                        </Link>
+                                        <Link
+                                            to="/room-overview"
+                                            className="btn btn-outline-dark btn-lg px-4"
+                                        >
+                                            Se romoversikt
+                                        </Link>
+                                    </>
+                                )}
+
+                                {isAdmin && (
+                                    <>
+                                        <Link
+                                            to="/rooms"
+                                            className="btn btn-primary btn-lg px-4"
+                                        >
+                                            Administrer rom
+                                        </Link>
+                                        <Link
+                                            to="/room-overview"
+                                            className="btn btn-outline-dark btn-lg px-4"
+                                        >
+                                            Se romoversikt
+                                        </Link>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-lg-6">
+                            <div className="hp-visual">
+                                {isStudent ? (
+                                    <UpcomingSessions />
                                 ) : (
-                                    <Link
-                                        to="/bookings"
-                                        className="btn btn-lg fw-semibold"
-                                        style={{
-                                            backgroundColor: '#ffd500',
-                                            color: '#212529',
-                                            borderColor: '#ffd500',
-                                        }}
-                                    >
-                                        Book studierom
-                                    </Link>
-                                )
-                            ) : (
-                                <>
-                                    <Link
-                                        to="/register"
-                                        className="btn btn-lg fw-semibold"
-                                        style={{
-                                            backgroundColor: '#ffd500',
-                                            color: '#212529',
-                                            borderColor: '#ffd500',
-                                        }}
-                                    >
-                                        Registrer deg
-                                    </Link>
-                                    <Link
-                                        to="/login"
-                                        className="btn btn-outline-dark btn-lg"
-                                    >
-                                        Logg inn
-                                    </Link>
-                                </>
-                            )}
+                                    <BookingPreview />
+                                )}
+                            </div>
                         </div>
                     </div>
-
-                    <div className="col-lg-6">
-                        <div
-                            className="rounded-3 overflow-hidden shadow-sm"
-                            style={{
-                                height: 450,
-                                backgroundColor: '#f0e5a5',
-                            }}
-                        />
-                    </div>
                 </div>
+            </section>
 
+            <section className="container pb-5">
                 <div className="text-center mb-4">
-                    <h2 className="fw-bold">
-                        {isAuthenticated
-                            ? `Velkommen tilbake, ${fullName}`
-                            : 'Gjør studiehverdagen enklere'}
-                    </h2>
-                    <p className="text-secondary">
-                        Finn medstudenter, book studierom, og planlegg
-                        studieøktene dine.
-                    </p>
+                    <span className="section-eyebrow">Slik fungerer det</span>
+                    <h2 className="h3 fw-bold mt-1">Tre steg til et ledig rom</h2>
                 </div>
 
-                <div className="row g-4">
-                    <div className="col-md-4">
-                        <div className="card h-100 border rounded-3 shadow-sm">
-                            <div className="card-body p-4">
-                                <div
-                                    className="mb-3"
-                                    style={{
-                                        width: 35,
-                                        height: 4,
-                                        backgroundColor: '#ffd500',
-                                    }}
-                                />
-                                <h5 className="fw-bold">
-                                    Finn et studierom
-                                </h5>
-                                <p className="text-secondary mb-0">
-                                    Se ledige rom og finn et som passer
-                                    for deg og gruppen din.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                <ol className="hp-steps">
+                    {steps.map((step, index) => (
+                        <li key={step.title} className="hp-step">
+                            <span className="hp-step-number">{index + 1}</span>
+                            <h3 className="hp-step-title">{step.title}</h3>
+                        </li>
+                    ))}
+                </ol>
 
-                    <div className="col-md-4">
-                        <div className="card h-100 border rounded-3 shadow-sm">
-                            <div className="card-body p-4">
-                                <div
-                                    className="mb-3"
-                                    style={{
-                                        width: 35,
-                                        height: 4,
-                                        backgroundColor: '#ffd500',
-                                    }}
-                                />
-                                <h5 className="fw-bold">
-                                    Book en studieøkt
-                                </h5>
-                                <p className="text-secondary mb-0">
-                                    Velg rom, dato og tidspunkt for
-                                    neste studieøkt.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="col-md-4">
-                        <div className="card h-100 border rounded-3 shadow-sm">
-                            <div className="card-body p-4">
-                                <div
-                                    className="mb-3"
-                                    style={{
-                                        width: 35,
-                                        height: 4,
-                                        backgroundColor: '#ffd500',
-                                    }}
-                                />
-                                <h5 className="fw-bold">
-                                    Oversikt over bookinger
-                                </h5>
-                                <p className="text-secondary mb-0">
-                                    Se alle reservasjonene dine samlet
-                                    på ett sted.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {!isAuthenticated && (
-                    <section
-                        className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 rounded-3 p-4 p-md-5 mt-5"
-                        style={{
-                            backgroundColor: '#fff9db',
-                            border: '1px solid #f0e5a5',
-                        }}
-                    >
+                {isAuthenticated ? (
+                    <div className="hp-band">
                         <div>
-                            <h2 className="fw-bold mb-3">
-                                Klar for din neste studieøkt?
+                            <h2 className="h4 fw-bold mb-1">
+                                Leter du etter et bestemt rom?
                             </h2>
                             <p className="text-secondary mb-0">
-                                Registrer deg og finn et ledig rom i
-                                dag.
+                                Søk etter bygg og antall plasser, og se hva som er
+                                ledig akkurat nå.
+                            </p>
+                        </div>
+                        <Link
+                            to="/room-overview"
+                            className="btn btn-dark px-4 text-nowrap"
+                        >
+                            Åpne romoversikten
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="hp-band">
+                        <div>
+                            <h2 className="h4 fw-bold mb-1">
+                                Klar for neste studieøkt?
+                            </h2>
+                            <p className="text-secondary mb-0">
+                                Lag en bruker og finn et ledig rom i dag.
                             </p>
                         </div>
                         <Link
                             to="/register"
-                            className="btn btn-lg fw-semibold text-nowrap"
-                            style={{
-                                backgroundColor: '#ffd500',
-                                color: '#212529',
-                                borderColor: '#ffd500',
-                            }}
+                            className="btn btn-dark px-4 text-nowrap"
                         >
                             Kom i gang
                         </Link>
-                    </section>
+                    </div>
                 )}
             </section>
         </main>
