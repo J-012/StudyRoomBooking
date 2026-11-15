@@ -16,6 +16,7 @@ public DbSet<Room> Rooms { get; set; }
 public DbSet<StudySession> StudySessions { get; set; }
 public DbSet<SessionParticipant> SessionParticipants { get; set; }
 public DbSet<Amenity> Amenities { get; set; }
+public DbSet<Building> Buildings { get; set; }
 public DbSet<RoomAmenity> RoomAmenities { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -28,6 +29,12 @@ public DbSet<RoomAmenity> RoomAmenities { get; set; }
             .HasForeignKey(session => session.OrganizerUserId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        modelBuilder.Entity<Room>()
+            .HasOne(room => room.Building)
+            .WithMany(building => building.Rooms)
+            .HasForeignKey(room => room.BuildingId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         modelBuilder.Entity<StudySession>()
             .HasIndex(session => new
             {
@@ -37,14 +44,49 @@ public DbSet<RoomAmenity> RoomAmenities { get; set; }
             });
 
         modelBuilder.Entity<Room>().HasData(
-            new Room { Id = 1, RoomNumber = "PH170", Building = "Pilestredet 35", Capacity = 6 },
-            new Room { Id = 2, RoomNumber = "PH171", Building = "Pilestredet 35", Capacity = 8 },
-            new Room { Id = 3, RoomNumber = "P48-101", Building = "Pilestredet 48", Capacity = 4 }
-        );
+    new Room
+    {
+        Id = 1,
+        RoomNumber = "PH170",
+        BuildingId = 1,
+        Capacity = 6
+    },
+    new Room
+    {
+        Id = 2,
+        RoomNumber = "PH171",
+        BuildingId = 1,
+        Capacity = 8
+    },
+    new Room
+    {
+        Id = 3,
+        RoomNumber = "P48-101",
+        BuildingId = 2,
+        Capacity = 4
+    }
+);
 
         modelBuilder.Entity<Amenity>()
     .HasIndex(amenity => amenity.Name)
     .IsUnique();
+
+    modelBuilder.Entity<Building>()
+    .HasIndex(building => building.Name)
+    .IsUnique();
+
+modelBuilder.Entity<Building>().HasData(
+    new Building
+    {
+        Id = 1,
+        Name = "Pilestredet 35"
+    },
+    new Building
+    {
+        Id = 2,
+        Name = "Pilestredet 48"
+    }
+);
 
 modelBuilder.Entity<RoomAmenity>()
     .HasKey(roomAmenity => new

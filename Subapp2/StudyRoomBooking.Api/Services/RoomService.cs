@@ -9,15 +9,18 @@ public class RoomService : IRoomService
     private readonly IRoomRepository _roomRepository;
     private readonly IBookingRepository _bookingRepository;
     private readonly IAmenityRepository _amenityRepository;
+    private readonly IBuildingRepository _buildingRepository;
 
     public RoomService(
         IRoomRepository roomRepository,
         IBookingRepository bookingRepository,
-        IAmenityRepository amenityRepository)
+        IAmenityRepository amenityRepository,
+        IBuildingRepository buildingRepository)
     {
         _roomRepository = roomRepository;
         _bookingRepository = bookingRepository;
         _amenityRepository = amenityRepository;
+        _buildingRepository = buildingRepository;
     }
 
     public async Task<List<RoomDto>> GetAllAsync()
@@ -90,6 +93,18 @@ public class RoomService : IRoomService
     public async Task<RoomDto> CreateAsync(
         CreateRoomDto roomDto)
     {
+        Building? building =
+            await _buildingRepository.GetByIdAsync(
+                roomDto.BuildingId
+            );
+
+        if (building == null)
+        {
+            throw new ArgumentException(
+                "Selected building does not exist."
+            );
+        }
+
         List<int> amenityIds =
             await ValidateAmenityIdsAsync(
                 roomDto.AmenityIds
@@ -98,7 +113,7 @@ public class RoomService : IRoomService
         Room room = new Room
         {
             RoomNumber = roomDto.RoomNumber,
-            Building = roomDto.Building,
+            BuildingId = roomDto.BuildingId,
             Capacity = roomDto.Capacity
         };
 
@@ -134,13 +149,25 @@ public class RoomService : IRoomService
             return false;
         }
 
+        Building? building =
+            await _buildingRepository.GetByIdAsync(
+                roomDto.BuildingId
+            );
+
+        if (building == null)
+        {
+            throw new ArgumentException(
+                "Selected building does not exist."
+            );
+        }
+
         List<int> amenityIds =
             await ValidateAmenityIdsAsync(
                 roomDto.AmenityIds
             );
 
         room.RoomNumber = roomDto.RoomNumber;
-        room.Building = roomDto.Building;
+        room.BuildingId = roomDto.BuildingId;
         room.Capacity = roomDto.Capacity;
 
         room.RoomAmenities.Clear();
@@ -181,7 +208,8 @@ public class RoomService : IRoomService
         {
             Id = room.Id,
             RoomNumber = room.RoomNumber,
-            Building = room.Building,
+            BuildingId = room.BuildingId,
+            Building = room.Building?.Name ?? string.Empty,
             Capacity = room.Capacity
         };
 

@@ -16,12 +16,13 @@ public class RoomRepository : IRoomRepository
     public async Task<List<Room>> GetAllAsync()
     {
         return await _context.Rooms
+            .Include(room => room.Building)
             .Include(room => room.RoomAmenities)
                 .ThenInclude(
                     roomAmenity => roomAmenity.Amenity
                 )
             .AsNoTracking()
-            .OrderBy(room => room.Building)
+            .OrderBy(room => room.Building!.Name)
             .ThenBy(room => room.RoomNumber)
             .ToListAsync();
     }
@@ -29,8 +30,11 @@ public class RoomRepository : IRoomRepository
     public async Task<Room?> GetByIdAsync(int id)
     {
         return await _context.Rooms
+            .Include(room => room.Building)
             .Include(room => room.RoomAmenities)
-                .ThenInclude(roomAmenity => roomAmenity.Amenity)
+                .ThenInclude(
+                    roomAmenity => roomAmenity.Amenity
+                )
             .FirstOrDefaultAsync(
                 room => room.Id == id
             );

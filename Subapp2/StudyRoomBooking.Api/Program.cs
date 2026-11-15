@@ -77,6 +77,14 @@ builder.Services.AddScoped<
     IBookingService,
     BookingService>();
 
+builder.Services.AddScoped<
+    IBuildingRepository,
+    BuildingRepository>();
+
+builder.Services.AddScoped<
+    IBuildingService,
+    BuildingService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

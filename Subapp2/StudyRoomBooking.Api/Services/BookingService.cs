@@ -278,7 +278,7 @@ public class BookingService : IBookingService
             RoomNumber =
                 session.Room?.RoomNumber ?? string.Empty,
             Building =
-                session.Room?.Building ?? string.Empty,
+                session.Room?.Building?.Name ?? string.Empty,
             StartTime = session.StartTime,
             EndTime = session.EndTime,
             OrganizerName =

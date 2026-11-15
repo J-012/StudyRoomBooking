@@ -6,6 +6,7 @@ import BookingsPage from './pages/BookingsPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import AmenitiesPage from './pages/AmenitiesPage'
+import BuildingsPage from './pages/BuildingsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import RoomOverviewPage from './pages/RoomOverviewPage'
 import { useAuth } from './context/AuthContext'
@@ -60,6 +61,15 @@ function App() {
                                                 to="/amenities"
                                             >
                                                 Amenities
+                                            </Link>
+                                        </li>
+
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link text-secondary"
+                                                to="/buildings"
+                                            >
+                                                Buildings
                                             </Link>
                                         </li>
                                     </>
@@ -136,6 +146,15 @@ function App() {
                     element={
                         <ProtectedRoute adminOnly>
                             <AmenitiesPage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/buildings"
+                    element={
+                        <ProtectedRoute adminOnly>
+                            <BuildingsPage />
                         </ProtectedRoute>
                     }
                 />

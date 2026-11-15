@@ -18,6 +18,7 @@ public class BookingRepository : IBookingRepository
     {
         return await _context.StudySessions
             .Include(session => session.Room)
+                .ThenInclude(room => room!.Building)
             .Include(session => session.Organizer)
             .AsNoTracking()
             .OrderBy(session => session.StartTime)
@@ -28,6 +29,7 @@ public class BookingRepository : IBookingRepository
     {
         return await _context.StudySessions
             .Include(session => session.Room)
+                .ThenInclude(room => room!.Building)
             .Include(session => session.Organizer)
             .FirstOrDefaultAsync(
                 session => session.Id == id

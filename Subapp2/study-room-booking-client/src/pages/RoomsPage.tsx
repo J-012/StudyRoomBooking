@@ -9,7 +9,10 @@ import {
 } from '../api/roomsApi'
 
 import { getAmenities } from '../api/amenitiesApi'
+import { getBuildings } from '../api/buildingsApi'
+
 import type { Amenity } from '../types/Amenity'
+import type { Building } from '../types/Building'
 
 import type {
     Room,
@@ -18,16 +21,23 @@ import type {
 
 const emptyForm: RoomRequest = {
     roomNumber: '',
-    building: '',
+    buildingId: 0,
     capacity: 1,
     amenityIds: [],
 }
 
 function RoomsPage() {
-    const [rooms, setRooms] = useState<Room[]>([])
+    const [rooms, setRooms] =
+        useState<Room[]>([])
+
     const [amenities, setAmenities] =
-    useState<Amenity[]>([])
-    const [form, setForm] = useState<RoomRequest>(emptyForm)
+        useState<Amenity[]>([])
+
+    const [buildings, setBuildings] =
+        useState<Building[]>([])
+
+    const [form, setForm] =
+        useState<RoomRequest>(emptyForm)
 
     const [editingId, setEditingId] =
         useState<number | null>(null)
@@ -59,25 +69,40 @@ function RoomsPage() {
                     'Could not load amenities.'
                 )
             )
+    
+        getBuildings()
+            .then(setBuildings)
+            .catch(() =>
+                setError(
+                    'Could not load buildings.'
+                )
+            )
     }, [])
 
     async function handleSubmit(
         event: FormEvent<HTMLFormElement>
     ) {
         event.preventDefault()
-
+    
+        if (form.buildingId <= 0) {
+            setError(
+                'Please select a building.'
+            )
+            return
+        }
+    
         try {
             setError('')
-
+    
             if (editingId === null) {
                 await createRoom(form)
             } else {
                 await updateRoom(editingId, form)
             }
-
+    
             setForm(emptyForm)
             setEditingId(null)
-
+    
             await loadRooms()
         } catch {
             setError('Could not save room.')
@@ -86,10 +111,10 @@ function RoomsPage() {
 
     function startEditing(room: Room) {
         setEditingId(room.id)
-
+    
         setForm({
             roomNumber: room.roomNumber,
-            building: room.building,
+            buildingId: room.buildingId,
             capacity: room.capacity,
             amenityIds:
                 room.amenities.map(
@@ -228,32 +253,46 @@ function RoomsPage() {
     
                             <div className="col-12 col-md-4">
     
-                                <label className="form-label">
-                                    Building
-                                </label>
-    
-                                <input
-                                    className="form-control"
-                                    value={form.building}
-                                    required
-                                    maxLength={100}
-                                    placeholder="e.g. Pilestredet 35"
-                                    onChange={(event) =>
-                                        setForm({
-                                            ...form,
-                                            building:
-                                                event.target.value,
-                                        })
-                                    }
-                                />
-    
-                            </div>
-    
-                            <div className="col-12 col-md-4">
-    
-                                <label className="form-label">
-                                    Capacity
-                                </label>
+                            <label className="form-label">
+                                Building
+                            </label>
+
+                            <select
+                                className="form-select"
+                                value={form.buildingId}
+                                required
+                                onChange={(event) =>
+                                    setForm({
+                                        ...form,
+                                        buildingId: Number(
+                                            event.target.value
+                                        ),
+                                    })
+                                }
+                            >
+                                <option value={0}>
+                                    Select building
+                                </option>
+
+                                {buildings.map(
+                                    (building) => (
+                                        <option
+                                            key={building.id}
+                                            value={building.id}
+                                        >
+                                            {building.name}
+                                        </option>
+                                    )
+                                )}
+                            </select>
+
+                        </div>
+
+                        <div className="col-12 col-md-4">
+
+                            <label className="form-label">
+                                Capacity
+                            </label>
     
                                 <input
                                     className="form-control"

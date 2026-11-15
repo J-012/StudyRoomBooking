@@ -260,16 +260,49 @@ namespace StudyRoomBooking.Api.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("StudyRoomBooking.Api.Models.Building", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Buildings");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Pilestredet 35"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Pilestredet 48"
+                        });
+                });
+
             modelBuilder.Entity("StudyRoomBooking.Api.Models.Room", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Building")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                    b.Property<int>("BuildingId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Capacity")
                         .HasColumnType("INTEGER");
@@ -281,27 +314,29 @@ namespace StudyRoomBooking.Api.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BuildingId");
+
                     b.ToTable("Rooms");
 
                     b.HasData(
                         new
                         {
                             Id = 1,
-                            Building = "Pilestredet 35",
+                            BuildingId = 1,
                             Capacity = 6,
                             RoomNumber = "PH170"
                         },
                         new
                         {
                             Id = 2,
-                            Building = "Pilestredet 35",
+                            BuildingId = 1,
                             Capacity = 8,
                             RoomNumber = "PH171"
                         },
                         new
                         {
                             Id = 3,
-                            Building = "Pilestredet 48",
+                            BuildingId = 2,
                             Capacity = 4,
                             RoomNumber = "P48-101"
                         });
@@ -452,6 +487,17 @@ namespace StudyRoomBooking.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("StudyRoomBooking.Api.Models.Room", b =>
+                {
+                    b.HasOne("StudyRoomBooking.Api.Models.Building", "Building")
+                        .WithMany("Rooms")
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Building");
+                });
+
             modelBuilder.Entity("StudyRoomBooking.Api.Models.RoomAmenity", b =>
                 {
                     b.HasOne("StudyRoomBooking.Api.Models.Amenity", "Amenity")
@@ -518,6 +564,11 @@ namespace StudyRoomBooking.Api.Migrations
                     b.Navigation("OrganizedSessions");
 
                     b.Navigation("Participations");
+                });
+
+            modelBuilder.Entity("StudyRoomBooking.Api.Models.Building", b =>
+                {
+                    b.Navigation("Rooms");
                 });
 
             modelBuilder.Entity("StudyRoomBooking.Api.Models.Room", b =>

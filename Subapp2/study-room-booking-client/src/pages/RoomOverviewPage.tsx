@@ -3,8 +3,13 @@ import { Link } from 'react-router-dom'
 
 import { getAvailableRooms } from '../api/bookingsApi'
 import { getRooms } from '../api/roomsApi'
+import { getBuildings } from '../api/buildingsApi'
+
 import { useAuth } from '../context/AuthContext'
+
 import type { Room } from '../types/Room'
+import type { Building } from '../types/Building'
+
 import { getDefaultBookingWindow } from '../utils/bookingTime'
 
 import './RoomOverviewPage.css'
@@ -65,18 +70,39 @@ function RoomOverviewPage() {
         []
     )
 
-    const [rooms, setRooms] = useState<Room[]>([])
-    const [loading, setLoading] = useState(true)
-    const [loadError, setLoadError] = useState('')
+    const [rooms, setRooms] =
+    useState<Room[]>([])
+
+    const [buildings, setBuildings] =
+        useState<Building[]>([])
+
+    const [loading, setLoading] =
+        useState(true)
+
+    const [loadError, setLoadError] =
+        useState('')
 
     // Filtre
-    const [search, setSearch] = useState('')
-    const [building, setBuilding] = useState('')
-    const [minCapacity, setMinCapacity] = useState(0)
-    const [date, setDate] = useState(initialWindow.date)
-    const [start, setStart] = useState(initialWindow.start)
-    const [end, setEnd] = useState(initialWindow.end)
-    const [onlyAvailable, setOnlyAvailable] = useState(false)
+    const [search, setSearch] =
+        useState('')
+
+    const [buildingId, setBuildingId] =
+        useState(0)
+
+    const [minCapacity, setMinCapacity] =
+        useState(0)
+
+    const [date, setDate] =
+        useState(initialWindow.date)
+
+    const [start, setStart] =
+        useState(initialWindow.start)
+
+    const [end, setEnd] =
+        useState(initialWindow.end)
+
+    const [onlyAvailable, setOnlyAvailable] =
+        useState(false)
 
     // Ledighet for valgt tidsrom
     const [availableIds, setAvailableIds] = useState<Set<number> | null>(null)
@@ -92,7 +118,19 @@ function RoomOverviewPage() {
                         : 'Kunne ikke hente rom.',
                 ),
             )
-            .finally(() => setLoading(false))
+            .finally(() =>
+                setLoading(false)
+            )
+    
+        getBuildings()
+            .then(setBuildings)
+            .catch((error) =>
+                setLoadError(
+                    error instanceof Error
+                        ? error.message
+                        : 'Kunne ikke hente bygg.',
+                ),
+            )
     }, [])
 
     const timesValid = date !== '' && start !== '' && end !== '' && end > start
@@ -129,14 +167,6 @@ function RoomOverviewPage() {
         }
     }, [date, start, end, timesValid])
 
-    const buildings = useMemo(
-        () =>
-            [...new Set(rooms.map((room) => room.building))].sort((a, b) =>
-                a.localeCompare(b, 'nb'),
-            ),
-        [rooms],
-    )
-
     function statusFor(room: Room): RoomStatus {
         if (!timesValid) return null
         if (checking || availableIds === null) return 'checking'
@@ -155,7 +185,12 @@ function RoomOverviewPage() {
                 ) {
                     return false
                 }
-                if (building && room.building !== building) return false
+                if (
+                    buildingId > 0 &&
+                    room.buildingId !== buildingId
+                ) {
+                    return false
+                }
                 if (room.capacity < minCapacity) return false
                 if (
                     onlyAvailable &&
@@ -177,7 +212,7 @@ function RoomOverviewPage() {
     }, [
         rooms,
         search,
-        building,
+        buildingId,
         minCapacity,
         onlyAvailable,
         timesValid,
@@ -189,18 +224,21 @@ function RoomOverviewPage() {
             ? rooms.filter((room) => availableIds.has(room.id)).length
             : null
 
-    const filtersActive =
-        search !== '' || building !== '' || minCapacity > 0 || onlyAvailable
+            const filtersActive =
+                search !== '' ||
+                buildingId > 0 ||
+                minCapacity > 0 ||
+                onlyAvailable
 
-    function resetFilters() {
-        setSearch('')
-        setBuilding('')
-        setMinCapacity(0)
-        setOnlyAvailable(false)
-        setDate(initialWindow.date)
-        setStart(initialWindow.start)
-        setEnd(initialWindow.end)
-    }
+        function resetFilters() {
+            setSearch('')
+            setBuildingId(0)
+            setMinCapacity(0)
+            setOnlyAvailable(false)
+            setDate(initialWindow.date)
+            setStart(initialWindow.start)
+            setEnd(initialWindow.end)
+        }
 
     function bookingLink(room: Room) {
         const params = new URLSearchParams({ roomId: String(room.id) })
@@ -257,20 +295,31 @@ function RoomOverviewPage() {
                                     >
                                         Bygg
                                     </label>
+
                                     <select
                                         id="room-building"
                                         className="form-select"
-                                        value={building}
-                                        onChange={(e) =>
-                                            setBuilding(e.target.value)
+                                        value={buildingId}
+                                        onChange={(event) =>
+                                            setBuildingId(
+                                                Number(event.target.value)
+                                            )
                                         }
                                     >
-                                        <option value="">Alle bygg</option>
-                                        {buildings.map((name) => (
-                                            <option key={name} value={name}>
-                                                {name}
-                                            </option>
-                                        ))}
+                                        <option value={0}>
+                                            Alle bygg
+                                        </option>
+
+                                        {buildings.map(
+                                            (building) => (
+                                                <option
+                                                    key={building.id}
+                                                    value={building.id}
+                                                >
+                                                    {building.name}
+                                                </option>
+                                            )
+                                        )}
                                     </select>
                                 </div>
 
