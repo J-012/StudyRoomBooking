@@ -60,6 +60,19 @@ public class BookingRepository : IBookingRepository
         await _context.SaveChangesAsync();
     }
 
+    public async Task<int> CountActiveBookingsForUserAsync(
+    string organizerUserId)
+{
+    DateTime now = DateTime.Now;
+
+    return await _context.StudySessions
+        .CountAsync(session =>
+            session.OrganizerUserId == organizerUserId
+            &&
+            session.EndTime >= now
+        );
+    }
+
     public async Task<bool> HasConflictAsync(
         int roomId,
         DateTime startTime,

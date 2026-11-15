@@ -6,6 +6,8 @@ namespace StudyRoomBooking.Api.Services;
 
 public class BookingService : IBookingService
 {
+    private const int MaxActiveBookingsPerUser = 3;
+
     private readonly IBookingRepository _bookingRepository;
     private readonly IRoomRepository _roomRepository;
 
@@ -80,6 +82,19 @@ public class BookingService : IBookingService
         CreateBookingDto bookingDto,
         string currentUserId)
     {
+        int activeBookingCount =
+            await _bookingRepository
+                .CountActiveBookingsForUserAsync(
+                    currentUserId
+                );
+
+        if (activeBookingCount >= MaxActiveBookingsPerUser)
+        {
+            throw new ArgumentException(
+                $"You can have a maximum of {MaxActiveBookingsPerUser} active bookings at a time."
+            );
+        }
+
         await ValidateAsync(
             bookingDto.RoomId,
             bookingDto.StartTime,
