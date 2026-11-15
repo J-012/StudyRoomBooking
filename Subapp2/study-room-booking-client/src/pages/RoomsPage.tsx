@@ -8,6 +8,9 @@ import {
     updateRoom,
 } from '../api/roomsApi'
 
+import { getAmenities } from '../api/amenitiesApi'
+import type { Amenity } from '../types/Amenity'
+
 import type {
     Room,
     RoomRequest,
@@ -17,10 +20,13 @@ const emptyForm: RoomRequest = {
     roomNumber: '',
     building: '',
     capacity: 1,
+    amenityIds: [],
 }
 
 function RoomsPage() {
     const [rooms, setRooms] = useState<Room[]>([])
+    const [amenities, setAmenities] =
+    useState<Amenity[]>([])
     const [form, setForm] = useState<RoomRequest>(emptyForm)
 
     const [editingId, setEditingId] =
@@ -45,6 +51,14 @@ function RoomsPage() {
 
     useEffect(() => {
         loadRooms()
+    
+        getAmenities()
+            .then(setAmenities)
+            .catch(() =>
+                setError(
+                    'Could not load amenities.'
+                )
+            )
     }, [])
 
     async function handleSubmit(
@@ -77,12 +91,40 @@ function RoomsPage() {
             roomNumber: room.roomNumber,
             building: room.building,
             capacity: room.capacity,
+            amenityIds:
+                room.amenities.map(
+                    (amenity) => amenity.id
+                ),
         })
     }
 
     function cancelEditing() {
         setEditingId(null)
         setForm(emptyForm)
+    }
+
+    function toggleAmenity(
+        amenityId: number
+    ) {
+        setForm((currentForm) => {
+            const alreadySelected =
+                currentForm.amenityIds.includes(
+                    amenityId
+                )
+    
+            return {
+                ...currentForm,
+                amenityIds: alreadySelected
+                    ? currentForm.amenityIds.filter(
+                          (id) =>
+                              id !== amenityId
+                      )
+                    : [
+                          ...currentForm.amenityIds,
+                          amenityId,
+                      ],
+            }
+        })
     }
 
     async function handleDelete(id: number) {
@@ -233,6 +275,52 @@ function RoomsPage() {
                             </div>
     
                         </div>
+
+                        {amenities.length > 0 && (
+                            <div className="mt-4">
+
+                                <label className="form-label fw-semibold">
+                                    Amenities
+                                </label>
+
+                                <div className="d-flex flex-wrap gap-3">
+
+                                    {amenities.map(
+                                        (amenity) => (
+                                            <div
+                                                className="form-check"
+                                                key={amenity.id}
+                                            >
+                                                <input
+                                                    id={`amenity-${amenity.id}`}
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    checked={
+                                                        form.amenityIds.includes(
+                                                            amenity.id
+                                                        )
+                                                    }
+                                                    onChange={() =>
+                                                        toggleAmenity(
+                                                            amenity.id
+                                                        )
+                                                    }
+                                                />
+
+                                                <label
+                                                    className="form-check-label"
+                                                    htmlFor={`amenity-${amenity.id}`}
+                                                >
+                                                    {amenity.name}
+                                                </label>
+                                            </div>
+                                        )
+                                    )}
+
+                                </div>
+
+                            </div>
+                        )}
     
                         <div className="d-flex gap-2 justify-content-end mt-4">
     
@@ -297,6 +385,23 @@ function RoomsPage() {
                                     <p className="text-secondary-emphasis mb-0">
                                         {room.building}
                                     </p>
+
+                                    {room.amenities.length > 0 && (
+                                        <div className="d-flex flex-wrap gap-1 mt-3">
+
+                                            {room.amenities.map(
+                                                (amenity) => (
+                                                    <span
+                                                        key={amenity.id}
+                                                        className="badge text-bg-light"
+                                                    >
+                                                        {amenity.name}
+                                                    </span>
+                                                )
+                                            )}
+
+                                        </div>
+                                    )}
     
                                 </div>
     

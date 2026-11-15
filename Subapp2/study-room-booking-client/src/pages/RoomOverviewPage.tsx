@@ -478,6 +478,23 @@ function RoomOverviewPage() {
                                                 : 'plasser'}
                                         </p>
 
+                                        {room.amenities.length > 0 && (
+                                            <div className="d-flex flex-wrap gap-1 mb-3">
+
+                                                {room.amenities.map(
+                                                    (amenity) => (
+                                                        <span
+                                                            key={amenity.id}
+                                                            className="badge text-bg-light"
+                                                        >
+                                                            {amenity.name}
+                                                        </span>
+                                                    )
+                                                )}
+
+                                            </div>
+                                        )}
+
                                         <div className="room-card-footer">
                                             {status === 'busy' ? (
                                                 <span className="room-card-note">

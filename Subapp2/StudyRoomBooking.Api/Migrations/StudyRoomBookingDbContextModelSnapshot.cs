@@ -145,6 +145,49 @@ namespace StudyRoomBooking.Api.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("StudyRoomBooking.Api.Models.Amenity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Amenities");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Whiteboard available in the room.",
+                            Name = "Whiteboard"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "External monitor available.",
+                            Name = "Monitor"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "Power outlets available for students.",
+                            Name = "Power outlets"
+                        });
+                });
+
             modelBuilder.Entity("StudyRoomBooking.Api.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -264,6 +307,48 @@ namespace StudyRoomBooking.Api.Migrations
                         });
                 });
 
+            modelBuilder.Entity("StudyRoomBooking.Api.Models.RoomAmenity", b =>
+                {
+                    b.Property<int>("RoomId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("AmenityId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("RoomId", "AmenityId");
+
+                    b.HasIndex("AmenityId");
+
+                    b.ToTable("RoomAmenities");
+
+                    b.HasData(
+                        new
+                        {
+                            RoomId = 1,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 1,
+                            AmenityId = 2
+                        },
+                        new
+                        {
+                            RoomId = 2,
+                            AmenityId = 1
+                        },
+                        new
+                        {
+                            RoomId = 2,
+                            AmenityId = 3
+                        },
+                        new
+                        {
+                            RoomId = 3,
+                            AmenityId = 3
+                        });
+                });
+
             modelBuilder.Entity("StudyRoomBooking.Api.Models.SessionParticipant", b =>
                 {
                     b.Property<int>("StudySessionId")
@@ -367,6 +452,25 @@ namespace StudyRoomBooking.Api.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("StudyRoomBooking.Api.Models.RoomAmenity", b =>
+                {
+                    b.HasOne("StudyRoomBooking.Api.Models.Amenity", "Amenity")
+                        .WithMany("RoomAmenities")
+                        .HasForeignKey("AmenityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("StudyRoomBooking.Api.Models.Room", "Room")
+                        .WithMany("RoomAmenities")
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Amenity");
+
+                    b.Navigation("Room");
+                });
+
             modelBuilder.Entity("StudyRoomBooking.Api.Models.SessionParticipant", b =>
                 {
                     b.HasOne("StudyRoomBooking.Api.Models.StudySession", "StudySession")
@@ -404,11 +508,21 @@ namespace StudyRoomBooking.Api.Migrations
                     b.Navigation("Room");
                 });
 
+            modelBuilder.Entity("StudyRoomBooking.Api.Models.Amenity", b =>
+                {
+                    b.Navigation("RoomAmenities");
+                });
+
             modelBuilder.Entity("StudyRoomBooking.Api.Models.ApplicationUser", b =>
                 {
                     b.Navigation("OrganizedSessions");
 
                     b.Navigation("Participations");
+                });
+
+            modelBuilder.Entity("StudyRoomBooking.Api.Models.Room", b =>
+                {
+                    b.Navigation("RoomAmenities");
                 });
 
             modelBuilder.Entity("StudyRoomBooking.Api.Models.StudySession", b =>

@@ -16,4 +16,6 @@ public class Room
 
     [Range(1, 100)]
     public int Capacity { get; set; }
+
+    public List<RoomAmenity> RoomAmenities { get; set; } = new();
 }

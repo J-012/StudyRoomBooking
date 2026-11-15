@@ -14,4 +14,6 @@ public class UpdateRoomDto
 
     [Range(1, 100)]
     public int Capacity { get; set; }
+
+    public List<int> AmenityIds { get; set; } = new();
 }

@@ -63,6 +63,13 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<
+    IAmenityRepository,
+    AmenityRepository>();
+
+builder.Services.AddScoped<
+    IAmenityService,
+    AmenityService>();
+builder.Services.AddScoped<
     IBookingRepository,
     BookingRepository>();
 

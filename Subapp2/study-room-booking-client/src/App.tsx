@@ -5,6 +5,7 @@ import RoomsPage from './pages/RoomsPage'
 import BookingsPage from './pages/BookingsPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import AmenitiesPage from './pages/AmenitiesPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import RoomOverviewPage from './pages/RoomOverviewPage'
 import { useAuth } from './context/AuthContext'
@@ -43,14 +44,25 @@ function App() {
                             <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-2">
 
                                 {isAdmin && (
-                                    <li className="nav-item">
-                                        <Link
-                                            className="nav-link text-secondary"
-                                            to="/rooms"
-                                        >
-                                            Rooms
-                                        </Link>
-                                    </li>
+                                    <>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link text-secondary"
+                                                to="/rooms"
+                                            >
+                                                Rooms
+                                            </Link>
+                                        </li>
+
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link text-secondary"
+                                                to="/amenities"
+                                            >
+                                                Amenities
+                                            </Link>
+                                        </li>
+                                    </>
                                 )}
 
                                     <li className="nav-item">
@@ -115,6 +127,15 @@ function App() {
                     element={
                         <ProtectedRoute adminOnly>
                             <RoomsPage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/amenities"
+                    element={
+                        <ProtectedRoute adminOnly>
+                            <AmenitiesPage />
                         </ProtectedRoute>
                     }
                 />
