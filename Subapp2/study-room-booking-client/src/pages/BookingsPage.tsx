@@ -11,6 +11,7 @@ import {
 
 import type { Booking, BookingRequest } from '../types/Booking'
 import type { Room } from '../types/Room'
+import { getDefaultBookingWindow } from '../utils/bookingTime'
 
 import './BookingsPage.css'
 
@@ -25,13 +26,18 @@ interface BookingForm {
     end: string // HH:mm
 }
 
-const emptyForm: BookingForm = {
-    subject: '',
-    topic: '',
-    roomId: 0,
-    date: '',
-    start: '',
-    end: '',
+function createEmptyForm(): BookingForm {
+    const defaultWindow =
+        getDefaultBookingWindow()
+
+    return {
+        subject: '',
+        topic: '',
+        roomId: 0,
+        date: defaultWindow.date,
+        start: defaultWindow.start,
+        end: defaultWindow.end,
+    }
 }
 
 function errorText(error: unknown, fallback: string) {
@@ -142,7 +148,8 @@ function BookingsPage() {
     const [bookings, setBookings] = useState<Booking[]>([])
     const [availableRooms, setAvailableRooms] = useState<Room[]>([])
     const [roomsLoading, setRoomsLoading] = useState(false)
-    const [form, setForm] = useState<BookingForm>(emptyForm)
+    const [form, setForm] =
+    useState<BookingForm>(createEmptyForm)
     const [editingId, setEditingId] = useState<number | null>(null)
 
     const [loading, setLoading] = useState(true)
@@ -276,7 +283,7 @@ function BookingsPage() {
                 await updateBooking(editingId, request)
             }
 
-            setForm(emptyForm)
+            setForm(createEmptyForm())
             setEditingId(null)
             await loadData()
         } catch (error) {
@@ -304,7 +311,7 @@ function BookingsPage() {
 
     function cancelEditing() {
         setEditingId(null)
-        setForm(emptyForm)
+        setForm(createEmptyForm())
         setFormError('')
     }
 

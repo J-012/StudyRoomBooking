@@ -202,16 +202,17 @@ function HomePage() {
                                 {isStudent && (
                                     <>
                                         <Link
-                                            to="/bookings"
+                                            to="/room-overview"
                                             className="btn btn-primary btn-lg px-4"
                                         >
-                                            Book et rom
+                                            Finn rom
                                         </Link>
+
                                         <Link
-                                            to="/room-overview"
+                                            to="/bookings"
                                             className="btn btn-outline-dark btn-lg px-4"
                                         >
-                                            Se romoversikt
+                                            Mine bookinger
                                         </Link>
                                     </>
                                 )}

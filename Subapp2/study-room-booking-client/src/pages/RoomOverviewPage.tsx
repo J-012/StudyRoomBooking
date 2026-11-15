@@ -5,33 +5,13 @@ import { getAvailableRooms } from '../api/bookingsApi'
 import { getRooms } from '../api/roomsApi'
 import { useAuth } from '../context/AuthContext'
 import type { Room } from '../types/Room'
+import { getDefaultBookingWindow } from '../utils/bookingTime'
 
 import './RoomOverviewPage.css'
 
 type RoomStatus = 'free' | 'busy' | 'checking' | null
 
 const capacityOptions = [0, 2, 4, 6, 8, 10]
-
-function pad(value: number) {
-    return String(value).padStart(2, '0')
-}
-
-// Standard tidsrom: neste hele kvarter og én time frem
-function defaultWindow() {
-    const start = new Date()
-    start.setSeconds(0, 0)
-    start.setMinutes(Math.floor(start.getMinutes() / 15) * 15 + 15)
-
-    const end = new Date(start.getTime() + 60 * 60 * 1000)
-    const date = start.toLocaleDateString('sv-SE') // YYYY-MM-DD
-    const sameDay = end.toLocaleDateString('sv-SE') === date
-
-    return {
-        date,
-        start: `${pad(start.getHours())}:${pad(start.getMinutes())}`,
-        end: sameDay ? `${pad(end.getHours())}:${pad(end.getMinutes())}` : '',
-    }
-}
 
 function formatDate(date: string) {
     return new Date(`${date}T00:00`).toLocaleDateString('nb-NO', {
@@ -80,7 +60,10 @@ function StatusBadge({ status }: { status: RoomStatus }) {
 
 function RoomOverviewPage() {
     const { isAuthenticated } = useAuth()
-    const initialWindow = useMemo(defaultWindow, [])
+    const initialWindow = useMemo(
+        getDefaultBookingWindow,
+        []
+    )
 
     const [rooms, setRooms] = useState<Room[]>([])
     const [loading, setLoading] = useState(true)
