@@ -185,10 +185,10 @@ function HomePage() {
                                 {!isAuthenticated && (
                                     <>
                                         <Link
-                                            to="/register"
+                                            to="/login"
                                             className="btn btn-primary btn-lg px-4"
                                         >
-                                            Registrer deg
+                                            Logg inn
                                         </Link>
                                         <Link
                                             to="/room-overview"

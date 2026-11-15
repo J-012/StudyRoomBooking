@@ -77,12 +77,12 @@ function App() {
                                     </li>
                                 ) : (
                                     <>
-                                        <li className="nav-item">
+                                        <li className="nav-item mt-2 mt-lg-0">
                                             <Link
-                                                className="nav-link text-secondary"
+                                                className="btn btn-outline-dark px-3"
                                                 to="/login"
                                             >
-                                                Logg inn
+                                                Log in
                                             </Link>
                                         </li>
 
