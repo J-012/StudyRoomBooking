@@ -2,6 +2,11 @@
   <Folder Name="/Subapp1/">
     <Project Path="Subapp1/StudyRoomBooking.Mvc.csproj" />
   </Folder>
+
+  <Folder Name="/Subapp1.Tests/">
+    <Project Path="Subapp1.Tests/Subapp1.Tests.csproj" />
+  </Folder>
+
   <Folder Name="/Subapp2/">
     <Project Path="Subapp2/StudyRoomBooking.Api/StudyRoomBooking.Api.csproj" />
   </Folder>
