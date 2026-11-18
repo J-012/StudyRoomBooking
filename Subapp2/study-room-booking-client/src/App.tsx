@@ -5,7 +5,10 @@ import RoomsPage from './pages/RoomsPage'
 import BookingsPage from './pages/BookingsPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import AmenitiesPage from './pages/AmenitiesPage'
+import BuildingsPage from './pages/BuildingsPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import RoomOverviewPage from './pages/RoomOverviewPage'
 import { useAuth } from './context/AuthContext'
 import './App.css'
 
@@ -42,14 +45,34 @@ function App() {
                             <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-2">
 
                                 {isAdmin && (
-                                    <li className="nav-item">
-                                        <Link
-                                            className="nav-link text-secondary"
-                                            to="/rooms"
-                                        >
-                                            Rooms
-                                        </Link>
-                                    </li>
+                                    <>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link text-secondary"
+                                                to="/rooms"
+                                            >
+                                                Rooms
+                                            </Link>
+                                        </li>
+
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link text-secondary"
+                                                to="/amenities"
+                                            >
+                                                Amenities
+                                            </Link>
+                                        </li>
+
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link text-secondary"
+                                                to="/buildings"
+                                            >
+                                                Buildings
+                                            </Link>
+                                        </li>
+                                    </>
                                 )}
 
                                     <li className="nav-item">
@@ -76,12 +99,12 @@ function App() {
                                     </li>
                                 ) : (
                                     <>
-                                        <li className="nav-item">
+                                        <li className="nav-item mt-2 mt-lg-0">
                                             <Link
-                                                className="nav-link text-secondary"
+                                                className="btn btn-outline-dark px-3"
                                                 to="/login"
                                             >
-                                                Logg inn
+                                                Log in
                                             </Link>
                                         </li>
 
@@ -119,11 +142,37 @@ function App() {
                 />
 
                 <Route
+                    path="/amenities"
+                    element={
+                        <ProtectedRoute adminOnly>
+                            <AmenitiesPage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/buildings"
+                    element={
+                        <ProtectedRoute adminOnly>
+                            <BuildingsPage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
                     path="/bookings"
                     element={
                         <ProtectedRoute>
                             <BookingsPage />
                         </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    
+                path="/room-overview"
+                    element={
+                            <RoomOverviewPage />
                     }
                 />
 

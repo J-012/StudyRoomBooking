@@ -14,6 +14,10 @@ public interface IBookingRepository
 
     Task DeleteAsync(StudySession session);
 
+    Task<int> CountActiveBookingsForUserAsync(
+    string organizerUserId
+    );
+
     Task<bool> HasConflictAsync(
         int roomId,
         DateTime startTime,

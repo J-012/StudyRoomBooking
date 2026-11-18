@@ -21,7 +21,9 @@ public class RoomsController : ControllerBase
         _logger = logger;
     }
 
+    // Romoversikten skal være synlig uten innlogging
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<List<RoomDto>>> GetAll()
     {
         List<RoomDto> rooms = await _roomService.GetAllAsync();
@@ -29,7 +31,36 @@ public class RoomsController : ControllerBase
         return Ok(rooms);
     }
 
+    // GET /api/rooms/available?startTime=...&endTime=...&excludeBookingId=...
+    [HttpGet("available")]
+    [AllowAnonymous]
+    public async Task<ActionResult<List<RoomDto>>> GetAvailable(
+        [FromQuery] DateTime startTime,
+        [FromQuery] DateTime endTime,
+        [FromQuery] int? excludeBookingId)
+    {
+        try
+        {
+            List<RoomDto> rooms =
+                await _roomService.GetAvailableAsync(
+                    startTime,
+                    endTime,
+                    excludeBookingId
+                );
+
+            return Ok(rooms);
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new
+            {
+                message = exception.Message
+            });
+        }
+    }
+
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<ActionResult<RoomDto>> GetById(int id)
     {
         RoomDto? room = await _roomService.GetByIdAsync(id);

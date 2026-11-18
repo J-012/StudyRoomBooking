@@ -6,6 +6,8 @@ namespace StudyRoomBooking.Api.Services;
 
 public class BookingService : IBookingService
 {
+    private const int MaxActiveBookingsPerUser = 3;
+
     private readonly IBookingRepository _bookingRepository;
     private readonly IRoomRepository _roomRepository;
 
@@ -29,6 +31,15 @@ public class BookingService : IBookingService
 
         foreach (StudySession session in sessions)
         {
+            // Studenter ser bare sine egne bookinger, admin ser alle.
+            if (!CanManage(
+                session,
+                currentUserId,
+                isAdmin))
+            {
+                continue;
+            }
+
             bookingDtos.Add(
                 ToDto(
                     session,
@@ -49,7 +60,13 @@ public class BookingService : IBookingService
         StudySession? session =
             await _bookingRepository.GetByIdAsync(id);
 
-        if (session == null)
+        // Andres bookinger behandles som "finnes ikke" (404),
+        // så man ikke kan hente dem ved å gjette en id.
+        if (session == null
+            || !CanManage(
+                session,
+                currentUserId,
+                isAdmin))
         {
             return null;
         }
@@ -65,6 +82,19 @@ public class BookingService : IBookingService
         CreateBookingDto bookingDto,
         string currentUserId)
     {
+        int activeBookingCount =
+            await _bookingRepository
+                .CountActiveBookingsForUserAsync(
+                    currentUserId
+                );
+
+        if (activeBookingCount >= MaxActiveBookingsPerUser)
+        {
+            throw new ArgumentException(
+                $"You can have a maximum of {MaxActiveBookingsPerUser} active bookings at a time."
+            );
+        }
+
         await ValidateAsync(
             bookingDto.RoomId,
             bookingDto.StartTime,
@@ -248,7 +278,7 @@ public class BookingService : IBookingService
             RoomNumber =
                 session.Room?.RoomNumber ?? string.Empty,
             Building =
-                session.Room?.Building ?? string.Empty,
+                session.Room?.Building?.Name ?? string.Empty,
             StartTime = session.StartTime,
             EndTime = session.EndTime,
             OrganizerName =

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { login } from '../api/authApi'
 import { useAuth } from '../context/AuthContext'
@@ -90,6 +90,13 @@ function LoginPage() {
                 <button type="submit" className="btn btn-primary w-100">
                     Logg inn
                 </button>
+
+                <p className="text-center mt-3 mb-0">
+                    Har du ikke en bruker?{' '}
+                    <Link to="/register">
+                        Registrer deg
+                    </Link>
+                </p>
             </form>
         </main>
     )

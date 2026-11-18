@@ -6,7 +6,11 @@ public class RoomDto
 
     public string RoomNumber { get; set; } = string.Empty;
 
+    public int BuildingId { get; set; }
+
     public string Building { get; set; } = string.Empty;
 
     public int Capacity { get; set; }
+
+    public List<AmenityDto> Amenities { get; set; } = new();
 }

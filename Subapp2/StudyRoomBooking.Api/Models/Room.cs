@@ -10,10 +10,12 @@ public class Room
     [StringLength(20)]
     public string RoomNumber { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(100)]
-    public string Building { get; set; } = string.Empty;
+    [Range(1, int.MaxValue)]
+    public int BuildingId { get; set; }
+    public Building? Building { get; set; }
 
     [Range(1, 100)]
     public int Capacity { get; set; }
+
+    public List<RoomAmenity> RoomAmenities { get; set; } = new();
 }

@@ -1,0 +1,209 @@
+/* ---------- Room overview page ---------- */
+
+.filter-panel .form-check-input:checked {
+  background-color: var(--srb-primary);
+  border-color: var(--srb-primary);
+}
+
+.filter-panel .form-check-input:focus {
+  border-color: var(--srb-primary);
+  box-shadow: 0 0 0 0.2rem rgba(255, 213, 0, 0.2);
+}
+
+/* Bootstrap sin bryter bruker et hvitt ikon; gjør det mørkt på gul bakgrunn */
+.filter-panel .form-switch .form-check-input:checked {
+  --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23212529'/%3e%3c/svg%3e");
+}
+
+.filter-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: calc(1.5em + 1.2rem + 2px); /* samme høyde som inputfeltene */
+  margin: 0;
+}
+
+.filter-switch .form-check-input {
+  width: 2.5em;
+  height: 1.35em;
+  margin: 0;
+  cursor: pointer;
+}
+
+.filter-switch .form-check-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.filter-switch .form-check-input:disabled + .form-check-label {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Resultatlinje */
+
+.results-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.92rem;
+}
+
+/* Romkort */
+
+.room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1rem;
+}
+
+.room-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.15rem 1.25rem;
+  background: #fff;
+  border: 1px solid var(--srb-border);
+  border-radius: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.room-card:hover {
+  border-color: #cfd4da;
+  box-shadow: var(--srb-shadow);
+}
+
+.room-card.is-busy {
+  background: #fafafa;
+}
+
+.room-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.room-card-number {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.room-card-building {
+  margin: 0;
+  color: var(--srb-muted);
+  font-size: 0.88rem;
+}
+
+.room-card-capacity {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.9rem 0 1.1rem;
+  font-size: 0.88rem;
+  color: var(--srb-ink);
+}
+
+.room-card-capacity svg {
+  color: var(--srb-muted);
+}
+
+.room-card-footer {
+  margin-top: auto;
+}
+
+.room-card-note {
+  display: block;
+  padding: 0.4rem 0;
+  color: var(--srb-muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* Status */
+
+.room-status {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.room-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.room-status-free {
+  background: #e6f6ec;
+  color: #1e7a3c;
+}
+
+.room-status-busy {
+  background: #fdecec;
+  color: #a12828;
+}
+
+.room-status-checking {
+  background: #f1f3f5;
+  color: var(--srb-muted);
+}
+
+.room-skeleton {
+  height: 168px;
+  border-color: transparent;
+  background: linear-gradient(90deg, #f4f5f7 0%, #eceef1 50%, #f4f5f7 100%);
+  background-size: 200% 100%;
+  animation: room-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes room-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  border: 1px dashed var(--srb-border);
+  border-radius: 12px;
+  color: var(--srb-muted);
+}
+
+.min-w-0 {
+  min-width: 0;
+}
+
+/* Filteret står i en egen kolonne til venstre og følger med ved scrolling */
+@media (min-width: 992px) {
+  .filter-panel {
+    position: sticky;
+    top: 1.5rem;
+  }
+
+  .room-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+}
+
+.filter-heading {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--srb-muted);
+}

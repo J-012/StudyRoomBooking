@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { register } from '../api/authApi'
 import { useAuth } from '../context/AuthContext'
@@ -151,6 +151,13 @@ function RegisterPage() {
                 <button type="submit" className="btn btn-primary w-100">
                     Registrer
                 </button>
+
+                <p className="text-center mt-3 mb-0">
+                    Har du allerede en bruker?{' '}
+                    <Link to="/login">
+                        Logg inn
+                    </Link>
+                </p>
             </form>
         </main>
     )

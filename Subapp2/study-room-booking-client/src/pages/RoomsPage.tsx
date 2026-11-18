@@ -8,6 +8,12 @@ import {
     updateRoom,
 } from '../api/roomsApi'
 
+import { getAmenities } from '../api/amenitiesApi'
+import { getBuildings } from '../api/buildingsApi'
+
+import type { Amenity } from '../types/Amenity'
+import type { Building } from '../types/Building'
+
 import type {
     Room,
     RoomRequest,
@@ -15,13 +21,23 @@ import type {
 
 const emptyForm: RoomRequest = {
     roomNumber: '',
-    building: '',
+    buildingId: 0,
     capacity: 1,
+    amenityIds: [],
 }
 
 function RoomsPage() {
-    const [rooms, setRooms] = useState<Room[]>([])
-    const [form, setForm] = useState<RoomRequest>(emptyForm)
+    const [rooms, setRooms] =
+        useState<Room[]>([])
+
+    const [amenities, setAmenities] =
+        useState<Amenity[]>([])
+
+    const [buildings, setBuildings] =
+        useState<Building[]>([])
+
+    const [form, setForm] =
+        useState<RoomRequest>(emptyForm)
 
     const [editingId, setEditingId] =
         useState<number | null>(null)
@@ -45,25 +61,48 @@ function RoomsPage() {
 
     useEffect(() => {
         loadRooms()
+    
+        getAmenities()
+            .then(setAmenities)
+            .catch(() =>
+                setError(
+                    'Could not load amenities.'
+                )
+            )
+    
+        getBuildings()
+            .then(setBuildings)
+            .catch(() =>
+                setError(
+                    'Could not load buildings.'
+                )
+            )
     }, [])
 
     async function handleSubmit(
         event: FormEvent<HTMLFormElement>
     ) {
         event.preventDefault()
-
+    
+        if (form.buildingId <= 0) {
+            setError(
+                'Please select a building.'
+            )
+            return
+        }
+    
         try {
             setError('')
-
+    
             if (editingId === null) {
                 await createRoom(form)
             } else {
                 await updateRoom(editingId, form)
             }
-
+    
             setForm(emptyForm)
             setEditingId(null)
-
+    
             await loadRooms()
         } catch {
             setError('Could not save room.')
@@ -72,17 +111,45 @@ function RoomsPage() {
 
     function startEditing(room: Room) {
         setEditingId(room.id)
-
+    
         setForm({
             roomNumber: room.roomNumber,
-            building: room.building,
+            buildingId: room.buildingId,
             capacity: room.capacity,
+            amenityIds:
+                room.amenities.map(
+                    (amenity) => amenity.id
+                ),
         })
     }
 
     function cancelEditing() {
         setEditingId(null)
         setForm(emptyForm)
+    }
+
+    function toggleAmenity(
+        amenityId: number
+    ) {
+        setForm((currentForm) => {
+            const alreadySelected =
+                currentForm.amenityIds.includes(
+                    amenityId
+                )
+    
+            return {
+                ...currentForm,
+                amenityIds: alreadySelected
+                    ? currentForm.amenityIds.filter(
+                          (id) =>
+                              id !== amenityId
+                      )
+                    : [
+                          ...currentForm.amenityIds,
+                          amenityId,
+                      ],
+            }
+        })
     }
 
     async function handleDelete(id: number) {
@@ -186,32 +253,46 @@ function RoomsPage() {
     
                             <div className="col-12 col-md-4">
     
-                                <label className="form-label">
-                                    Building
-                                </label>
-    
-                                <input
-                                    className="form-control"
-                                    value={form.building}
-                                    required
-                                    maxLength={100}
-                                    placeholder="e.g. Pilestredet 35"
-                                    onChange={(event) =>
-                                        setForm({
-                                            ...form,
-                                            building:
-                                                event.target.value,
-                                        })
-                                    }
-                                />
-    
-                            </div>
-    
-                            <div className="col-12 col-md-4">
-    
-                                <label className="form-label">
-                                    Capacity
-                                </label>
+                            <label className="form-label">
+                                Building
+                            </label>
+
+                            <select
+                                className="form-select"
+                                value={form.buildingId}
+                                required
+                                onChange={(event) =>
+                                    setForm({
+                                        ...form,
+                                        buildingId: Number(
+                                            event.target.value
+                                        ),
+                                    })
+                                }
+                            >
+                                <option value={0}>
+                                    Select building
+                                </option>
+
+                                {buildings.map(
+                                    (building) => (
+                                        <option
+                                            key={building.id}
+                                            value={building.id}
+                                        >
+                                            {building.name}
+                                        </option>
+                                    )
+                                )}
+                            </select>
+
+                        </div>
+
+                        <div className="col-12 col-md-4">
+
+                            <label className="form-label">
+                                Capacity
+                            </label>
     
                                 <input
                                     className="form-control"
@@ -233,6 +314,52 @@ function RoomsPage() {
                             </div>
     
                         </div>
+
+                        {amenities.length > 0 && (
+                            <div className="mt-4">
+
+                                <label className="form-label fw-semibold">
+                                    Amenities
+                                </label>
+
+                                <div className="d-flex flex-wrap gap-3">
+
+                                    {amenities.map(
+                                        (amenity) => (
+                                            <div
+                                                className="form-check"
+                                                key={amenity.id}
+                                            >
+                                                <input
+                                                    id={`amenity-${amenity.id}`}
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    checked={
+                                                        form.amenityIds.includes(
+                                                            amenity.id
+                                                        )
+                                                    }
+                                                    onChange={() =>
+                                                        toggleAmenity(
+                                                            amenity.id
+                                                        )
+                                                    }
+                                                />
+
+                                                <label
+                                                    className="form-check-label"
+                                                    htmlFor={`amenity-${amenity.id}`}
+                                                >
+                                                    {amenity.name}
+                                                </label>
+                                            </div>
+                                        )
+                                    )}
+
+                                </div>
+
+                            </div>
+                        )}
     
                         <div className="d-flex gap-2 justify-content-end mt-4">
     
@@ -297,6 +424,23 @@ function RoomsPage() {
                                     <p className="text-secondary-emphasis mb-0">
                                         {room.building}
                                     </p>
+
+                                    {room.amenities.length > 0 && (
+                                        <div className="d-flex flex-wrap gap-1 mt-3">
+
+                                            {room.amenities.map(
+                                                (amenity) => (
+                                                    <span
+                                                        key={amenity.id}
+                                                        className="badge text-bg-light"
+                                                    >
+                                                        {amenity.name}
+                                                    </span>
+                                                )
+                                            )}
+
+                                        </div>
+                                    )}
     
                                 </div>
     
