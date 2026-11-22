@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { getAvailableRooms } from '../api/bookingsApi'
-import { getRooms } from '../api/roomsApi'
+import { getAvailableRooms, getRooms } from '../api/roomsApi'
 import { getBuildings } from '../api/buildingsApi'
 
 import { useAuth } from '../context/AuthContext'

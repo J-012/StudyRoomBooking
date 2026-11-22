@@ -90,13 +90,10 @@ public class RoomService : IRoomService
         return ToDto(room);
     }
 
-    public async Task<RoomDto> CreateAsync(
-        CreateRoomDto roomDto)
+    public async Task<RoomDto> CreateAsync(CreateRoomDto roomDto)
     {
         Building? building =
-            await _buildingRepository.GetByIdAsync(
-                roomDto.BuildingId
-            );
+            await _buildingRepository.GetByIdAsync(roomDto.BuildingId);
 
         if (building == null)
         {
@@ -106,9 +103,7 @@ public class RoomService : IRoomService
         }
 
         List<int> amenityIds =
-            await ValidateAmenityIdsAsync(
-                roomDto.AmenityIds
-            );
+            await ValidateAmenityIdsAsync(roomDto.AmenityIds);
 
         Room room = new Room
         {
@@ -127,13 +122,10 @@ public class RoomService : IRoomService
             );
         }
 
-        Room createdRoom =
-            await _roomRepository.AddAsync(room);
+        Room createdRoom = await _roomRepository.AddAsync(room);
 
         Room? completeRoom =
-            await _roomRepository.GetByIdAsync(
-                createdRoom.Id
-            );
+            await _roomRepository.GetByIdAsync(createdRoom.Id);
 
         return ToDto(completeRoom!);
     }
@@ -150,9 +142,7 @@ public class RoomService : IRoomService
         }
 
         Building? building =
-            await _buildingRepository.GetByIdAsync(
-                roomDto.BuildingId
-            );
+            await _buildingRepository.GetByIdAsync(roomDto.BuildingId);
 
         if (building == null)
         {
@@ -162,9 +152,7 @@ public class RoomService : IRoomService
         }
 
         List<int> amenityIds =
-            await ValidateAmenityIdsAsync(
-                roomDto.AmenityIds
-            );
+            await ValidateAmenityIdsAsync(roomDto.AmenityIds);
 
         room.RoomNumber = roomDto.RoomNumber;
         room.BuildingId = roomDto.BuildingId;
@@ -197,6 +185,21 @@ public class RoomService : IRoomService
             return false;
         }
 
+        // Deleting a room cascades to its bookings. Refuse while students
+        // still have upcoming bookings there, so they do not lose them
+        // without warning. Bookings that have already ended are removed
+        // together with the room.
+        bool hasUpcomingBookings =
+            await _bookingRepository
+                .HasUpcomingBookingsForRoomAsync(id);
+
+        if (hasUpcomingBookings)
+        {
+            throw new ArgumentException(
+                "This room has upcoming bookings. Delete or move the bookings first."
+            );
+        }
+
         await _roomRepository.DeleteAsync(room);
 
         return true;
@@ -213,20 +216,16 @@ public class RoomService : IRoomService
             Capacity = room.Capacity
         };
 
-        foreach (RoomAmenity roomAmenity
-            in room.RoomAmenities)
+        foreach (RoomAmenity roomAmenity in room.RoomAmenities)
         {
             if (roomAmenity.Amenity != null)
             {
                 roomDto.Amenities.Add(
                     new AmenityDto
                     {
-                        Id =
-                            roomAmenity.Amenity.Id,
-                        Name =
-                            roomAmenity.Amenity.Name,
-                        Description =
-                            roomAmenity.Amenity.Description
+                        Id = roomAmenity.Amenity.Id,
+                        Name = roomAmenity.Amenity.Name,
+                        Description = roomAmenity.Amenity.Description
                     }
                 );
             }
@@ -234,13 +233,11 @@ public class RoomService : IRoomService
 
         return roomDto;
     }
-    
-    private async Task<List<int>>
-    ValidateAmenityIdsAsync(
+
+    private async Task<List<int>> ValidateAmenityIdsAsync(
         List<int> amenityIds)
     {
-        List<int> uniqueIds =
-            amenityIds.Distinct().ToList();
+        List<int> uniqueIds = amenityIds.Distinct().ToList();
 
         if (uniqueIds.Count == 0)
         {
@@ -248,9 +245,7 @@ public class RoomService : IRoomService
         }
 
         List<Amenity> amenities =
-            await _amenityRepository.GetByIdsAsync(
-                uniqueIds
-            );
+            await _amenityRepository.GetByIdsAsync(uniqueIds);
 
         if (amenities.Count != uniqueIds.Count)
         {

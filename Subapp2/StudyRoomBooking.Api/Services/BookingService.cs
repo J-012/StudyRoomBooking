@@ -26,27 +26,35 @@ public class BookingService : IBookingService
         List<StudySession> sessions =
             await _bookingRepository.GetAllAsync();
 
-        List<BookingDto> bookingDtos =
-            new List<BookingDto>();
+        List<BookingDto> bookingDtos = new List<BookingDto>();
 
         foreach (StudySession session in sessions)
         {
-            // Studenter ser bare sine egne bookinger, admin ser alle.
-            if (!CanManage(
-                session,
-                currentUserId,
-                isAdmin))
+            // Studenter ser egne bookinger og økter de har blitt med i,
+            // admin ser alle.
+            if (!CanSee(session, currentUserId, isAdmin))
             {
                 continue;
             }
 
-            bookingDtos.Add(
-                ToDto(
-                    session,
-                    currentUserId,
-                    isAdmin
-                )
-            );
+            bookingDtos.Add(ToDto(session, currentUserId, isAdmin));
+        }
+
+        return bookingDtos;
+    }
+
+    public async Task<List<BookingDto>> GetOpenAsync(
+        string currentUserId,
+        bool isAdmin)
+    {
+        List<StudySession> sessions =
+            await _bookingRepository.GetUpcomingAsync();
+
+        List<BookingDto> bookingDtos = new List<BookingDto>();
+
+        foreach (StudySession session in sessions)
+        {
+            bookingDtos.Add(ToDto(session, currentUserId, isAdmin));
         }
 
         return bookingDtos;
@@ -63,19 +71,12 @@ public class BookingService : IBookingService
         // Andres bookinger behandles som "finnes ikke" (404),
         // så man ikke kan hente dem ved å gjette en id.
         if (session == null
-            || !CanManage(
-                session,
-                currentUserId,
-                isAdmin))
+            || !CanSee(session, currentUserId, isAdmin))
         {
             return null;
         }
 
-        return ToDto(
-            session,
-            currentUserId,
-            isAdmin
-        );
+        return ToDto(session, currentUserId, isAdmin);
     }
 
     public async Task<BookingDto> CreateAsync(
@@ -84,9 +85,7 @@ public class BookingService : IBookingService
     {
         int activeBookingCount =
             await _bookingRepository
-                .CountActiveBookingsForUserAsync(
-                    currentUserId
-                );
+                .CountActiveBookingsForUserAsync(currentUserId);
 
         if (activeBookingCount >= MaxActiveBookingsPerUser)
         {
@@ -115,11 +114,7 @@ public class BookingService : IBookingService
         StudySession createdSession =
             await _bookingRepository.AddAsync(session);
 
-        return ToDto(
-            createdSession,
-            currentUserId,
-            false
-        );
+        return ToDto(createdSession, currentUserId, false);
     }
 
     public async Task<bool> UpdateAsync(
@@ -136,22 +131,28 @@ public class BookingService : IBookingService
             return false;
         }
 
-        if (!CanManage(
-            session,
-            currentUserId,
-            isAdmin))
+        if (!CanManage(session, currentUserId, isAdmin))
         {
             throw new UnauthorizedAccessException(
                 "You can only edit your own bookings."
             );
         }
 
-        await ValidateAsync(
+        Room room = await ValidateAsync(
             bookingDto.RoomId,
             bookingDto.StartTime,
             bookingDto.EndTime,
             id
         );
+
+        // The session may be moved to another room, but not to one that is
+        // too small for the people who have already joined.
+        if (CountAttendees(session) > room.Capacity)
+        {
+            throw new ArgumentException(
+                "The selected room is too small for the people who have joined this session."
+            );
+        }
 
         session.Subject = bookingDto.Subject;
         session.Topic = bookingDto.Topic;
@@ -177,10 +178,7 @@ public class BookingService : IBookingService
             return false;
         }
 
-        if (!CanManage(
-            session,
-            currentUserId,
-            isAdmin))
+        if (!CanManage(session, currentUserId, isAdmin))
         {
             throw new UnauthorizedAccessException(
                 "You can only delete your own bookings."
@@ -192,7 +190,88 @@ public class BookingService : IBookingService
         return true;
     }
 
-    private async Task ValidateAsync(
+    public async Task<bool> JoinAsync(int id, string currentUserId)
+    {
+        StudySession? session =
+            await _bookingRepository.GetByIdAsync(id);
+
+        if (session == null)
+        {
+            return false;
+        }
+
+        if (session.EndTime < DateTime.Now)
+        {
+            throw new ArgumentException(
+                "This session has already ended."
+            );
+        }
+
+        if (session.OrganizerUserId == currentUserId)
+        {
+            throw new ArgumentException(
+                "You are the organizer of this session."
+            );
+        }
+
+        if (IsParticipant(session, currentUserId))
+        {
+            throw new ArgumentException(
+                "You have already joined this session."
+            );
+        }
+
+        // The room's capacity limits how many can attend. The organizer
+        // takes one of the seats.
+        int capacity = session.Room?.Capacity ?? 0;
+
+        if (CountAttendees(session) >= capacity)
+        {
+            throw new ArgumentException(
+                "This session is full."
+            );
+        }
+
+        await _bookingRepository.AddParticipantAsync(
+            new SessionParticipant
+            {
+                StudySessionId = session.Id,
+                UserId = currentUserId
+            }
+        );
+
+        return true;
+    }
+
+    public async Task<bool> LeaveAsync(int id, string currentUserId)
+    {
+        StudySession? session =
+            await _bookingRepository.GetByIdAsync(id);
+
+        if (session == null)
+        {
+            return false;
+        }
+
+        SessionParticipant? participant =
+            session.Participants.FirstOrDefault(
+                participant => participant.UserId == currentUserId
+            );
+
+        if (participant == null)
+        {
+            throw new ArgumentException(
+                "You have not joined this session."
+            );
+        }
+
+        await _bookingRepository.RemoveParticipantAsync(participant);
+
+        return true;
+    }
+
+    // Throws ArgumentException if a rule is broken, otherwise returns the room.
+    private async Task<Room> ValidateAsync(
         int roomId,
         DateTime startTime,
         DateTime endTime,
@@ -253,6 +332,8 @@ public class BookingService : IBookingService
                 "The room is already booked during this time."
             );
         }
+
+        return room;
     }
 
     private bool CanManage(
@@ -262,6 +343,32 @@ public class BookingService : IBookingService
     {
         return isAdmin
             || session.OrganizerUserId == currentUserId;
+    }
+
+    private bool IsParticipant(
+        StudySession session,
+        string currentUserId)
+    {
+        return session.Participants.Any(
+            participant => participant.UserId == currentUserId
+        );
+    }
+
+    private bool CanSee(
+        StudySession session,
+        string currentUserId,
+        bool isAdmin)
+    {
+        return CanManage(session, currentUserId, isAdmin)
+            || IsParticipant(session, currentUserId);
+    }
+
+    // The organizer plus everyone who has joined.
+    private int CountAttendees(StudySession session)
+    {
+        int organizer = session.OrganizerUserId == null ? 0 : 1;
+
+        return session.Participants.Count + organizer;
     }
 
     private BookingDto ToDto(
@@ -284,11 +391,13 @@ public class BookingService : IBookingService
             OrganizerName =
                 session.Organizer?.FullName ?? "Unknown",
             CanManage =
-                CanManage(
-                    session,
-                    currentUserId,
-                    isAdmin
-                )
+                CanManage(session, currentUserId, isAdmin),
+            Capacity = session.Room?.Capacity ?? 0,
+            AttendeeCount = CountAttendees(session),
+            IsOrganizer =
+                session.OrganizerUserId == currentUserId,
+            IsParticipant =
+                IsParticipant(session, currentUserId)
         };
     }
 }

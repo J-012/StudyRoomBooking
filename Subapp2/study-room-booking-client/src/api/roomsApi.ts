@@ -1,89 +1,59 @@
 import type { Room, RoomRequest } from '../types/Room'
-import { clearStoredAuth } from '../context/AuthContext'
+import { apiRequest } from './apiClient'
 
 const roomsUrl = '/api/rooms'
 
-function authHeaders(): HeadersInit {
-    const raw = localStorage.getItem('auth')
-    const token = raw ? JSON.parse(raw).token : null
-
-    return {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    }
-}
-
-function handleUnauthorized(response: Response) {
-    if (response.status === 401) {
-        clearStoredAuth()
-        window.location.href = '/login'
-    }
-}
-
 export async function getRooms(): Promise<Room[]> {
-    const response = await fetch(roomsUrl, {
-        headers: authHeaders(),
-    })
+    const response = await apiRequest(roomsUrl, 'Could not load rooms')
 
-    handleUnauthorized(response)
-
-    if (!response.ok) {
-        throw new Error('Could not load rooms')
-    }
-
-    const rooms: Room[] = await response.json()
-
-    return rooms
+    return response.json()
 }
 
-export async function createRoom(
-    room: RoomRequest
-): Promise<Room> {
-    const response = await fetch(roomsUrl, {
+/**
+ * Henter rom som er ledige i hele tidsrommet.
+ * excludeBookingId brukes når man endrer en booking, slik at
+ * bookingens eget rom ikke regnes som opptatt av seg selv.
+ */
+export async function getAvailableRooms(
+    startTime: string,
+    endTime: string,
+    excludeBookingId?: number
+): Promise<Room[]> {
+    const params = new URLSearchParams({ startTime, endTime })
+
+    if (excludeBookingId !== undefined) {
+        params.set('excludeBookingId', String(excludeBookingId))
+    }
+
+    const response = await apiRequest(
+        `${roomsUrl}/available?${params}`,
+        'Kunne ikke hente ledige rom.'
+    )
+
+    return response.json()
+}
+
+export async function createRoom(room: RoomRequest): Promise<Room> {
+    const response = await apiRequest(roomsUrl, 'Could not create room', {
         method: 'POST',
-        headers: authHeaders(),
         body: JSON.stringify(room),
     })
 
-    handleUnauthorized(response)
-
-    if (!response.ok) {
-        throw new Error('Could not create room')
-    }
-
-    const createdRoom: Room = await response.json()
-
-    return createdRoom
+    return response.json()
 }
 
 export async function updateRoom(
     id: number,
     room: RoomRequest
 ): Promise<void> {
-    const response = await fetch(`${roomsUrl}/${id}`, {
+    await apiRequest(`${roomsUrl}/${id}`, 'Could not update room', {
         method: 'PUT',
-        headers: authHeaders(),
         body: JSON.stringify(room),
     })
-
-    handleUnauthorized(response)
-
-    if (!response.ok) {
-        throw new Error('Could not update room')
-    }
 }
 
-export async function deleteRoom(
-    id: number
-): Promise<void> {
-    const response = await fetch(`${roomsUrl}/${id}`, {
+export async function deleteRoom(id: number): Promise<void> {
+    await apiRequest(`${roomsUrl}/${id}`, 'Could not delete room', {
         method: 'DELETE',
-        headers: authHeaders(),
     })
-
-    handleUnauthorized(response)
-
-    if (!response.ok) {
-        throw new Error('Could not delete room')
-    }
 }

@@ -21,4 +21,16 @@ public class BookingDto
     public string OrganizerName { get; set; } = string.Empty;
 
     public bool CanManage { get; set; }
+
+    // Number of seats in the room.
+    public int Capacity { get; set; }
+
+    // The organizer plus everyone who has joined.
+    public int AttendeeCount { get; set; }
+
+    // True if the current user created the session.
+    public bool IsOrganizer { get; set; }
+
+    // True if the current user has joined someone else's session.
+    public bool IsParticipant { get; set; }
 }

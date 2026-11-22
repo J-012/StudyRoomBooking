@@ -1,10 +1,12 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudyRoomBooking.Api.DTOs;
 using StudyRoomBooking.Api.Services;
-using Microsoft.AspNetCore.Authorization;
 
 namespace StudyRoomBooking.Api.Controllers;
 
+// Broken domain rules (ArgumentException from the service) are turned into
+// 400 responses by GlobalExceptionHandler.
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
@@ -39,24 +41,14 @@ public class RoomsController : ControllerBase
         [FromQuery] DateTime endTime,
         [FromQuery] int? excludeBookingId)
     {
-        try
-        {
-            List<RoomDto> rooms =
-                await _roomService.GetAvailableAsync(
-                    startTime,
-                    endTime,
-                    excludeBookingId
-                );
+        List<RoomDto> rooms =
+            await _roomService.GetAvailableAsync(
+                startTime,
+                endTime,
+                excludeBookingId
+            );
 
-            return Ok(rooms);
-        }
-        catch (ArgumentException exception)
-        {
-            return BadRequest(new
-            {
-                message = exception.Message
-            });
-        }
+        return Ok(rooms);
     }
 
     [HttpGet("{id}")]

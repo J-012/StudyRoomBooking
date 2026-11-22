@@ -4,7 +4,14 @@ namespace StudyRoomBooking.Api.Services;
 
 public interface IBookingService
 {
+    // The user's own sessions and the ones they have joined (admin: all).
     Task<List<BookingDto>> GetAllAsync(
+        string currentUserId,
+        bool isAdmin
+    );
+
+    // Every session that has not ended yet, so students can find one to join.
+    Task<List<BookingDto>> GetOpenAsync(
         string currentUserId,
         bool isAdmin
     );
@@ -32,4 +39,9 @@ public interface IBookingService
         string currentUserId,
         bool isAdmin
     );
+
+    // Both return false if the session does not exist.
+    Task<bool> JoinAsync(int id, string currentUserId);
+
+    Task<bool> LeaveAsync(int id, string currentUserId);
 }

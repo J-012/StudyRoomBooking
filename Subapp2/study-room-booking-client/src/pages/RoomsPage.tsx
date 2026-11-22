@@ -104,8 +104,12 @@ function RoomsPage() {
             setEditingId(null)
     
             await loadRooms()
-        } catch {
-            setError('Could not save room.')
+        } catch (error) {
+            setError(
+                error instanceof Error
+                    ? error.message
+                    : 'Could not save room.'
+            )
         }
     }
 
@@ -163,8 +167,12 @@ function RoomsPage() {
         try {
             await deleteRoom(id)
             await loadRooms()
-        } catch {
-            setError('Could not delete room.')
+        } catch (error) {
+            setError(
+                error instanceof Error
+                    ? error.message
+                    : 'Could not delete room.'
+            )
         }
     }
 

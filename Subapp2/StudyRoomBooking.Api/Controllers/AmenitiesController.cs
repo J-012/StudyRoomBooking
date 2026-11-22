@@ -5,13 +5,14 @@ using StudyRoomBooking.Api.Services;
 
 namespace StudyRoomBooking.Api.Controllers;
 
+// Broken domain rules (ArgumentException from the service) are turned into
+// 400 responses by GlobalExceptionHandler.
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
 public class AmenitiesController : ControllerBase
 {
     private readonly IAmenityService _amenityService;
-
     private readonly ILogger<AmenitiesController> _logger;
 
     public AmenitiesController(
@@ -34,8 +35,7 @@ public class AmenitiesController : ControllerBase
 
     [HttpGet("{id}")]
     [AllowAnonymous]
-    public async Task<ActionResult<AmenityDto>> GetById(
-        int id)
+    public async Task<ActionResult<AmenityDto>> GetById(int id)
     {
         AmenityDto? amenity =
             await _amenityService.GetByIdAsync(id);
@@ -58,31 +58,19 @@ public class AmenitiesController : ControllerBase
     public async Task<ActionResult<AmenityDto>> Create(
         CreateAmenityDto amenityDto)
     {
-        try
-        {
-            AmenityDto amenity =
-                await _amenityService.CreateAsync(
-                    amenityDto
-                );
+        AmenityDto amenity =
+            await _amenityService.CreateAsync(amenityDto);
 
-            _logger.LogInformation(
-                "Amenity {AmenityId} was created.",
-                amenity.Id
-            );
+        _logger.LogInformation(
+            "Amenity {AmenityId} was created.",
+            amenity.Id
+        );
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = amenity.Id },
-                amenity
-            );
-        }
-        catch (ArgumentException exception)
-        {
-            return BadRequest(new
-            {
-                message = exception.Message
-            });
-        }
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = amenity.Id },
+            amenity
+        );
     }
 
     [HttpPut("{id}")]
@@ -91,45 +79,41 @@ public class AmenitiesController : ControllerBase
         int id,
         UpdateAmenityDto amenityDto)
     {
-        try
+        bool updated =
+            await _amenityService.UpdateAsync(id, amenityDto);
+
+        if (!updated)
         {
-            bool updated =
-                await _amenityService.UpdateAsync(
-                    id,
-                    amenityDto
-                );
-
-            if (!updated)
-            {
-                return NotFound();
-            }
-
-            _logger.LogInformation(
-                "Amenity {AmenityId} was updated.",
+            _logger.LogWarning(
+                "Amenity with id {AmenityId} could not be updated because it was not found.",
                 id
             );
 
-            return NoContent();
+            return NotFound();
         }
-        catch (ArgumentException exception)
-        {
-            return BadRequest(new
-            {
-                message = exception.Message
-            });
-        }
+
+        _logger.LogInformation(
+            "Amenity {AmenityId} was updated.",
+            id
+        );
+
+        return NoContent();
     }
 
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Delete(
-        int id)
+    public async Task<IActionResult> Delete(int id)
     {
         bool deleted =
             await _amenityService.DeleteAsync(id);
 
         if (!deleted)
         {
+            _logger.LogWarning(
+                "Amenity with id {AmenityId} could not be deleted because it was not found.",
+                id
+            );
+
             return NotFound();
         }
 

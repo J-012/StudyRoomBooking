@@ -8,8 +8,7 @@ public class BuildingService : IBuildingService
 {
     private readonly IBuildingRepository _buildingRepository;
 
-    public BuildingService(
-        IBuildingRepository buildingRepository)
+    public BuildingService(IBuildingRepository buildingRepository)
     {
         _buildingRepository = buildingRepository;
     }
@@ -19,8 +18,7 @@ public class BuildingService : IBuildingService
         List<Building> buildings =
             await _buildingRepository.GetAllAsync();
 
-        List<BuildingDto> buildingDtos =
-            new List<BuildingDto>();
+        List<BuildingDto> buildingDtos = new List<BuildingDto>();
 
         foreach (Building building in buildings)
         {
@@ -49,9 +47,7 @@ public class BuildingService : IBuildingService
         string name = buildingDto.Name.Trim();
 
         bool alreadyExists =
-            await _buildingRepository.ExistsByNameAsync(
-                name
-            );
+            await _buildingRepository.ExistsByNameAsync(name);
 
         if (alreadyExists)
         {
@@ -87,10 +83,7 @@ public class BuildingService : IBuildingService
         string name = buildingDto.Name.Trim();
 
         bool alreadyExists =
-            await _buildingRepository.ExistsByNameAsync(
-                name,
-                id
-            );
+            await _buildingRepository.ExistsByNameAsync(name, id);
 
         if (alreadyExists)
         {
@@ -100,8 +93,7 @@ public class BuildingService : IBuildingService
         }
 
         building.Name = name;
-        building.Address =
-            buildingDto.Address?.Trim();
+        building.Address = buildingDto.Address?.Trim();
 
         await _buildingRepository.SaveChangesAsync();
 
@@ -116,6 +108,19 @@ public class BuildingService : IBuildingService
         if (building == null)
         {
             return false;
+        }
+
+        // Rooms reference their building with DeleteBehavior.Restrict,
+        // so the database would reject this delete. Stop it here with
+        // a message the admin can act on.
+        bool hasRooms =
+            await _buildingRepository.HasRoomsAsync(id);
+
+        if (hasRooms)
+        {
+            throw new ArgumentException(
+                "This building still has rooms. Move or delete the rooms first."
+            );
         }
 
         await _buildingRepository.DeleteAsync(building);

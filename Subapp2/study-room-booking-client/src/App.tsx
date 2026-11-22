@@ -3,6 +3,7 @@ import { Routes, Route, Link } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import RoomsPage from './pages/RoomsPage'
 import BookingsPage from './pages/BookingsPage'
+import SessionsPage from './pages/SessionsPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import AmenitiesPage from './pages/AmenitiesPage'
@@ -17,11 +18,9 @@ function App() {
 
     return (
         <div className="app-shell">
-
             <header className="bg-white border-bottom sticky-top">
                 <nav className="navbar navbar-expand-lg navbar-light py-3">
                     <div className="container">
-
                         <Link className="navbar-brand fw-bold text-dark" to="/">
                             StudyRoomBooking
                         </Link>
@@ -43,6 +42,15 @@ function App() {
                             id="mainNav"
                         >
                             <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+                                {/* Romoversikten er åpen for alle */}
+                                <li className="nav-item">
+                                    <Link
+                                        className="nav-link text-secondary"
+                                        to="/room-overview"
+                                    >
+                                        Romoversikt
+                                    </Link>
+                                </li>
 
                                 {isAdmin && (
                                     <>
@@ -75,14 +83,28 @@ function App() {
                                     </>
                                 )}
 
-                                    <li className="nav-item">
-                                        <Link
-                                            className="nav-link text-secondary"
-                                            to="/bookings"
-                                        >
-                                            Bookings
-                                        </Link>
-                                    </li>
+                                {/* Økter og bookinger krever innlogging */}
+                                {isAuthenticated && (
+                                    <>
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link text-secondary"
+                                                to="/sessions"
+                                            >
+                                                Åpne økter
+                                            </Link>
+                                        </li>
+
+                                        <li className="nav-item">
+                                            <Link
+                                                className="nav-link text-secondary"
+                                                to="/bookings"
+                                            >
+                                                Bookings
+                                            </Link>
+                                        </li>
+                                    </>
+                                )}
 
                                 {isAuthenticated ? (
                                     <li className="nav-item mt-2 mt-lg-0 d-flex align-items-center gap-2">
@@ -118,7 +140,6 @@ function App() {
                                         </li>
                                     </>
                                 )}
-
                             </ul>
                         </div>
                     </div>
@@ -126,11 +147,7 @@ function App() {
             </header>
 
             <Routes>
-
-                <Route
-                    path="/"
-                    element={<HomePage />}
-                />
+                <Route path="/" element={<HomePage />} />
 
                 <Route
                     path="/rooms"
@@ -169,40 +186,37 @@ function App() {
                 />
 
                 <Route
-                    
-                path="/room-overview"
+                    path="/sessions"
                     element={
-                            <RoomOverviewPage />
+                        <ProtectedRoute>
+                            <SessionsPage />
+                        </ProtectedRoute>
                     }
                 />
 
-                <Route
-                    path="/login"
-                    element={<LoginPage />}
-                />
+                <Route path="/room-overview" element={<RoomOverviewPage />} />
 
-                <Route
-                    path="/register"
-                    element={<RegisterPage />}
-                />
+                <Route path="/login" element={<LoginPage />} />
 
+                <Route path="/register" element={<RegisterPage />} />
             </Routes>
 
             <footer className="footer">
                 <div className="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-
-                    <div>
-                        © 2026 - StudyRoomBooking
-                    </div>
+                    <div>© 2026 - StudyRoomBooking</div>
 
                     <div className="d-flex gap-4">
-                        <a href="/">Bookings</a>
-                        <a href="/">Privacy</a>
-                    </div>
+                        <Link to="/room-overview">Romoversikt</Link>
 
+                        {isAuthenticated && (
+                            <>
+                                <Link to="/sessions">Åpne økter</Link>
+                                <Link to="/bookings">Bookings</Link>
+                            </>
+                        )}
+                    </div>
                 </div>
             </footer>
-
         </div>
     )
 }

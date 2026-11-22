@@ -9,6 +9,14 @@ export interface Booking {
     endTime: string
     organizerName: string
     canManage: boolean
+    // Antall plasser i rommet
+    capacity: number
+    // Arrangøren pluss alle som har blitt med
+    attendeeCount: number
+    // Innlogget bruker opprettet økten
+    isOrganizer: boolean
+    // Innlogget bruker har blitt med i en annens økt
+    isParticipant: boolean
 }
 
 export interface BookingRequest {

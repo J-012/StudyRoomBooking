@@ -13,6 +13,8 @@ public interface IBuildingRepository
         int? excludedId = null
     );
 
+    Task<bool> HasRoomsAsync(int buildingId);
+
     Task<Building> AddAsync(Building building);
 
     Task SaveChangesAsync();

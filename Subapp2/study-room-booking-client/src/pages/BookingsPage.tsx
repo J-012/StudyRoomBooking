@@ -4,14 +4,17 @@ import type { FormEvent } from 'react'
 import {
     createBooking,
     deleteBooking,
-    getAvailableRooms,
     getBookings,
     updateBooking,
 } from '../api/bookingsApi'
+import { getAvailableRooms } from '../api/roomsApi'
 
 import type { Booking, BookingRequest } from '../types/Booking'
 import type { Room } from '../types/Room'
 import { getDefaultBookingWindow } from '../utils/bookingTime'
+import { useSearchParams } from 'react-router-dom'
+
+import { useAuth } from '../context/AuthContext'
 
 import './BookingsPage.css'
 
@@ -38,6 +41,33 @@ function createEmptyForm(): BookingForm {
         start: defaultWindow.start,
         end: defaultWindow.end,
     }
+}
+// Leser forhåndsvalg fra romoversikten (?roomId=…&date=…&start=…&end=…).
+// Manglende eller ugyldige verdier faller tilbake til standardskjemaet.
+function createFormFromParams(params: URLSearchParams): BookingForm {
+    const form = createEmptyForm()
+
+    const date = params.get('date')
+    const start = params.get('start')
+    const end = params.get('end')
+    const roomId = Number(params.get('roomId'))
+
+    const timePattern = /^\d{2}:\d{2}$/
+
+    if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        form.date = date
+    }
+
+    if (start && end && timePattern.test(start) && timePattern.test(end)) {
+        form.start = start
+        form.end = end
+    }
+
+    if (Number.isInteger(roomId) && roomId > 0) {
+        form.roomId = roomId
+    }
+
+    return form
 }
 
 function errorText(error: unknown, fallback: string) {
@@ -148,8 +178,11 @@ function BookingsPage() {
     const [bookings, setBookings] = useState<Booking[]>([])
     const [availableRooms, setAvailableRooms] = useState<Room[]>([])
     const [roomsLoading, setRoomsLoading] = useState(false)
-    const [form, setForm] =
-    useState<BookingForm>(createEmptyForm)
+    const [searchParams] = useSearchParams()
+    const { isAdmin } = useAuth()
+    const [form, setForm] = useState<BookingForm>(() =>
+        createFormFromParams(searchParams)
+    )
     const [editingId, setEditingId] = useState<number | null>(null)
 
     const [loading, setLoading] = useState(true)
@@ -551,7 +584,11 @@ function BookingsPage() {
                 {/* Liste: høyre kolonne på desktop */}
                 <div className="col-12 col-lg-8">
                     <div className="d-flex justify-content-between align-items-baseline mb-3">
-                        <h2 className="section-title mb-0">Mine kommende økter</h2>
+                        <h2 className="section-title mb-0">
+                            {isAdmin
+                                ? 'Alle kommende økter'
+                                : 'Mine kommende økter'}
+                        </h2>
                         {!loading && (
                             <span className="text-secondary small">
                                 {upcoming.length}{' '}

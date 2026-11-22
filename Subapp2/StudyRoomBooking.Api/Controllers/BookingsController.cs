@@ -7,6 +7,9 @@ using StudyRoomBooking.Api.Services;
 
 namespace StudyRoomBooking.Api.Controllers;
 
+// Broken domain rules (ArgumentException) and attempts to change someone
+// else's booking (UnauthorizedAccessException) are turned into 400 and 403
+// responses by GlobalExceptionHandler.
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
@@ -42,9 +45,29 @@ public class BookingsController : ControllerBase
         return Ok(bookings);
     }
 
+    // GET /api/bookings/open
+    // All upcoming sessions, so logged-in students can find one to join.
+    [HttpGet("open")]
+    public async Task<ActionResult<List<BookingDto>>> GetOpen()
+    {
+        string? userId = GetCurrentUserId();
+
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        List<BookingDto> bookings =
+            await _bookingService.GetOpenAsync(
+                userId,
+                User.IsInRole("Admin")
+            );
+
+        return Ok(bookings);
+    }
+
     [HttpGet("{id}")]
-    public async Task<ActionResult<BookingDto>> GetById(
-        int id)
+    public async Task<ActionResult<BookingDto>> GetById(int id)
     {
         string? userId = GetCurrentUserId();
 
@@ -62,6 +85,12 @@ public class BookingsController : ControllerBase
 
         if (booking == null)
         {
+            _logger.LogWarning(
+                "Booking with id {BookingId} was not found for user {UserId}.",
+                id,
+                userId
+            );
+
             return NotFound();
         }
 
@@ -79,33 +108,23 @@ public class BookingsController : ControllerBase
             return Unauthorized();
         }
 
-        try
-        {
-            BookingDto createdBooking =
-                await _bookingService.CreateAsync(
-                    bookingDto,
-                    userId
-                );
-
-            _logger.LogInformation(
-                "Booking {BookingId} created by user {UserId}.",
-                createdBooking.Id,
+        BookingDto createdBooking =
+            await _bookingService.CreateAsync(
+                bookingDto,
                 userId
             );
 
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = createdBooking.Id },
-                createdBooking
-            );
-        }
-        catch (ArgumentException exception)
-        {
-            return BadRequest(new
-            {
-                message = exception.Message
-            });
-        }
+        _logger.LogInformation(
+            "Booking {BookingId} created by user {UserId}.",
+            createdBooking.Id,
+            userId
+        );
+
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = createdBooking.Id },
+            createdBooking
+        );
     }
 
     [HttpPut("{id}")]
@@ -120,40 +139,31 @@ public class BookingsController : ControllerBase
             return Unauthorized();
         }
 
-        try
-        {
-            bool updated =
-                await _bookingService.UpdateAsync(
-                    id,
-                    bookingDto,
-                    userId,
-                    User.IsInRole("Admin")
-                );
-
-            if (!updated)
-            {
-                return NotFound();
-            }
-
-            _logger.LogInformation(
-                "Booking {BookingId} updated by user {UserId}.",
+        bool updated =
+            await _bookingService.UpdateAsync(
                 id,
-                userId
+                bookingDto,
+                userId,
+                User.IsInRole("Admin")
             );
 
-            return NoContent();
-        }
-        catch (ArgumentException exception)
+        if (!updated)
         {
-            return BadRequest(new
-            {
-                message = exception.Message
-            });
+            _logger.LogWarning(
+                "Booking with id {BookingId} could not be updated because it was not found.",
+                id
+            );
+
+            return NotFound();
         }
-        catch (UnauthorizedAccessException)
-        {
-            return Forbid();
-        }
+
+        _logger.LogInformation(
+            "Booking {BookingId} updated by user {UserId}.",
+            id,
+            userId
+        );
+
+        return NoContent();
     }
 
     [HttpDelete("{id}")]
@@ -166,40 +176,105 @@ public class BookingsController : ControllerBase
             return Unauthorized();
         }
 
-        try
-        {
-            bool deleted =
-                await _bookingService.DeleteAsync(
-                    id,
-                    userId,
-                    User.IsInRole("Admin")
-                );
-
-            if (!deleted)
-            {
-                return NotFound();
-            }
-
-            _logger.LogInformation(
-                "Booking {BookingId} deleted by user {UserId}.",
+        bool deleted =
+            await _bookingService.DeleteAsync(
                 id,
-                userId
+                userId,
+                User.IsInRole("Admin")
             );
 
-            return NoContent();
-        }
-        catch (UnauthorizedAccessException)
+        if (!deleted)
         {
-            return Forbid();
+            _logger.LogWarning(
+                "Booking with id {BookingId} could not be deleted because it was not found.",
+                id
+            );
+
+            return NotFound();
         }
+
+        _logger.LogInformation(
+            "Booking {BookingId} deleted by user {UserId}.",
+            id,
+            userId
+        );
+
+        return NoContent();
+    }
+
+    // POST /api/bookings/5/participants
+    // The current user joins the session.
+    [HttpPost("{id}/participants")]
+    public async Task<IActionResult> Join(int id)
+    {
+        string? userId = GetCurrentUserId();
+
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        bool joined =
+            await _bookingService.JoinAsync(id, userId);
+
+        if (!joined)
+        {
+            _logger.LogWarning(
+                "User {UserId} could not join booking {BookingId} because it was not found.",
+                userId,
+                id
+            );
+
+            return NotFound();
+        }
+
+        _logger.LogInformation(
+            "User {UserId} joined booking {BookingId}.",
+            userId,
+            id
+        );
+
+        return NoContent();
+    }
+
+    // DELETE /api/bookings/5/participants
+    // The current user leaves the session.
+    [HttpDelete("{id}/participants")]
+    public async Task<IActionResult> Leave(int id)
+    {
+        string? userId = GetCurrentUserId();
+
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        bool left =
+            await _bookingService.LeaveAsync(id, userId);
+
+        if (!left)
+        {
+            _logger.LogWarning(
+                "User {UserId} could not leave booking {BookingId} because it was not found.",
+                userId,
+                id
+            );
+
+            return NotFound();
+        }
+
+        _logger.LogInformation(
+            "User {UserId} left booking {BookingId}.",
+            userId,
+            id
+        );
+
+        return NoContent();
     }
 
     private string? GetCurrentUserId()
     {
-        return User.FindFirstValue(
-                   JwtRegisteredClaimNames.Sub)
-               ??
-               User.FindFirstValue(
-                   ClaimTypes.NameIdentifier);
+        return User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
     }
 }

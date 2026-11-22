@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using StudyRoomBooking.Api.DAL;
+using StudyRoomBooking.Api.Middleware;
 using StudyRoomBooking.Api.Models;
 using StudyRoomBooking.Api.Repositories;
 using StudyRoomBooking.Api.Services;
@@ -15,7 +16,9 @@ builder.Services.AddControllers();
 
 builder.Services.AddOpenApi();
 
-builder.Services.AddScoped<ITokenService, TokenService>();
+// Global error handling: see Middleware/GlobalExceptionHandler.cs
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 builder.Services.AddDbContext<StudyRoomBookingDbContext>(options =>
 {
@@ -60,32 +63,22 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+// Repositories
 builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IAmenityRepository, AmenityRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+builder.Services.AddScoped<IBuildingRepository, BuildingRepository>();
+
+// Services
+builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
-builder.Services.AddScoped<
-    IAmenityRepository,
-    AmenityRepository>();
-
-builder.Services.AddScoped<
-    IAmenityService,
-    AmenityService>();
-builder.Services.AddScoped<
-    IBookingRepository,
-    BookingRepository>();
-
-builder.Services.AddScoped<
-    IBookingService,
-    BookingService>();
-
-builder.Services.AddScoped<
-    IBuildingRepository,
-    BuildingRepository>();
-
-builder.Services.AddScoped<
-    IBuildingService,
-    BuildingService>();
+builder.Services.AddScoped<IAmenityService, AmenityService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<IBuildingService, BuildingService>();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
@@ -110,8 +103,9 @@ using (IServiceScope scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
         }
     }
+
     UserManager<ApplicationUser> userManager =
-    scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
     string adminEmail = "admin@studyroombooking.no";
 
