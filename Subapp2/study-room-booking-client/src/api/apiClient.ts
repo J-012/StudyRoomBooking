@@ -1,60 +1,56 @@
-import { clearStoredAuth } from '../context/AuthContext'
+import { clearStoredAuth, readStoredAuth } from '../utils/authStorage'
 
-// Shared HTTP helper for the API modules: adds the JWT, sends the user to
-// the login page when the token is rejected, and turns error responses
-// into an Error carrying the message from the server.
-
-function authHeaders(): HeadersInit {
-    let token: string | null = null
-
-    try {
-        const raw = localStorage.getItem('auth')
-        token = raw ? JSON.parse(raw).token : null
-    } catch {
-        // Corrupt value in localStorage: treat as not logged in.
-    }
-
-    return {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    }
-}
-
-async function getErrorMessage(response: Response, fallback: string) {
+/** Extracts both custom errors and ASP.NET validation problem details. */
+async function getErrorMessage(response: Response, fallback: string): Promise<string> {
     try {
         const data = await response.json()
+        if (typeof data?.message === 'string' && data.message) return data.message
 
-        if (typeof data?.message === 'string') {
-            return data.message
+        if (data?.errors && typeof data.errors === 'object') {
+            const messages = Object.values(data.errors).flatMap(value =>
+                Array.isArray(value) ? value.filter(item => typeof item === 'string') : []
+            )
+            if (messages.length) return messages.join(' ')
         }
-    } catch {
-        // Response had no JSON body.
-    }
 
+        if (typeof data?.detail === 'string' && data.detail) return data.detail
+        if (typeof data?.title === 'string' && data.title) return data.title
+    } catch {
+        // Proxy failures and empty responses may not contain JSON.
+    }
     return fallback
 }
 
-/**
- * Sends a request to the API and returns the response if it succeeded.
- * Throws an Error with the server's message (or fallbackMessage) otherwise.
- */
+/** Sends HTTP requests with consistent headers, authentication and error handling. */
 export async function apiRequest(
     url: string,
     fallbackMessage: string,
-    init: RequestInit = {}
+    init: RequestInit = {},
+    anonymous = false,
 ): Promise<Response> {
-    const response = await fetch(url, {
-        ...init,
-        headers: authHeaders(),
-    })
+    const headers = new Headers(init.headers)
+    if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
 
-    if (response.status === 401) {
+    const auth = anonymous ? null : readStoredAuth()
+    if (auth) headers.set('Authorization', `Bearer ${auth.token}`)
+
+    let response: Response
+    try {
+        response = await fetch(url, { ...init, headers })
+    } catch {
+        throw new Error('Kunne ikke koble til serveren. Prøv igjen.')
+    }
+
+    // Login failures must stay on the login form instead of reloading the page.
+    if (response.status === 401 && !anonymous) {
         clearStoredAuth()
         window.location.href = '/login'
+        throw new Error('Logg inn på nytt for å fortsette.')
     }
 
     if (!response.ok) {
-        throw new Error(await getErrorMessage(response, fallbackMessage))
+        const fallback = response.status === 403 ? 'Du har ikke tilgang til denne handlingen.' : fallbackMessage
+        throw new Error(await getErrorMessage(response, fallback))
     }
 
     return response

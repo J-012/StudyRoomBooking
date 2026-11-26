@@ -9,6 +9,7 @@ import './index.css'
 import App from './App.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
 
+// BrowserRouter and AuthProvider supply navigation and session state to all pages.
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <BrowserRouter>

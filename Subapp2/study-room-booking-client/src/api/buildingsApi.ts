@@ -1,52 +1,32 @@
 import type { Building, BuildingRequest } from '../types/Building'
 import { apiRequest } from './apiClient'
 
-const buildingsUrl = '/api/buildings'
+const url = '/api/buildings'
 
+/** Retrieves buildings from the API. */
 export async function getBuildings(): Promise<Building[]> {
-    const response = await apiRequest(
-        buildingsUrl,
-        'Could not load buildings'
-    )
-
+    const response = await apiRequest(url, 'Could not load buildings.')
     return response.json()
 }
 
-export async function createBuilding(
-    building: BuildingRequest
-): Promise<Building> {
-    const response = await apiRequest(
-        buildingsUrl,
-        'Could not create building',
-        {
-            method: 'POST',
-            body: JSON.stringify(building),
-        }
-    )
-
+/** Creates a building. */
+export async function createBuilding(request: BuildingRequest): Promise<Building> {
+    const response = await apiRequest(url, 'Could not create building.', {
+        method: 'POST',
+        body: JSON.stringify(request),
+    })
     return response.json()
 }
 
-export async function updateBuilding(
-    id: number,
-    building: BuildingRequest
-): Promise<void> {
-    await apiRequest(
-        `${buildingsUrl}/${id}`,
-        'Could not update building',
-        {
-            method: 'PUT',
-            body: JSON.stringify(building),
-        }
-    )
+/** Updates the selected building. */
+export async function updateBuilding(id: number, request: BuildingRequest): Promise<void> {
+    await apiRequest(`${url}/${id}`, 'Could not update building.', {
+        method: 'PUT',
+        body: JSON.stringify(request),
+    })
 }
 
+/** Deletes the selected building. */
 export async function deleteBuilding(id: number): Promise<void> {
-    await apiRequest(
-        `${buildingsUrl}/${id}`,
-        'Could not delete building',
-        {
-            method: 'DELETE',
-        }
-    )
+    await apiRequest(`${url}/${id}`, 'Could not delete building.', { method: 'DELETE' })
 }

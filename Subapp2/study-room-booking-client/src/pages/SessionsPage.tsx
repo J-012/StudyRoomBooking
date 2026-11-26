@@ -9,119 +9,25 @@ import {
 
 import type { Booking } from '../types/Booking'
 
+import SessionCard from '../components/SessionCard'
+import { errorText } from '../utils/errorHandling'
+
 import './SessionsPage.css'
 
-function errorText(error: unknown, fallback: string) {
-    return error instanceof Error ? error.message : fallback
-}
-
-function formatDay(iso: string) {
-    return new Date(iso).toLocaleDateString('nb-NO', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-    })
-}
-
-function formatTime(iso: string) {
-    return new Date(iso).toLocaleTimeString('nb-NO', {
-        hour: '2-digit',
-        minute: '2-digit',
-    })
-}
-
-interface SessionCardProps {
-    session: Booking
-    busy: boolean
-    onJoin: () => void
-    onLeave: () => void
-}
-
-function SessionCard({ session, busy, onJoin, onLeave }: SessionCardProps) {
-    const isFull = session.attendeeCount >= session.capacity
-
-    return (
-        <article className="card session-card h-100">
-            <div className="card-body p-4 d-flex flex-column">
-                <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
-                    <h2 className="h5 fw-bold mb-0">{session.subject}</h2>
-
-                    <span
-                        className={`badge rounded-pill session-seats ${isFull ? 'is-full' : ''}`}
-                    >
-                        {session.attendeeCount} av {session.capacity} plasser
-                    </span>
-                </div>
-
-                <p className="text-secondary mb-3">{session.topic}</p>
-
-                <ul className="session-facts">
-                    <li>
-                        <span className="text-capitalize">
-                            {formatDay(session.startTime)}
-                        </span>
-                        , {formatTime(session.startTime)}–
-                        {formatTime(session.endTime)}
-                    </li>
-                    <li>
-                        {session.roomNumber} · {session.building}
-                    </li>
-                    <li>Arrangør: {session.organizerName}</li>
-                </ul>
-
-                <div className="mt-auto pt-3">
-                    {session.isOrganizer ? (
-                        <Link
-                            to="/bookings"
-                            className="btn btn-light btn-sm w-100"
-                        >
-                            Din økt – administrer
-                        </Link>
-                    ) : session.isParticipant ? (
-                        <button
-                            type="button"
-                            className="btn btn-outline-secondary btn-sm w-100"
-                            disabled={busy}
-                            onClick={onLeave}
-                        >
-                            {busy ? 'Vent…' : 'Du er med – forlat økten'}
-                        </button>
-                    ) : isFull ? (
-                        <button
-                            type="button"
-                            className="btn btn-light btn-sm w-100"
-                            disabled
-                        >
-                            Fullt
-                        </button>
-                    ) : (
-                        <button
-                            type="button"
-                            className="btn btn-primary btn-sm w-100"
-                            disabled={busy}
-                            onClick={onJoin}
-                        >
-                            {busy ? 'Vent…' : 'Bli med'}
-                        </button>
-                    )}
-                </div>
-            </div>
-        </article>
-    )
-}
-
+/** Lists open study sessions and handles participation. */
 function SessionsPage() {
     const [sessions, setSessions] = useState<Booking[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
 
-    // Filtre
+    // Search filters
     const [search, setSearch] = useState('')
     const [onlyWithSpace, setOnlyWithSpace] = useState(false)
 
-    // Id-en til økten som har et bli med/forlat-kall på gang
+    // Tracks the session being joined or left.
     const [busyId, setBusyId] = useState<number | null>(null)
 
+    /** Refreshes the list and participant counts from the API. */
     async function loadSessions() {
         try {
             setSessions(await getOpenSessions())
@@ -132,8 +38,17 @@ function SessionsPage() {
         }
     }
 
+    // Initial load is cancelled when the page unmounts.
     useEffect(() => {
-        loadSessions()
+        let cancelled = false
+        getOpenSessions().then(data => {
+            if (!cancelled) setSessions(data)
+        }).catch(error => {
+            if (!cancelled) setError(errorText(error, 'Kunne ikke hente økter.'))
+        }).finally(() => {
+            if (!cancelled) setLoading(false)
+        })
+        return () => { cancelled = true }
     }, [])
 
     const filteredSessions = useMemo(() => {
@@ -159,11 +74,13 @@ function SessionsPage() {
         })
     }, [sessions, search, onlyWithSpace])
 
+    /** Joins or leaves a session and reloads its server-side state. */
     async function changeParticipation(
         session: Booking,
         action: (id: number) => Promise<void>,
         fallback: string
     ) {
+        if (busyId !== null) return
         try {
             setBusyId(session.id)
             setError('')
@@ -172,8 +89,7 @@ function SessionsPage() {
         } catch (error) {
             setError(errorText(error, fallback))
         } finally {
-            // Hent listen på nytt uansett, så antall plasser stemmer
-            // også når noen andre rakk å ta den siste plassen.
+            // Reload even after a failure: another student may have filled the last seat.
             await loadSessions()
             setBusyId(null)
         }
@@ -281,7 +197,7 @@ function SessionsPage() {
                             >
                                 <SessionCard
                                     session={session}
-                                    busy={busyId === session.id}
+                                    busy={busyId !== null}
                                     onJoin={() =>
                                         changeParticipation(
                                             session,
@@ -307,4 +223,3 @@ function SessionsPage() {
 }
 
 export default SessionsPage
-

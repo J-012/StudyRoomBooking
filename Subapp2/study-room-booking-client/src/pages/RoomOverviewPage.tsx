@@ -1,30 +1,30 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { getAvailableRooms, getRooms } from '../api/roomsApi'
+import { getRooms } from '../api/roomsApi'
 import { getBuildings } from '../api/buildingsApi'
 
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 
 import type { Room } from '../types/Room'
 import type { Building } from '../types/Building'
 
 import { getDefaultBookingWindow } from '../utils/bookingTime'
 
+import { formatDay } from '../utils/dateFormatting'
+import { errorText } from '../utils/errorHandling'
+
+import { useAvailableRooms } from '../hooks/useAvailableRooms'
+
+import AmenityBadges from '../components/AmenityBadges'
+
 import './RoomOverviewPage.css'
 
-type RoomStatus = 'free' | 'busy' | 'checking' | null
+type RoomStatus = 'free' | 'busy' | 'checking' | 'error' | null
 
 const capacityOptions = [0, 2, 4, 6, 8, 10]
 
-function formatDate(date: string) {
-    return new Date(`${date}T00:00`).toLocaleDateString('nb-NO', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-    })
-}
-
+/** Renders the capacity icon. */
 function PeopleIcon() {
     return (
         <svg
@@ -46,6 +46,7 @@ function PeopleIcon() {
     )
 }
 
+/** Presents the current availability status. */
 function StatusBadge({ status }: { status: RoomStatus }) {
     if (status === null) return null
 
@@ -53,6 +54,7 @@ function StatusBadge({ status }: { status: RoomStatus }) {
         free: 'Ledig',
         busy: 'Opptatt',
         checking: 'Sjekker…',
+        error: 'Ukjent',
     }
 
     return (
@@ -62,113 +64,62 @@ function StatusBadge({ status }: { status: RoomStatus }) {
     )
 }
 
+/** Displays rooms with combined filters and live availability. */
 function RoomOverviewPage() {
     const { isAuthenticated } = useAuth()
-    const initialWindow = useMemo(
-        getDefaultBookingWindow,
-        []
-    )
+    const [initialWindow] = useState(getDefaultBookingWindow)
 
-    const [rooms, setRooms] =
-    useState<Room[]>([])
+    const [rooms, setRooms] = useState<Room[]>([])
 
-    const [buildings, setBuildings] =
-        useState<Building[]>([])
+    const [buildings, setBuildings] = useState<Building[]>([])
 
-    const [loading, setLoading] =
-        useState(true)
+    const [loading, setLoading] = useState(true)
 
-    const [loadError, setLoadError] =
-        useState('')
+    const [loadError, setLoadError] = useState('')
 
-    // Filtre
-    const [search, setSearch] =
-        useState('')
+    // Search filters
+    const [search, setSearch] = useState('')
 
-    const [buildingId, setBuildingId] =
-        useState(0)
+    const [buildingId, setBuildingId] = useState(0)
 
-    const [minCapacity, setMinCapacity] =
-        useState(0)
+    const [minCapacity, setMinCapacity] = useState(0)
 
-    const [date, setDate] =
-        useState(initialWindow.date)
+    const [date, setDate] = useState(initialWindow.date)
 
-    const [start, setStart] =
-        useState(initialWindow.start)
+    const [start, setStart] = useState(initialWindow.start)
 
-    const [end, setEnd] =
-        useState(initialWindow.end)
+    const [end, setEnd] = useState(initialWindow.end)
 
-    const [onlyAvailable, setOnlyAvailable] =
-        useState(false)
+    const [onlyAvailable, setOnlyAvailable] = useState(false)
 
-    // Ledighet for valgt tidsrom
-    const [availableIds, setAvailableIds] = useState<Set<number> | null>(null)
-    const [checking, setChecking] = useState(false)
-
+    // Fetch room and building data together; ignore results from an unmounted page.
     useEffect(() => {
-        getRooms()
-            .then(setRooms)
-            .catch((error) =>
-                setLoadError(
-                    error instanceof Error
-                        ? error.message
-                        : 'Kunne ikke hente rom.',
-                ),
-            )
-            .finally(() =>
-                setLoading(false)
-            )
-    
-        getBuildings()
-            .then(setBuildings)
-            .catch((error) =>
-                setLoadError(
-                    error instanceof Error
-                        ? error.message
-                        : 'Kunne ikke hente bygg.',
-                ),
-            )
+        let cancelled = false
+        Promise.all([getRooms(), getBuildings()])
+            .then(([roomData, buildingData]) => {
+                if (cancelled) return
+                setRooms(roomData)
+                setBuildings(buildingData)
+            })
+            .catch(error => {
+                if (!cancelled) setLoadError(errorText(error, 'Kunne ikke hente rom og bygg.'))
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false)
+            })
+        return () => { cancelled = true }
     }, [])
 
-    const timesValid = date !== '' && start !== '' && end !== '' && end > start
+    const availability = useAvailableRooms(date, start, end)
+    const { valid: timesValid, loading: checking } = availability
+    const { rooms: freeRooms, ready } = availability
+    const availableIds = useMemo(() => ready ? new Set(freeRooms.map(room => room.id)) : null, [ready, freeRooms])
 
-    useEffect(() => {
-        if (!timesValid) {
-            setAvailableIds(null)
-            setChecking(false)
-            return
-        }
-
-        let cancelled = false
-        setChecking(true)
-
-        const timer = setTimeout(async () => {
-            try {
-                const free = await getAvailableRooms(
-                    `${date}T${start}`,
-                    `${date}T${end}`,
-                )
-                if (!cancelled) {
-                    setAvailableIds(new Set(free.map((room) => room.id)))
-                }
-            } catch {
-                if (!cancelled) setAvailableIds(null)
-            } finally {
-                if (!cancelled) setChecking(false)
-            }
-        }, 300)
-
-        return () => {
-            cancelled = true
-            clearTimeout(timer)
-        }
-    }, [date, start, end, timesValid])
-
+    /** Converts the current availability result into a room status. */
     function statusFor(room: Room): RoomStatus {
         if (!timesValid) return null
-        if (checking || availableIds === null) return 'checking'
+        if (checking) return 'checking'
+        if (availability.error || availableIds === null) return 'error'
         return availableIds.has(room.id) ? 'free' : 'busy'
     }
 
@@ -223,22 +174,22 @@ function RoomOverviewPage() {
             ? rooms.filter((room) => availableIds.has(room.id)).length
             : null
 
-            const filtersActive =
-                search !== '' ||
-                buildingId > 0 ||
-                minCapacity > 0 ||
-                onlyAvailable
+    const filtersActive =
+        search !== '' || buildingId > 0 || minCapacity > 0 || onlyAvailable
 
-        function resetFilters() {
-            setSearch('')
-            setBuildingId(0)
-            setMinCapacity(0)
-            setOnlyAvailable(false)
-            setDate(initialWindow.date)
-            setStart(initialWindow.start)
-            setEnd(initialWindow.end)
-        }
+    /** Resets search and filters to a fresh default time window. */
+    function resetFilters() {
+        const window = getDefaultBookingWindow()
+        setSearch('')
+        setBuildingId(0)
+        setMinCapacity(0)
+        setOnlyAvailable(false)
+        setDate(window.date)
+        setStart(window.start)
+        setEnd(window.end)
+    }
 
+    /** Carries the selected room and time window to the booking form. */
     function bookingLink(room: Room) {
         const params = new URLSearchParams({ roomId: String(room.id) })
         if (timesValid) {
@@ -260,10 +211,11 @@ function RoomOverviewPage() {
                 </p>
             </header>
 
-            {loadError && <div className="error-message mb-4">{loadError}</div>}
+            {loadError && <div className="error-message mb-4" role="alert">{loadError}</div>}
+            {availability.error && <div className="error-message mb-4" role="alert">{availability.error} <button type="button" className="btn btn-sm btn-light" onClick={availability.refresh}>Prøv igjen</button></div>}
 
             <div className="row g-4">
-                {/* Filterpanel: venstre kolonne på desktop, øverst på mobil */}
+                {/* Filter panel */}
                 <div className="col-12 col-lg-3">
                     <section className="card filter-panel" aria-label="Filtre">
                         <div className="card-body p-3 p-md-4">
@@ -418,7 +370,7 @@ function RoomOverviewPage() {
                                             role="switch"
                                             className="form-check-input"
                                             checked={onlyAvailable}
-                                            disabled={!timesValid}
+                                            disabled={!timesValid || (!availability.ready && !onlyAvailable)}
                                             onChange={(e) =>
                                                 setOnlyAvailable(
                                                     e.target.checked,
@@ -444,9 +396,9 @@ function RoomOverviewPage() {
                     </section>
                 </div>
 
-                {/* Rom: høyre kolonne på desktop */}
+                {/* Room results */}
                 <div className="col-12 col-lg-9">
-                    {/* Resultatlinje */}
+                    {/* Results summary */}
                     <div className="results-bar">
                         <p className="mb-0">
                             <strong>{filteredRooms.length}</strong> rom
@@ -454,7 +406,7 @@ function RoomOverviewPage() {
                                 <span className="text-secondary">
                                     {' '}
                                     · {freeCount} av {rooms.length} ledige{' '}
-                                    {formatDate(date)}, {start}–{end}
+                                    {formatDay(date)}, {start}–{end}
                                 </span>
                             )}
                         </p>
@@ -470,7 +422,7 @@ function RoomOverviewPage() {
                         )}
                     </div>
 
-                    {/* Romkort */}
+                    {/* Room cards */}
                     {loading ? (
                         <div className="room-grid">
                             {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -480,6 +432,8 @@ function RoomOverviewPage() {
                                 />
                             ))}
                         </div>
+                    ) : loadError ? (
+                        <p className="text-secondary">Romoversikten kunne ikke lastes. Oppdater siden for å prøve igjen.</p>
                     ) : filteredRooms.length === 0 ? (
                         <div className="empty-state">
                             <p className="fw-semibold text-body mb-1">
@@ -526,25 +480,12 @@ function RoomOverviewPage() {
                                                 : 'plasser'}
                                         </p>
 
-                                        {room.amenities.length > 0 && (
-                                            <div className="d-flex flex-wrap gap-1 mb-3">
-
-                                                {room.amenities.map(
-                                                    (amenity) => (
-                                                        <span
-                                                            key={amenity.id}
-                                                            className="badge text-bg-light"
-                                                        >
-                                                            {amenity.name}
-                                                        </span>
-                                                    )
-                                                )}
-
-                                            </div>
-                                        )}
+                                        <AmenityBadges amenities={room.amenities} className="mb-3" />
 
                                         <div className="room-card-footer">
-                                            {status === 'busy' ? (
+                                            {status === 'checking' || status === 'error' ? (
+                                                <span className="room-card-note">{status === 'checking' ? 'Sjekker ledighet…' : 'Ledighet ukjent'}</span>
+                                            ) : status === 'busy' ? (
                                                 <span className="room-card-note">
                                                     Opptatt i valgt tidsrom
                                                 </span>

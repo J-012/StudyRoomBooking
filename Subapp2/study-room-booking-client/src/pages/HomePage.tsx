@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { getBookings } from '../api/bookingsApi'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 import type { Booking } from '../types/Booking'
+
+import { formatShortMonth, formatTime } from '../utils/dateFormatting'
 
 import './HomePage.css'
 
@@ -19,14 +21,7 @@ const steps = [
     },
 ]
 
-function formatTime(iso: string) {
-    return new Date(iso).toLocaleTimeString('nb-NO', {
-        hour: '2-digit',
-        minute: '2-digit',
-    })
-}
-
-// Viser studentens neste tre økter i hero-seksjonen
+/** Shows the next three bookings for the signed-in student. */
 function UpcomingSessions() {
     const [items, setItems] = useState<Booking[] | null>(null)
     const [failed, setFailed] = useState(false)
@@ -88,9 +83,7 @@ function UpcomingSessions() {
                 <ul className="hp-sessions">
                     {items.map((booking) => {
                         const start = new Date(booking.startTime)
-                        const month = start
-                            .toLocaleDateString('nb-NO', { month: 'short' })
-                            .replace('.', '')
+                        const month = formatShortMonth(start)
 
                         return (
                             <li key={booking.id} className="hp-session">
@@ -117,7 +110,7 @@ function UpcomingSessions() {
     )
 }
 
-// Illustrasjon av booking-flyten for besøkende som ikke er logget inn
+/** Illustrates the booking flow for guests without using live data. */
 function BookingPreview() {
     const rooms = [
         { number: 'A2-14', building: 'Bygg A', selected: false },
@@ -162,6 +155,7 @@ function BookingPreview() {
     )
 }
 
+/** Landing page with role-specific navigation and booking information. */
 function HomePage() {
     const { isAuthenticated, isAdmin, fullName } = useAuth()
     const isStudent = isAuthenticated && !isAdmin

@@ -3,8 +3,11 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { register } from '../api/authApi'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
 
+import { errorText } from '../utils/errorHandling'
+
+/** Registration form for new student accounts. */
 function RegisterPage() {
     const [fullName, setFullName] = useState('')
     const [studentNumber, setStudentNumber] = useState('')
@@ -13,10 +16,12 @@ function RegisterPage() {
     const [confirmPassword, setConfirmPassword] = useState('')
 
     const [errors, setErrors] = useState<string[]>([])
+    const [saving, setSaving] = useState(false)
 
     const { login: setAuth } = useAuth()
     const navigate = useNavigate()
 
+    /** Collects client-side validation errors before sending credentials. */
     function validate(): string[] {
         const problems: string[] = []
 
@@ -47,10 +52,12 @@ function RegisterPage() {
         return problems
     }
 
+    /** Submits the form and initializes the authenticated session on success. */
     async function handleSubmit(
         event: FormEvent<HTMLFormElement>
     ) {
         event.preventDefault()
+        if (saving) return
 
         const validationErrors = validate()
 
@@ -59,6 +66,7 @@ function RegisterPage() {
             return
         }
 
+        setSaving(true)
         try {
             setErrors([])
 
@@ -71,12 +79,10 @@ function RegisterPage() {
 
             setAuth(auth)
             navigate('/')
-        } catch (err) {
-            if (err instanceof Error) {
-                setErrors([err.message])
-            } else {
-                setErrors(['Kunne ikke registrere bruker.'])
-            }
+        } catch (error) {
+            setErrors([errorText(error, 'Kunne ikke registrere bruker.')])
+        } finally {
+            setSaving(false)
         }
     }
 
@@ -85,7 +91,7 @@ function RegisterPage() {
             <h1 className="h3 fw-bold mb-4">Registrer deg</h1>
 
             {errors.length > 0 && (
-                <div className="error-message mb-4">
+                <div className="error-message mb-4" role="alert">
                     <ul className="mb-0 ps-3">
                         {errors.map((message, index) => (
                             <li key={index}>{message}</li>
@@ -96,8 +102,10 @@ function RegisterPage() {
 
             <form onSubmit={handleSubmit} noValidate>
                 <div className="mb-3">
-                    <label className="form-label">Fullt navn</label>
+                    <label className="form-label" htmlFor="full-name">Fullt navn</label>
                     <input
+                        id="full-name"
+                        autoComplete="name"
                         className="form-control"
                         value={fullName}
                         maxLength={100}
@@ -106,8 +114,10 @@ function RegisterPage() {
                 </div>
 
                 <div className="mb-3">
-                    <label className="form-label">Studentnummer</label>
+                    <label className="form-label" htmlFor="student-number">Studentnummer</label>
                     <input
+                        id="student-number"
+                        autoComplete="off"
                         className="form-control"
                         value={studentNumber}
                         maxLength={20}
@@ -116,8 +126,10 @@ function RegisterPage() {
                 </div>
 
                 <div className="mb-3">
-                    <label className="form-label">E-post</label>
+                    <label className="form-label" htmlFor="email">E-post</label>
                     <input
+                        id="email"
+                        autoComplete="email"
                         type="email"
                         className="form-control"
                         value={email}
@@ -126,8 +138,10 @@ function RegisterPage() {
                 </div>
 
                 <div className="mb-3">
-                    <label className="form-label">Passord</label>
+                    <label className="form-label" htmlFor="password">Passord</label>
                     <input
+                        id="password"
+                        autoComplete="new-password"
                         type="password"
                         className="form-control"
                         value={password}
@@ -139,8 +153,10 @@ function RegisterPage() {
                 </div>
 
                 <div className="mb-4">
-                    <label className="form-label">Bekreft passord</label>
+                    <label className="form-label" htmlFor="confirm-password">Bekreft passord</label>
                     <input
+                        id="confirm-password"
+                        autoComplete="new-password"
                         type="password"
                         className="form-control"
                         value={confirmPassword}
@@ -148,8 +164,8 @@ function RegisterPage() {
                     />
                 </div>
 
-                <button type="submit" className="btn btn-primary w-100">
-                    Registrer
+                <button type="submit" className="btn btn-primary w-100" disabled={saving}>
+                    {saving ? 'Vent…' : 'Registrer'}
                 </button>
 
                 <p className="text-center mt-3 mb-0">

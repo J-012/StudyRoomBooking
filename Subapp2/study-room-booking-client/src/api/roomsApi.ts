@@ -1,19 +1,15 @@
 import type { Room, RoomRequest } from '../types/Room'
 import { apiRequest } from './apiClient'
 
-const roomsUrl = '/api/rooms'
+const url = '/api/rooms'
 
+/** Retrieves rooms from the API. */
 export async function getRooms(): Promise<Room[]> {
-    const response = await apiRequest(roomsUrl, 'Could not load rooms')
-
+    const response = await apiRequest(url, 'Could not load rooms.')
     return response.json()
 }
 
-/**
- * Henter rom som er ledige i hele tidsrommet.
- * excludeBookingId brukes når man endrer en booking, slik at
- * bookingens eget rom ikke regnes som opptatt av seg selv.
- */
+/** Retrieves free rooms; excludes the current booking when editing. */
 export async function getAvailableRooms(
     startTime: string,
     endTime: string,
@@ -26,34 +22,31 @@ export async function getAvailableRooms(
     }
 
     const response = await apiRequest(
-        `${roomsUrl}/available?${params}`,
+        `${url}/available?${params}`,
         'Kunne ikke hente ledige rom.'
     )
 
     return response.json()
 }
 
-export async function createRoom(room: RoomRequest): Promise<Room> {
-    const response = await apiRequest(roomsUrl, 'Could not create room', {
+/** Creates a room. */
+export async function createRoom(request: RoomRequest): Promise<Room> {
+    const response = await apiRequest(url, 'Could not create room.', {
         method: 'POST',
-        body: JSON.stringify(room),
+        body: JSON.stringify(request),
     })
-
     return response.json()
 }
 
-export async function updateRoom(
-    id: number,
-    room: RoomRequest
-): Promise<void> {
-    await apiRequest(`${roomsUrl}/${id}`, 'Could not update room', {
+/** Updates the selected room. */
+export async function updateRoom(id: number, request: RoomRequest): Promise<void> {
+    await apiRequest(`${url}/${id}`, 'Could not update room.', {
         method: 'PUT',
-        body: JSON.stringify(room),
+        body: JSON.stringify(request),
     })
 }
 
+/** Deletes the selected room. */
 export async function deleteRoom(id: number): Promise<void> {
-    await apiRequest(`${roomsUrl}/${id}`, 'Could not delete room', {
-        method: 'DELETE',
-    })
+    await apiRequest(`${url}/${id}`, 'Could not delete room.', { method: 'DELETE' })
 }

@@ -10,141 +10,15 @@ import AmenitiesPage from './pages/AmenitiesPage'
 import BuildingsPage from './pages/BuildingsPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import RoomOverviewPage from './pages/RoomOverviewPage'
-import { useAuth } from './context/AuthContext'
+import SiteHeader from './components/layout/SiteHeader'
+import SiteFooter from './components/layout/SiteFooter'
 import './App.css'
 
+/** Defines public routes and protected student/admin routes in the shared layout. */
 function App() {
-    const { isAuthenticated, isAdmin, fullName, logout } = useAuth()
-
     return (
         <div className="app-shell">
-            <header className="bg-white border-bottom sticky-top">
-                <nav className="navbar navbar-expand-lg navbar-light py-3">
-                    <div className="container">
-                        <Link className="navbar-brand fw-bold text-dark" to="/">
-                            StudyRoomBooking
-                        </Link>
-
-                        <button
-                            className="navbar-toggler"
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#mainNav"
-                            aria-controls="mainNav"
-                            aria-expanded="false"
-                            aria-label="Toggle navigation"
-                        >
-                            <span className="navbar-toggler-icon"></span>
-                        </button>
-
-                        <div
-                            className="collapse navbar-collapse"
-                            id="mainNav"
-                        >
-                            <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-                                {/* Romoversikten er åpen for alle */}
-                                <li className="nav-item">
-                                    <Link
-                                        className="nav-link text-secondary"
-                                        to="/room-overview"
-                                    >
-                                        Romoversikt
-                                    </Link>
-                                </li>
-
-                                {isAdmin && (
-                                    <>
-                                        <li className="nav-item">
-                                            <Link
-                                                className="nav-link text-secondary"
-                                                to="/rooms"
-                                            >
-                                                Rooms
-                                            </Link>
-                                        </li>
-
-                                        <li className="nav-item">
-                                            <Link
-                                                className="nav-link text-secondary"
-                                                to="/amenities"
-                                            >
-                                                Amenities
-                                            </Link>
-                                        </li>
-
-                                        <li className="nav-item">
-                                            <Link
-                                                className="nav-link text-secondary"
-                                                to="/buildings"
-                                            >
-                                                Buildings
-                                            </Link>
-                                        </li>
-                                    </>
-                                )}
-
-                                {/* Økter og bookinger krever innlogging */}
-                                {isAuthenticated && (
-                                    <>
-                                        <li className="nav-item">
-                                            <Link
-                                                className="nav-link text-secondary"
-                                                to="/sessions"
-                                            >
-                                                Åpne økter
-                                            </Link>
-                                        </li>
-
-                                        <li className="nav-item">
-                                            <Link
-                                                className="nav-link text-secondary"
-                                                to="/bookings"
-                                            >
-                                                Bookings
-                                            </Link>
-                                        </li>
-                                    </>
-                                )}
-
-                                {isAuthenticated ? (
-                                    <li className="nav-item mt-2 mt-lg-0 d-flex align-items-center gap-2">
-                                        <span className="text-secondary small">
-                                            {fullName}
-                                        </span>
-                                        <button
-                                            type="button"
-                                            className="btn btn-outline-secondary px-3"
-                                            onClick={logout}
-                                        >
-                                            Logg ut
-                                        </button>
-                                    </li>
-                                ) : (
-                                    <>
-                                        <li className="nav-item mt-2 mt-lg-0">
-                                            <Link
-                                                className="btn btn-outline-dark px-3"
-                                                to="/login"
-                                            >
-                                                Log in
-                                            </Link>
-                                        </li>
-
-                                        <li className="nav-item mt-2 mt-lg-0">
-                                            <Link
-                                                className="btn btn-primary px-3"
-                                                to="/register"
-                                            >
-                                                Registrer deg
-                                            </Link>
-                                        </li>
-                                    </>
-                                )}
-                            </ul>
-                        </div>
-                    </div>
-                </nav>
-            </header>
+            <SiteHeader />
 
             <Routes>
                 <Route path="/" element={<HomePage />} />
@@ -199,24 +73,15 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
 
                 <Route path="/register" element={<RegisterPage />} />
+                <Route path="*" element={
+                    <main className="container py-5">
+                        <h1 className="h3">Siden finnes ikke</h1>
+                        <Link to="/">Til forsiden</Link>
+                    </main>
+                } />
             </Routes>
 
-            <footer className="footer">
-                <div className="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-                    <div>© 2026 - StudyRoomBooking</div>
-
-                    <div className="d-flex gap-4">
-                        <Link to="/room-overview">Romoversikt</Link>
-
-                        {isAuthenticated && (
-                            <>
-                                <Link to="/sessions">Åpne økter</Link>
-                                <Link to="/bookings">Bookings</Link>
-                            </>
-                        )}
-                    </div>
-                </div>
-            </footer>
+            <SiteFooter />
         </div>
     )
 }

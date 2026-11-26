@@ -1,52 +1,32 @@
 import type { Amenity, AmenityRequest } from '../types/Amenity'
 import { apiRequest } from './apiClient'
 
-const amenitiesUrl = '/api/amenities'
+const url = '/api/amenities'
 
+/** Retrieves amenities from the API. */
 export async function getAmenities(): Promise<Amenity[]> {
-    const response = await apiRequest(
-        amenitiesUrl,
-        'Could not load amenities'
-    )
-
+    const response = await apiRequest(url, 'Could not load amenities.')
     return response.json()
 }
 
-export async function createAmenity(
-    amenity: AmenityRequest
-): Promise<Amenity> {
-    const response = await apiRequest(
-        amenitiesUrl,
-        'Could not create amenity',
-        {
-            method: 'POST',
-            body: JSON.stringify(amenity),
-        }
-    )
-
+/** Creates a amenity. */
+export async function createAmenity(request: AmenityRequest): Promise<Amenity> {
+    const response = await apiRequest(url, 'Could not create amenity.', {
+        method: 'POST',
+        body: JSON.stringify(request),
+    })
     return response.json()
 }
 
-export async function updateAmenity(
-    id: number,
-    amenity: AmenityRequest
-): Promise<void> {
-    await apiRequest(
-        `${amenitiesUrl}/${id}`,
-        'Could not update amenity',
-        {
-            method: 'PUT',
-            body: JSON.stringify(amenity),
-        }
-    )
+/** Updates the selected amenity. */
+export async function updateAmenity(id: number, request: AmenityRequest): Promise<void> {
+    await apiRequest(`${url}/${id}`, 'Could not update amenity.', {
+        method: 'PUT',
+        body: JSON.stringify(request),
+    })
 }
 
+/** Deletes the selected amenity. */
 export async function deleteAmenity(id: number): Promise<void> {
-    await apiRequest(
-        `${amenitiesUrl}/${id}`,
-        'Could not delete amenity',
-        {
-            method: 'DELETE',
-        }
-    )
+    await apiRequest(`${url}/${id}`, 'Could not delete amenity.', { method: 'DELETE' })
 }

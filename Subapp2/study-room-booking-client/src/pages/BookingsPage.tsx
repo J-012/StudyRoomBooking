@@ -7,177 +7,25 @@ import {
     getBookings,
     updateBooking,
 } from '../api/bookingsApi'
-import { getAvailableRooms } from '../api/roomsApi'
 
 import type { Booking, BookingRequest } from '../types/Booking'
-import type { Room } from '../types/Room'
-import { getDefaultBookingWindow } from '../utils/bookingTime'
+import { useAvailableRooms } from '../hooks/useAvailableRooms'
+import { createEmptyForm, createFormFromParams } from '../utils/bookingForm'
+import { validateBookingTimes } from '../utils/bookingTime'
+import type { BookingForm } from '../utils/bookingForm'
+import BookingRow from '../components/bookings/BookingRow'
+import BookingFormPanel from '../components/bookings/BookingFormPanel'
 import { useSearchParams } from 'react-router-dom'
 
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '../context/useAuth'
+
+import { errorText } from '../utils/errorHandling'
 
 import './BookingsPage.css'
 
-// Skjemaet bruker én dato + to klokkeslett i stedet for to datetime-felt.
-// Det slås sammen til startTime/endTime før det sendes til API-et.
-interface BookingForm {
-    subject: string
-    topic: string
-    roomId: number
-    date: string // YYYY-MM-DD
-    start: string // HH:mm
-    end: string // HH:mm
-}
-
-function createEmptyForm(): BookingForm {
-    const defaultWindow =
-        getDefaultBookingWindow()
-
-    return {
-        subject: '',
-        topic: '',
-        roomId: 0,
-        date: defaultWindow.date,
-        start: defaultWindow.start,
-        end: defaultWindow.end,
-    }
-}
-// Leser forhåndsvalg fra romoversikten (?roomId=…&date=…&start=…&end=…).
-// Manglende eller ugyldige verdier faller tilbake til standardskjemaet.
-function createFormFromParams(params: URLSearchParams): BookingForm {
-    const form = createEmptyForm()
-
-    const date = params.get('date')
-    const start = params.get('start')
-    const end = params.get('end')
-    const roomId = Number(params.get('roomId'))
-
-    const timePattern = /^\d{2}:\d{2}$/
-
-    if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
-        form.date = date
-    }
-
-    if (start && end && timePattern.test(start) && timePattern.test(end)) {
-        form.start = start
-        form.end = end
-    }
-
-    if (Number.isInteger(roomId) && roomId > 0) {
-        form.roomId = roomId
-    }
-
-    return form
-}
-
-function errorText(error: unknown, fallback: string) {
-    return error instanceof Error ? error.message : fallback
-}
-
-function formatTime(iso: string) {
-    return new Date(iso).toLocaleTimeString('nb-NO', {
-        hour: '2-digit',
-        minute: '2-digit',
-    })
-}
-
-function formatWeekday(iso: string) {
-    return new Date(iso).toLocaleDateString('nb-NO', { weekday: 'long' })
-}
-
-function todayLocal() {
-    // sv-SE gir formatet YYYY-MM-DD i lokal tid
-    return new Date().toLocaleDateString('sv-SE')
-}
-
-function DateBlock({ iso }: { iso: string }) {
-    const date = new Date(iso)
-    const month = date
-        .toLocaleDateString('nb-NO', { month: 'short' })
-        .replace('.', '')
-
-    return (
-        <div className="date-block">
-            <span className="date-block-month">{month}</span>
-            <span className="date-block-day">{date.getDate()}</span>
-        </div>
-    )
-}
-
-interface BookingRowProps {
-    booking: Booking
-    isEditing: boolean
-    isPast: boolean
-    onEdit: () => void
-    onDelete: () => void
-}
-
-function BookingRow({
-    booking,
-    isEditing,
-    isPast,
-    onEdit,
-    onDelete,
-}: BookingRowProps) {
-    const classes = [
-        'booking-row',
-        isEditing ? 'is-editing' : '',
-        isPast ? 'is-past' : '',
-    ].join(' ')
-
-    return (
-        <li className={classes}>
-            <DateBlock iso={booking.startTime} />
-
-            <div className="booking-row-body">
-                <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
-                    <h3 className="booking-row-title">{booking.subject}</h3>
-                    <span className="booking-chip">
-                        {booking.roomNumber} · {booking.building}
-                    </span>
-                </div>
-
-                <p className="booking-row-topic">{booking.topic}</p>
-
-                <p className="booking-row-meta">
-                    <span className="text-capitalize">
-                        {formatWeekday(booking.startTime)}
-                    </span>
-                    , {formatTime(booking.startTime)}–
-                    {formatTime(booking.endTime)}
-                    <span className="booking-row-dot">·</span>
-                    {booking.organizerName}
-                </p>
-            </div>
-
-            {booking.canManage && (
-                <div className="booking-row-actions">
-                    {!isPast && (
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-light"
-                            onClick={onEdit}
-                        >
-                            Endre
-                        </button>
-                    )}
-                    <button
-                        type="button"
-                        className="btn btn-sm btn-link text-danger text-decoration-none"
-                        onClick={onDelete}
-                    >
-                        Slett
-                    </button>
-                </div>
-            )}
-        </li>
-    )
-}
-
+/** Coordinates booking data, the form, and management actions. */
 function BookingsPage() {
     const [bookings, setBookings] = useState<Booking[]>([])
-    const [availableRooms, setAvailableRooms] = useState<Room[]>([])
-    const [roomsLoading, setRoomsLoading] = useState(false)
     const [searchParams] = useSearchParams()
     const { isAdmin } = useAuth()
     const [form, setForm] = useState<BookingForm>(() =>
@@ -188,12 +36,13 @@ function BookingsPage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [showPast, setShowPast] = useState(false)
+    const [now, setNow] = useState(Date.now)
 
-    // Skiller mellom feil ved lasting (vises øverst)
-    // og feil i skjemaet (vises inne i skjemaet).
+    // Loading errors belong to the list; input errors belong to the form.
     const [loadError, setLoadError] = useState('')
     const [formError, setFormError] = useState('')
 
+    /** Refreshes the booking list after a successful mutation. */
     async function loadData() {
         try {
             setLoadError('')
@@ -205,63 +54,33 @@ function BookingsPage() {
         }
     }
 
+    // Initial load is cancelled when the page unmounts.
     useEffect(() => {
-        loadData()
+        let cancelled = false
+        getBookings().then(data => {
+            if (!cancelled) {
+                setBookings(data)
+            }
+        }).catch(error => {
+            if (!cancelled) setLoadError(errorText(error, 'Kunne ikke hente bookinger.'))
+        }).finally(() => {
+            if (!cancelled) setLoading(false)
+        })
+        return () => { cancelled = true }
     }, [])
 
-    const timesValid =
-        form.date !== '' &&
-        form.start !== '' &&
-        form.end !== '' &&
-        form.end > form.start
-
-    // Hent ledige rom hver gang dato/tid endres (med litt forsinkelse,
-    // så vi ikke spør API-et for hvert tastetrykk).
+    // Keep the booking list current even when the user leaves the page open.
     useEffect(() => {
-        if (!timesValid) {
-            setAvailableRooms([])
-            setRoomsLoading(false)
-            return
-        }
+        const timer = window.setInterval(() => setNow(Date.now()), 30_000)
+        return () => window.clearInterval(timer)
+    }, [])
 
-        let cancelled = false
-        setRoomsLoading(true)
-
-        const timer = setTimeout(async () => {
-            try {
-                const rooms = await getAvailableRooms(
-                    `${form.date}T${form.start}`,
-                    `${form.date}T${form.end}`,
-                    editingId ?? undefined
-                )
-                if (cancelled) return
-
-                setAvailableRooms(rooms)
-                // Nullstill rommet hvis det ikke lenger er ledig
-                setForm((current) =>
-                    rooms.some((r) => r.id === current.roomId)
-                        ? current
-                        : { ...current, roomId: 0 }
-                )
-            } catch (error) {
-                if (!cancelled) {
-                    setFormError(
-                        errorText(error, 'Kunne ikke hente ledige rom.')
-                    )
-                }
-            } finally {
-                if (!cancelled) setRoomsLoading(false)
-            }
-        }, 300)
-
-        return () => {
-            cancelled = true
-            clearTimeout(timer)
-        }
-    }, [form.date, form.start, form.end, editingId, timesValid])
+    const availability = useAvailableRooms(form.date, form.start, form.end, editingId ?? undefined)
+    const { rooms: availableRooms, loading: roomsLoading, valid: timesValid } = availability
+    const selectedRoomId = availability.ready && availableRooms.some(room => room.id === form.roomId)
+        ? form.roomId : 0
 
     const { upcoming, past } = useMemo(() => {
-        const now = Date.now()
         const sorted = [...bookings].sort(
             (a, b) =>
                 new Date(a.startTime).getTime() -
@@ -276,32 +95,41 @@ function BookingsPage() {
                 .filter((b) => new Date(b.endTime).getTime() < now)
                 .reverse(),
         }
-    }, [bookings])
+    }, [bookings, now])
 
+    /** Updates a single typed field without mutating the form. */
     function updateField<K extends keyof BookingForm>(
         key: K,
         value: BookingForm[K]
     ) {
         setForm((current) => ({ ...current, [key]: value }))
+        setFormError('')
     }
 
+    /** Validates the selected room and creates or updates a booking. */
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
 
-        if (form.end <= form.start) {
-            setFormError('Sluttid må være etter starttid.')
+        const timeError = validateBookingTimes(form.date, form.start, form.end)
+        if (timeError) {
+            setFormError(timeError)
             return
         }
 
-        if (form.roomId <= 0) {
+        if (saving || roomsLoading || !availability.ready || selectedRoomId <= 0) {
             setFormError('Velg et ledig rom.')
             return
         }
 
+        if (!form.subject.trim() || !form.topic.trim()) {
+            setFormError('Fyll inn fag og tema.')
+            return
+        }
+
         const request: BookingRequest = {
-            subject: form.subject,
-            topic: form.topic,
-            roomId: form.roomId,
+            subject: form.subject.trim(),
+            topic: form.topic.trim(),
+            roomId: selectedRoomId,
             startTime: `${form.date}T${form.start}`,
             endTime: `${form.date}T${form.end}`,
         }
@@ -318,14 +146,17 @@ function BookingsPage() {
 
             setForm(createEmptyForm())
             setEditingId(null)
+            availability.refresh()
             await loadData()
         } catch (error) {
             setFormError(errorText(error, 'Kunne ikke lagre bookingen.'))
+            availability.refresh()
         } finally {
             setSaving(false)
         }
     }
 
+    /** Prefills the form with the selected booking. */
     function startEditing(booking: Booking) {
         setEditingId(booking.id)
         setFormError('')
@@ -338,29 +169,35 @@ function BookingsPage() {
             end: booking.endTime.slice(11, 16),
         })
 
-        // På mobil ligger skjemaet over listen
+        // On mobile, the form is above the list.
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
+    /** Resets the form and leaves edit mode. */
     function cancelEditing() {
         setEditingId(null)
         setForm(createEmptyForm())
         setFormError('')
     }
 
+    /** Confirms deletion and refreshes bookings and room availability. */
     async function handleDelete(id: number) {
-        if (!window.confirm('Vil du slette denne bookingen?')) {
+        if (saving || !window.confirm('Vil du slette denne bookingen?')) {
             return
         }
 
+        setSaving(true)
         try {
             await deleteBooking(id)
+            availability.refresh()
             if (editingId === id) {
                 cancelEditing()
             }
             await loadData()
         } catch (error) {
             setLoadError(errorText(error, 'Kunne ikke slette bookingen.'))
+        } finally {
+            setSaving(false)
         }
     }
 
@@ -377,211 +214,31 @@ function BookingsPage() {
             </header>
 
             {loadError && (
-                <div className="error-message mb-4">{loadError}</div>
+                <div className="error-message mb-4" role="alert">{loadError}</div>
             )}
 
             <div className="row g-4 g-lg-5">
-                {/* Skjema: venstre kolonne på desktop, øverst på mobil */}
+                {/* Booking form */}
                 <div className="col-12 col-lg-4">
-                    <aside
-                        className={`card booking-panel ${isEditing ? 'is-editing' : ''}`}
-                    >
-                        <div className="card-body p-4">
-                            <div className="d-flex justify-content-between align-items-center mb-3">
-                                <h2 className="h5 fw-bold mb-0">
-                                    {isEditing ? 'Endre booking' : 'Ny booking'}
-                                </h2>
-                                {isEditing && (
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-link text-secondary text-decoration-none p-0"
-                                        onClick={cancelEditing}
-                                    >
-                                        Avbryt
-                                    </button>
-                                )}
-                            </div>
-
-                            <form
-                                onSubmit={handleSubmit}
-                                className="d-flex flex-column gap-3"
-                            >
-                                <div>
-                                    <label className="form-label" htmlFor="date">
-                                        Dato
-                                    </label>
-                                    <input
-                                        id="date"
-                                        type="date"
-                                        className="form-control"
-                                        required
-                                        min={isEditing ? undefined : todayLocal()}
-                                        value={form.date}
-                                        onChange={(e) =>
-                                            updateField('date', e.target.value)
-                                        }
-                                    />
-                                </div>
-
-                                <div className="row g-2">
-                                    <div className="col-6">
-                                        <label className="form-label" htmlFor="start">
-                                            Fra
-                                        </label>
-                                        <input
-                                            id="start"
-                                            type="time"
-                                            className="form-control"
-                                            required
-                                            step={900}
-                                            value={form.start}
-                                            onChange={(e) =>
-                                                updateField('start', e.target.value)
-                                            }
-                                        />
-                                    </div>
-                                    <div className="col-6">
-                                        <label className="form-label" htmlFor="end">
-                                            Til
-                                        </label>
-                                        <input
-                                            id="end"
-                                            type="time"
-                                            className="form-control"
-                                            required
-                                            step={900}
-                                            value={form.end}
-                                            onChange={(e) =>
-                                                updateField('end', e.target.value)
-                                            }
-                                        />
-                                    </div>
-                                </div>
-
-                                {form.start !== '' &&
-                                    form.end !== '' &&
-                                    form.end <= form.start && (
-                                        <div className="form-hint text-danger">
-                                            Sluttid må være etter starttid.
-                                        </div>
-                                    )}
-
-                                <div>
-                                    <span className="form-label d-block">
-                                        Ledige rom
-                                        {timesValid && !roomsLoading && (
-                                            <span className="text-secondary fw-normal">
-                                                {' '}({availableRooms.length})
-                                            </span>
-                                        )}
-                                    </span>
-
-                                    {!timesValid ? (
-                                        <div className="room-placeholder">
-                                            Velg dato og tid for å se ledige rom.
-                                        </div>
-                                    ) : roomsLoading ? (
-                                        <div className="room-placeholder">
-                                            Henter ledige rom…
-                                        </div>
-                                    ) : availableRooms.length === 0 ? (
-                                        <div className="room-placeholder">
-                                            Ingen ledige rom i dette tidsrommet.
-                                            Prøv et annet tidspunkt.
-                                        </div>
-                                    ) : (
-                                        <div
-                                            className="room-options"
-                                            role="radiogroup"
-                                            aria-label="Ledige rom"
-                                        >
-                                            {availableRooms.map((room) => {
-                                                const selected =
-                                                    form.roomId === room.id
-                                                return (
-                                                    <button
-                                                        key={room.id}
-                                                        type="button"
-                                                        role="radio"
-                                                        aria-checked={selected}
-                                                        className={`room-option ${selected ? 'is-selected' : ''}`}
-                                                        onClick={() =>
-                                                            updateField(
-                                                                'roomId',
-                                                                room.id
-                                                            )
-                                                        }
-                                                    >
-                                                        <span className="room-option-number">
-                                                            {room.roomNumber}
-                                                        </span>
-                                                        <span className="room-option-building">
-                                                            {room.building}
-                                                        </span>
-                                                    </button>
-                                                )
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <hr className="my-1" />
-
-                                <div>
-                                    <label className="form-label" htmlFor="subject">
-                                        Fag
-                                    </label>
-                                    <input
-                                        id="subject"
-                                        className="form-control"
-                                        placeholder="F.eks. DATA2410"
-                                        required
-                                        maxLength={100}
-                                        value={form.subject}
-                                        onChange={(e) =>
-                                            updateField('subject', e.target.value)
-                                        }
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="form-label" htmlFor="topic">
-                                        Tema
-                                    </label>
-                                    <input
-                                        id="topic"
-                                        className="form-control"
-                                        placeholder="Hva skal dere jobbe med?"
-                                        required
-                                        maxLength={200}
-                                        value={form.topic}
-                                        onChange={(e) =>
-                                            updateField('topic', e.target.value)
-                                        }
-                                    />
-                                </div>
-
-                                {formError && (
-                                    <div className="form-error">{formError}</div>
-                                )}
-
-                                <button
-                                    type="submit"
-                                    className="btn btn-primary w-100 py-2"
-                                    disabled={saving || form.roomId <= 0}
-                                >
-                                    {saving
-                                        ? 'Lagrer…'
-                                        : isEditing
-                                          ? 'Lagre endringer'
-                                          : 'Book rom'}
-                                </button>
-                            </form>
-                        </div>
-                    </aside>
+                    <BookingFormPanel
+                        form={form}
+                        isEditing={isEditing}
+                        roomsLoading={roomsLoading}
+                        timesValid={timesValid}
+                        selectedRoomId={selectedRoomId}
+                        availabilityReady={availability.ready}
+                        availabilityError={availability.error}
+                        refreshAvailability={availability.refresh}
+                        availableRooms={availableRooms}
+                        saving={saving}
+                        formError={formError}
+                        updateField={updateField}
+                        handleSubmit={handleSubmit}
+                        cancelEditing={cancelEditing}
+                    />
                 </div>
 
-                {/* Liste: høyre kolonne på desktop */}
+                {/* Booking list */}
                 <div className="col-12 col-lg-8">
                     <div className="d-flex justify-content-between align-items-baseline mb-3">
                         <h2 className="section-title mb-0">
@@ -618,6 +275,7 @@ function BookingsPage() {
                                 <BookingRow
                                     key={booking.id}
                                     booking={booking}
+                                    busy={saving}
                                     isEditing={editingId === booking.id}
                                     isPast={false}
                                     onEdit={() => startEditing(booking)}
@@ -644,9 +302,10 @@ function BookingsPage() {
                                         <BookingRow
                                             key={booking.id}
                                             booking={booking}
+                                            busy={saving}
                                             isEditing={false}
                                             isPast
-                                            onEdit={() => {}}
+                                            onEdit={() => { }}
                                             onDelete={() =>
                                                 handleDelete(booking.id)
                                             }

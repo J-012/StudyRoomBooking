@@ -207,3 +207,8 @@
   letter-spacing: 0.06em;
   color: var(--srb-muted);
 }
+/* Availability could not be verified by the API. */
+.room-status-error {
+    background: #f8d7da;
+    color: #842029;
+}

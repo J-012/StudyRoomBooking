@@ -1,51 +1,22 @@
-import type {
-    AuthResponse,
-    LoginRequest,
-    RegisterRequest,
-} from '../types/Auth'
+import type { AuthResponse, LoginRequest, RegisterRequest } from '../types/Auth'
+import { apiRequest } from './apiClient'
 
 const authUrl = '/api/auth'
 
-export async function login(
-    request: LoginRequest
-): Promise<AuthResponse> {
-    const response = await fetch(`${authUrl}/login`, {
+/** Authenticates an existing account without attaching a previous JWT. */
+export async function login(request: LoginRequest): Promise<AuthResponse> {
+    const response = await apiRequest(`${authUrl}/login`, 'Feil e-post eller passord.', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
         body: JSON.stringify(request),
-    })
-
-    if (!response.ok) {
-        throw new Error('Invalid email or password')
-    }
-
-    const auth: AuthResponse = await response.json()
-
-    return auth
+    }, true)
+    return response.json()
 }
 
-export async function register(
-    request: RegisterRequest
-): Promise<AuthResponse> {
-    const response = await fetch(`${authUrl}/register`, {
+/** Registers a new student and returns the authentication response. */
+export async function register(request: RegisterRequest): Promise<AuthResponse> {
+    const response = await apiRequest(`${authUrl}/register`, 'Kunne ikke registrere bruker.', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
         body: JSON.stringify(request),
-    })
-
-    if (!response.ok) {
-        const problem = await response.json().catch(() => null)
-        const message =
-            problem?.errors?.[''] ?? problem?.title ?? 'Kunne ikke registrere bruker.'
-
-        throw new Error(Array.isArray(message) ? message.join(' ') : message)
-    }
-
-    const auth: AuthResponse = await response.json()
-
-    return auth
+    }, true)
+    return response.json()
 }
