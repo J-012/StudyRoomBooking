@@ -1,0 +1,144 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using StudyRoomBooking.Api.DTOs;
+using StudyRoomBooking.Api.Services;
+
+namespace StudyRoomBooking.Api.Controllers;
+
+// Broken domain rules (ArgumentException from the service) are turned into
+// 400 responses by GlobalExceptionHandler.
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class RoomsController : ControllerBase
+{
+    private readonly IRoomService _roomService;
+    private readonly ILogger<RoomsController> _logger;
+
+    public RoomsController(
+        IRoomService roomService,
+        ILogger<RoomsController> logger)
+    {
+        _roomService = roomService;
+        _logger = logger;
+    }
+
+    // Romoversikten skal være synlig uten innlogging
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<ActionResult<List<RoomDto>>> GetAll()
+    {
+        List<RoomDto> rooms = await _roomService.GetAllAsync();
+
+        return Ok(rooms);
+    }
+
+    // GET /api/rooms/available?startTime=...&endTime=...&excludeBookingId=...
+    [HttpGet("available")]
+    [AllowAnonymous]
+    public async Task<ActionResult<List<RoomDto>>> GetAvailable(
+        [FromQuery] DateTime startTime,
+        [FromQuery] DateTime endTime,
+        [FromQuery] int? excludeBookingId)
+    {
+        List<RoomDto> rooms =
+            await _roomService.GetAvailableAsync(
+                startTime,
+                endTime,
+                excludeBookingId
+            );
+
+        return Ok(rooms);
+    }
+
+    [HttpGet("{id}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<RoomDto>> GetById(int id)
+    {
+        RoomDto? room = await _roomService.GetByIdAsync(id);
+
+        if (room == null)
+        {
+            _logger.LogWarning(
+                "Room with id {RoomId} was not found.",
+                id
+            );
+
+            return NotFound();
+        }
+
+        return Ok(room);
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<RoomDto>> Create(
+        CreateRoomDto roomDto)
+    {
+        RoomDto createdRoom =
+            await _roomService.CreateAsync(roomDto);
+
+        _logger.LogInformation(
+            "Room {RoomId} was created.",
+            createdRoom.Id
+        );
+
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = createdRoom.Id },
+            createdRoom
+        );
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Update(
+        int id,
+        UpdateRoomDto roomDto)
+    {
+        bool updated =
+            await _roomService.UpdateAsync(id, roomDto);
+
+        if (!updated)
+        {
+            _logger.LogWarning(
+                "Room with id {RoomId} could not be updated because it was not found.",
+                id
+            );
+
+            return NotFound();
+        }
+
+        _logger.LogInformation(
+            "Room {RoomId} was updated.",
+            id
+        );
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        bool deleted =
+            await _roomService.DeleteAsync(id);
+
+        if (!deleted)
+        {
+            _logger.LogWarning(
+                "Room with id {RoomId} could not be deleted because it was not found.",
+                id
+            );
+
+            return NotFound();
+        }
+
+        _logger.LogInformation(
+            "Room {RoomId} was deleted.",
+            id
+        );
+
+        return NoContent();
+    }
+}
