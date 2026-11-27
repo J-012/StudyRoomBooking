@@ -8,69 +8,43 @@ public class AmenityRepository : IAmenityRepository
 {
     private readonly StudyRoomBookingDbContext _context;
 
-    public AmenityRepository(
-        StudyRoomBookingDbContext context)
+    public AmenityRepository(StudyRoomBookingDbContext context)
     {
         _context = context;
     }
 
-    public async Task<List<Amenity>> GetAllAsync()
-    {
-        return await _context.Amenities
+    public Task<List<Amenity>> GetAllAsync() =>
+        _context.Amenities
             .AsNoTracking()
             .OrderBy(amenity => amenity.Name)
             .ToListAsync();
-    }
 
-    public async Task<Amenity?> GetByIdAsync(int id)
-    {
-        return await _context.Amenities
-            .FirstOrDefaultAsync(
-                amenity => amenity.Id == id
-            );
-    }
+    public Task<Amenity?> GetByIdAsync(int id) =>
+        _context.Amenities.FirstOrDefaultAsync(amenity => amenity.Id == id);
 
-    public async Task<List<Amenity>> GetByIdsAsync(
-        List<int> ids)
-    {
-        return await _context.Amenities
+    public Task<List<Amenity>> GetByIdsAsync(List<int> ids) =>
+        _context.Amenities
             .Where(amenity => ids.Contains(amenity.Id))
             .ToListAsync();
-    }
 
-    public async Task<bool> ExistsByNameAsync(
-        string name,
-        int? excludedId = null)
+    public Task<bool> ExistsByNameAsync(string name, int? excludedId = null) =>
+        _context.Amenities.AnyAsync(amenity =>
+            amenity.Name.ToLower() == name.ToLower()
+            && (excludedId == null || amenity.Id != excludedId));
+
+    public async Task<Amenity> AddAsync(Amenity amenity)
     {
-        return await _context.Amenities
-            .AnyAsync(amenity =>
-                amenity.Name.ToLower() == name.ToLower()
-                &&
-                (!excludedId.HasValue
-                    || amenity.Id != excludedId.Value)
-            );
-    }
-
-    public async Task<Amenity> AddAsync(
-        Amenity amenity)
-    {
-        await _context.Amenities.AddAsync(amenity);
-
+        _context.Amenities.Add(amenity);
         await _context.SaveChangesAsync();
 
         return amenity;
     }
 
-    public async Task SaveChangesAsync()
-    {
-        await _context.SaveChangesAsync();
-    }
+    public Task SaveChangesAsync() => _context.SaveChangesAsync();
 
-    public async Task DeleteAsync(
-        Amenity amenity)
+    public async Task DeleteAsync(Amenity amenity)
     {
         _context.Amenities.Remove(amenity);
-
         await _context.SaveChangesAsync();
     }
 }

@@ -8,134 +8,80 @@ public class AmenityService : IAmenityService
 {
     private readonly IAmenityRepository _amenityRepository;
 
-    public AmenityService(
-        IAmenityRepository amenityRepository)
+    public AmenityService(IAmenityRepository amenityRepository)
     {
         _amenityRepository = amenityRepository;
     }
 
     public async Task<List<AmenityDto>> GetAllAsync()
     {
-        List<Amenity> amenities =
-            await _amenityRepository.GetAllAsync();
+        List<Amenity> amenities = await _amenityRepository.GetAllAsync();
 
-        List<AmenityDto> amenityDtos =
-            new List<AmenityDto>();
-
-        foreach (Amenity amenity in amenities)
-        {
-            amenityDtos.Add(ToDto(amenity));
-        }
-
-        return amenityDtos;
+        return amenities.Select(amenity => amenity.ToDto()).ToList();
     }
 
-    public async Task<AmenityDto?> GetByIdAsync(
-        int id)
+    public async Task<AmenityDto?> GetByIdAsync(int id)
     {
-        Amenity? amenity =
-            await _amenityRepository.GetByIdAsync(id);
+        Amenity? amenity = await _amenityRepository.GetByIdAsync(id);
 
-        if (amenity == null)
-        {
-            return null;
-        }
-
-        return ToDto(amenity);
+        return amenity?.ToDto();
     }
 
-    public async Task<AmenityDto> CreateAsync(
-        CreateAmenityDto amenityDto)
+    public async Task<AmenityDto> CreateAsync(AmenityRequestDto amenityDto)
     {
-        string name = amenityDto.Name.Trim();
-
-        bool alreadyExists =
-            await _amenityRepository.ExistsByNameAsync(
-                name
-            );
-
-        if (alreadyExists)
-        {
-            throw new ArgumentException(
-                "An amenity with this name already exists."
-            );
-        }
-
         Amenity amenity = new Amenity
         {
-            Name = name,
-            Description =
-                amenityDto.Description?.Trim()
+            Name = await ValidateNameAsync(amenityDto.Name, null),
+            Description = amenityDto.Description?.Trim()
         };
 
-        Amenity createdAmenity =
-            await _amenityRepository.AddAsync(
-                amenity
-            );
+        Amenity createdAmenity = await _amenityRepository.AddAsync(amenity);
 
-        return ToDto(createdAmenity);
+        return createdAmenity.ToDto();
     }
 
-    public async Task<bool> UpdateAsync(
-        int id,
-        UpdateAmenityDto amenityDto)
+    public async Task<bool> UpdateAsync(int id, AmenityRequestDto amenityDto)
     {
-        Amenity? amenity =
-            await _amenityRepository.GetByIdAsync(id);
+        Amenity? amenity = await _amenityRepository.GetByIdAsync(id);
 
         if (amenity == null)
         {
             return false;
         }
 
-        string name = amenityDto.Name.Trim();
-
-        bool alreadyExists =
-            await _amenityRepository.ExistsByNameAsync(
-                name,
-                id
-            );
-
-        if (alreadyExists)
-        {
-            throw new ArgumentException(
-                "An amenity with this name already exists."
-            );
-        }
-
-        amenity.Name = name;
-        amenity.Description =
-            amenityDto.Description?.Trim();
+        amenity.Name = await ValidateNameAsync(amenityDto.Name, id);
+        amenity.Description = amenityDto.Description?.Trim();
 
         await _amenityRepository.SaveChangesAsync();
 
         return true;
     }
 
+    // RoomAmenity rows are removed by cascade delete.
     public async Task<bool> DeleteAsync(int id)
     {
-        Amenity? amenity =
-            await _amenityRepository.GetByIdAsync(id);
+        Amenity? amenity = await _amenityRepository.GetByIdAsync(id);
 
         if (amenity == null)
         {
             return false;
         }
 
-        await _amenityRepository.DeleteAsync(
-            amenity
-        );
+        await _amenityRepository.DeleteAsync(amenity);
 
         return true;
     }
 
-    private AmenityDto ToDto(Amenity amenity)
+    // Returns the trimmed name, or throws if another amenity already uses it.
+    private async Task<string> ValidateNameAsync(string name, int? excludedId)
     {
-        return new AmenityDto
+        string trimmedName = name.Trim();
+
+        if (await _amenityRepository.ExistsByNameAsync(trimmedName, excludedId))
         {
-            Id = amenity.Id,
-            Name = amenity.Name,
-            Description = amenity.Description
-        };
+            throw new ArgumentException("An amenity with this name already exists.");
+        }
+
+        return trimmedName;
     }
 }

@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace StudyRoomBooking.Api.Models;
 
+// Equipment a room can have whiteboard, monitor, etc
 public class Amenity
 {
     public int Id { get; set; }
