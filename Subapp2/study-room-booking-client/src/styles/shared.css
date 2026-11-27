@@ -1,0 +1,78 @@
+/* Shared layout helpers and visual states used across pages. */
+.min-w-0 {
+  min-width: 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  border: 1px dashed var(--srb-border);
+  border-radius: 12px;
+  color: var(--srb-muted);
+}
+
+/* Keep form and filter panels visible on desktop only. */
+@media (min-width: 992px) {
+  .sticky-panel {
+    position: sticky;
+    top: 1.5rem;
+  }
+}
+
+/* All loading placeholders share the same animation; their sizes remain page-specific. */
+.loading-skeleton {
+  background-image: linear-gradient(90deg, #f4f5f7 0%, #eceef1 50%, #f4f5f7 100%);
+  background-size: 200% 100%;
+  animation: srb-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes srb-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-skeleton {
+    animation: none;
+  }
+}
+
+/* The same date tile is used in booking rows and the home page preview. */
+.date-block {
+  flex-shrink: 0;
+  width: 52px;
+  padding: 0.4rem 0;
+  border-radius: 10px;
+  background: var(--srb-hero-bg);
+  text-align: center;
+  line-height: 1.1;
+}
+
+.date-block-month {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--srb-primary-dark);
+}
+
+.date-block-day {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.date-block-compact {
+  width: 46px;
+  padding: 0.3rem 0;
+  border-radius: 9px;
+}
+
+.date-block-compact .date-block-month {
+  font-size: 0.65rem;
+}
+
+.date-block-compact .date-block-day {
+  font-size: 1.15rem;
+}

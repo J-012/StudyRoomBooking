@@ -29,21 +29,7 @@
   margin-bottom: 1.25rem;
 }
 
-/* "Overstrekningstusj"-effekt i stedet for olivenfarget tekst */
-.hp-title-accent {
-  background: linear-gradient(transparent 60%, rgba(255, 213, 0, 0.6) 60%);
-  padding: 0 0.08em;
-}
-
-.hp-lead {
-  max-width: 34rem;
-  margin-bottom: 2rem;
-  color: var(--srb-muted);
-  font-size: 1.1rem;
-  line-height: 1.6;
-}
-
-/* Høyre side av hero: panel med en gul flate bak */
+/* Hero preview panel */
 
 .hp-visual {
   position: relative;
@@ -97,7 +83,7 @@
   text-align: center;
 }
 
-/* Kommende økter */
+/* Upcoming sessions */
 
 .hp-sessions {
   list-style: none;
@@ -114,30 +100,7 @@
   gap: 0.9rem;
   padding: 0.7rem;
   border-radius: 12px;
-  background: #f8f9fa;
-}
-
-.hp-session-date {
-  flex-shrink: 0;
-  width: 46px;
-  padding: 0.3rem 0;
-  border-radius: 9px;
-  background: var(--srb-hero-bg);
-  text-align: center;
-  line-height: 1.1;
-}
-
-.hp-session-date span {
-  display: block;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--srb-primary-dark);
-}
-
-.hp-session-date strong {
-  font-size: 1.15rem;
+  background-color: #f8f9fa;
 }
 
 .hp-session-title {
@@ -155,23 +118,11 @@
   color: var(--srb-muted);
 }
 
-.min-w-0 {
-  min-width: 0;
-}
-
 .hp-skeleton {
   height: 62px;
-  background: linear-gradient(90deg, #f4f5f7 0%, #eceef1 50%, #f4f5f7 100%);
-  background-size: 200% 100%;
-  animation: hp-shimmer 1.2s ease-in-out infinite;
 }
 
-@keyframes hp-shimmer {
-  from { background-position: 200% 0; }
-  to { background-position: -200% 0; }
-}
-
-/* Eksempel-panel for besøkende */
+/* Guest booking preview */
 
 .hp-preview-tag {
   padding: 0.15rem 0.55rem;
@@ -249,7 +200,7 @@
   text-align: center;
 }
 
-/* Slik fungerer det */
+/* How it works */
 
 .hp-steps {
   list-style: none;
@@ -290,13 +241,7 @@
   margin-bottom: 0.4rem;
 }
 
-.hp-step-text {
-  margin: 0;
-  color: var(--srb-muted);
-  font-size: 0.95rem;
-}
-
-/* Bånd nederst */
+/* Bottom call to action */
 
 .hp-band {
   display: flex;

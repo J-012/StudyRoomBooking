@@ -14,7 +14,7 @@ export default function SessionCard({ session, busy, onJoin, onLeave }: SessionC
     const isFull = session.attendeeCount >= session.capacity
 
     return (
-        <article className="card session-card h-100">
+        <article className="card h-100">
             <div className="card-body p-4 d-flex flex-column">
                 <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
                     <h2 className="h5 fw-bold mb-0">{session.subject}</h2>

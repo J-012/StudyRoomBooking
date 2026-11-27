@@ -1,18 +1,6 @@
 import type { Booking } from '../../types/Booking'
-import { formatShortMonth, formatTime, formatWeekday } from '../../utils/dateFormatting'
-
-/** Displays the date in a compact booking-list tile. */
-function DateBlock({ iso }: { iso: string }) {
-    const date = new Date(iso)
-    const month = formatShortMonth(date)
-
-    return (
-        <div className="date-block">
-            <span className="date-block-month">{month}</span>
-            <span className="date-block-day">{date.getDate()}</span>
-        </div>
-    )
-}
+import { formatTime, formatWeekday } from '../../utils/dateFormatting'
+import DateBlock from '../DateBlock'
 
 interface BookingRowProps {
     booking: Booking

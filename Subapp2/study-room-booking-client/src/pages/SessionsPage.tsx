@@ -106,7 +106,7 @@ function SessionsPage() {
                 </p>
             </header>
 
-            {error && <div className="error-message mb-4">{error}</div>}
+            {error && <div className="error-message mb-4" role="alert">{error}</div>}
 
             <section className="card mb-4" aria-label="Filtre">
                 <div className="card-body p-3 p-md-4">

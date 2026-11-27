@@ -257,7 +257,7 @@ function BookingsPage() {
                     {loading ? (
                         <ul className="booking-list">
                             {[0, 1, 2].map((i) => (
-                                <li key={i} className="booking-row skeleton" />
+                                <li key={i} className="booking-row booking-skeleton loading-skeleton" aria-hidden="true" />
                             ))}
                         </ul>
                     ) : upcoming.length === 0 ? (
