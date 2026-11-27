@@ -5,20 +5,15 @@ import { getBookings } from '../api/bookingsApi'
 import { useAuth } from '../context/useAuth'
 import type { Booking } from '../types/Booking'
 
-import { formatShortMonth, formatTime } from '../utils/dateFormatting'
+import { formatTime } from '../utils/dateFormatting'
+import DateBlock from '../components/DateBlock'
 
 import './HomePage.css'
 
 const steps = [
-    {
-        title: 'Velg tidspunkt',
-    },
-    {
-        title: 'Finn et ledig rom',
-    },
-    {
-        title: 'Book og møt opp',
-    },
+    'Velg tidspunkt',
+    'Finn et ledig rom',
+    'Book og møt opp',
 ]
 
 /** Shows the next three bookings for the signed-in student. */
@@ -69,7 +64,7 @@ function UpcomingSessions() {
             ) : items === null ? (
                 <ul className="hp-sessions">
                     {[0, 1, 2].map((i) => (
-                        <li key={i} className="hp-session hp-skeleton" />
+                        <li key={i} className="hp-session hp-skeleton loading-skeleton" aria-hidden="true" />
                     ))}
                 </ul>
             ) : items.length === 0 ? (
@@ -81,29 +76,21 @@ function UpcomingSessions() {
                 </div>
             ) : (
                 <ul className="hp-sessions">
-                    {items.map((booking) => {
-                        const start = new Date(booking.startTime)
-                        const month = formatShortMonth(start)
-
-                        return (
-                            <li key={booking.id} className="hp-session">
-                                <div className="hp-session-date">
-                                    <span>{month}</span>
-                                    <strong>{start.getDate()}</strong>
-                                </div>
-                                <div className="min-w-0">
-                                    <p className="hp-session-title">
-                                        {booking.subject}
-                                    </p>
-                                    <p className="hp-session-meta">
-                                        {formatTime(booking.startTime)}–
-                                        {formatTime(booking.endTime)} ·{' '}
-                                        {booking.roomNumber}, {booking.building}
-                                    </p>
-                                </div>
-                            </li>
-                        )
-                    })}
+                    {items.map((booking) => (
+                        <li key={booking.id} className="hp-session">
+                            <DateBlock iso={booking.startTime} compact />
+                            <div className="min-w-0">
+                                <p className="hp-session-title">
+                                    {booking.subject}
+                                </p>
+                                <p className="hp-session-meta">
+                                    {formatTime(booking.startTime)}–
+                                    {formatTime(booking.endTime)} ·{' '}
+                                    {booking.roomNumber}, {booking.building}
+                                </p>
+                            </div>
+                        </li>
+                    ))}
                 </ul>
             )}
         </div>
@@ -251,9 +238,9 @@ function HomePage() {
 
                 <ol className="hp-steps">
                     {steps.map((step, index) => (
-                        <li key={step.title} className="hp-step">
+                        <li key={step} className="hp-step">
                             <span className="hp-step-number">{index + 1}</span>
-                            <h3 className="hp-step-title">{step.title}</h3>
+                            <h3 className="hp-step-title">{step}</h3>
                         </li>
                     ))}
                 </ol>

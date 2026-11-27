@@ -8,14 +8,6 @@
   color: var(--srb-muted);
 }
 
-/* Skjemapanelet følger med når du scroller (kun desktop) */
-@media (min-width: 992px) {
-  .booking-panel {
-    position: sticky;
-    top: 1.5rem;
-  }
-}
-
 .booking-panel {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -25,7 +17,7 @@
   box-shadow: 0 0 0 3px rgba(255, 213, 0, 0.25);
 }
 
-/* Liste */
+/* Booking list */
 
 .booking-list {
   list-style: none;
@@ -41,7 +33,7 @@
   align-items: flex-start;
   gap: 1rem;
   padding: 1rem 1.25rem;
-  background: #fff;
+  background-color: #fff;
   border: 1px solid var(--srb-border);
   border-radius: 12px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -115,57 +107,14 @@
   white-space: nowrap;
 }
 
-/* Datoboks til venstre i hver rad */
+/* Loading placeholder */
 
-.date-block {
-  flex-shrink: 0;
-  width: 52px;
-  padding: 0.4rem 0;
-  border-radius: 10px;
-  background: var(--srb-hero-bg);
-  text-align: center;
-  line-height: 1.1;
-}
-
-.date-block-month {
-  display: block;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--srb-primary-dark);
-}
-
-.date-block-day {
-  display: block;
-  font-size: 1.35rem;
-  font-weight: 700;
-}
-
-/* Tom liste / lasting / feil */
-
-.empty-state {
-  text-align: center;
-  padding: 3rem 1.5rem;
-  border: 1px dashed var(--srb-border);
-  border-radius: 12px;
-  color: var(--srb-muted);
-}
-
-.booking-row.skeleton {
+.booking-row.booking-skeleton {
   height: 84px;
-  background: linear-gradient(90deg, #f4f5f7 0%, #eceef1 50%, #f4f5f7 100%);
-  background-size: 200% 100%;
-  animation: srb-shimmer 1.2s ease-in-out infinite;
   border-color: transparent;
 }
 
-@keyframes srb-shimmer {
-  from { background-position: 200% 0; }
-  to { background-position: -200% 0; }
-}
-
-/* Romvelger */
+/* Room picker */
 
 .room-options {
   display: grid;

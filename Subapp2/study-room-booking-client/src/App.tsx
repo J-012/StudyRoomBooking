@@ -12,7 +12,6 @@ import ProtectedRoute from './components/ProtectedRoute'
 import RoomOverviewPage from './pages/RoomOverviewPage'
 import SiteHeader from './components/layout/SiteHeader'
 import SiteFooter from './components/layout/SiteFooter'
-import './App.css'
 
 /** Defines public routes and protected student/admin routes in the shared layout. */
 function App() {

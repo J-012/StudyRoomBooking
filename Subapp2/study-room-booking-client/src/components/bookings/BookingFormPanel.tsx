@@ -26,7 +26,7 @@ export default function BookingFormPanel({ form, isEditing, roomsLoading, timesV
     formError, updateField, handleSubmit, cancelEditing }: BookingFormPanelProps) {
     return (
         <aside
-            className={`card booking-panel ${isEditing ? 'is-editing' : ''}`}
+            className={`card booking-panel sticky-panel ${isEditing ? 'is-editing' : ''}`}
         >
             <div className="card-body p-4">
                 <div className="d-flex justify-content-between align-items-center mb-3">

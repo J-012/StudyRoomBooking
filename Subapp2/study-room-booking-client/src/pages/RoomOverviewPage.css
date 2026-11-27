@@ -10,7 +10,7 @@
   box-shadow: 0 0 0 0.2rem rgba(255, 213, 0, 0.2);
 }
 
-/* Bootstrap sin bryter bruker et hvitt ikon; gjør det mørkt på gul bakgrunn */
+/* Use a dark switch icon on the yellow checked background */
 .filter-panel .form-switch .form-check-input:checked {
   --bs-form-switch-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23212529'/%3e%3c/svg%3e");
 }
@@ -19,7 +19,7 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  min-height: calc(1.5em + 1.2rem + 2px); /* samme høyde som inputfeltene */
+  min-height: calc(1.5em + 1.2rem + 2px); /* Match the height of the input fields */
   margin: 0;
 }
 
@@ -41,7 +41,7 @@
   cursor: default;
 }
 
-/* Resultatlinje */
+/* Results bar */
 
 .results-bar {
   display: flex;
@@ -53,7 +53,7 @@
   font-size: 0.92rem;
 }
 
-/* Romkort */
+/* Room cards */
 
 .room-grid {
   display: grid;
@@ -65,7 +65,7 @@
   display: flex;
   flex-direction: column;
   padding: 1.15rem 1.25rem;
-  background: #fff;
+  background-color: #fff;
   border: 1px solid var(--srb-border);
   border-radius: 14px;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -164,35 +164,10 @@
 .room-skeleton {
   height: 168px;
   border-color: transparent;
-  background: linear-gradient(90deg, #f4f5f7 0%, #eceef1 50%, #f4f5f7 100%);
-  background-size: 200% 100%;
-  animation: room-shimmer 1.2s ease-in-out infinite;
 }
 
-@keyframes room-shimmer {
-  from { background-position: 200% 0; }
-  to { background-position: -200% 0; }
-}
-
-.empty-state {
-  text-align: center;
-  padding: 3rem 1.5rem;
-  border: 1px dashed var(--srb-border);
-  border-radius: 12px;
-  color: var(--srb-muted);
-}
-
-.min-w-0 {
-  min-width: 0;
-}
-
-/* Filteret står i en egen kolonne til venstre og følger med ved scrolling */
+/* Desktop room grid */
 @media (min-width: 992px) {
-  .filter-panel {
-    position: sticky;
-    top: 1.5rem;
-  }
-
   .room-grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   }
@@ -209,6 +184,6 @@
 }
 /* Availability could not be verified by the API. */
 .room-status-error {
-    background: #f8d7da;
-    color: #842029;
+  background: #f8d7da;
+  color: #842029;
 }

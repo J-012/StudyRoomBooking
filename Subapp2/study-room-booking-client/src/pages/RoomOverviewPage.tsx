@@ -217,7 +217,7 @@ function RoomOverviewPage() {
             <div className="row g-4">
                 {/* Filter panel */}
                 <div className="col-12 col-lg-3">
-                    <section className="card filter-panel" aria-label="Filtre">
+                    <section className="card filter-panel sticky-panel" aria-label="Filtre">
                         <div className="card-body p-3 p-md-4">
                             <div className="row g-3">
                                 <div className="col-12">
@@ -428,7 +428,8 @@ function RoomOverviewPage() {
                             {[0, 1, 2, 3, 4, 5].map((i) => (
                                 <div
                                     key={i}
-                                    className="room-card room-skeleton"
+                                    className="room-card room-skeleton loading-skeleton"
+                                    aria-hidden="true"
                                 />
                             ))}
                         </div>
