@@ -1,0 +1,62 @@
+@model StudyRoomBooking.ViewModels.Admin.AmenityManagerViewModel
+
+<section id="amenities" aria-labelledby="amenities-heading">
+    <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+        <div>
+            <h2 id="amenities-heading" class="h5 fw-bold mb-1">Amenity catalog</h2>
+            <p class="small text-secondary mb-0">Changes here affect every room using the amenity.</p>
+        </div>
+        <span class="badge text-bg-light border">@Model.Amenities.Count total</span>
+    </div>
+
+    <div class="card"><div class="card-body p-3 p-md-4">
+        <form asp-controller="Amenities" asp-action="Create" method="post" class="row g-2 align-items-end mb-4">
+            @if (Model.ReturnRoomId is int roomId) { <input type="hidden" name="returnRoomId" value="@roomId" /> }
+            <div class="col-12 col-md-4">
+                <label for="new-amenity-name" class="form-label">New amenity</label>
+                <input id="new-amenity-name" name="Name" class="form-control" maxlength="50" required placeholder="e.g. Whiteboard" />
+            </div>
+            <div class="col-12 col-md-5">
+                <label for="new-amenity-description" class="form-label">Description <span class="fw-normal text-secondary">(optional)</span></label>
+                <input id="new-amenity-description" name="Description" class="form-control" maxlength="200" />
+            </div>
+            <div class="col-12 col-md-3"><button type="submit" class="btn btn-primary w-100">Add amenity</button></div>
+        </form>
+
+        @if (Model.Amenities.Count == 0)
+        {
+            <p class="small text-secondary border-top pt-3 mb-0">No amenities yet.</p>
+        }
+        else
+        {
+            <div class="list-group list-group-flush border-top">
+                @foreach (var amenity in Model.Amenities)
+                {
+                    var editId = $"edit-amenity-{amenity.Id}";
+                    <div class="list-group-item px-0">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                            <div><strong>@amenity.Name</strong>
+                                @if (!string.IsNullOrWhiteSpace(amenity.Description)) { <span class="small text-secondary ms-2">@amenity.Description</span> }
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" data-bs-target="#@editId" aria-expanded="false" aria-controls="@editId">Edit</button>
+                                <form asp-controller="Amenities" asp-action="Delete" asp-route-id="@amenity.Id" method="post" onsubmit="return confirm('Remove this amenity from all rooms?');">
+                                    @if (Model.ReturnRoomId is int returnId) { <input type="hidden" name="returnRoomId" value="@returnId" /> }
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="collapse mt-3" id="@editId">
+                            <form asp-controller="Amenities" asp-action="Edit" asp-route-id="@amenity.Id" method="post" class="row g-2 align-items-end">
+                                @if (Model.ReturnRoomId is int returnId) { <input type="hidden" name="returnRoomId" value="@returnId" /> }
+                                <div class="col-12 col-md-4"><label for="amenity-name-@amenity.Id" class="form-label">Name</label><input id="amenity-name-@amenity.Id" name="Name" class="form-control" value="@amenity.Name" maxlength="50" required /></div>
+                                <div class="col-12 col-md-5"><label for="amenity-description-@amenity.Id" class="form-label">Description</label><input id="amenity-description-@amenity.Id" name="Description" class="form-control" value="@amenity.Description" maxlength="200" /></div>
+                                <div class="col-12 col-md-3"><button type="submit" class="btn btn-primary w-100">Save</button></div>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div></div>
+</section>

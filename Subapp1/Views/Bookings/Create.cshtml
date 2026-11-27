@@ -26,7 +26,7 @@
                     <h2 class="h5 fw-bold mb-3">Your selection</h2>
                     <dl class="row mb-0">
                         <dt class="col-sm-3 text-secondary fw-normal">Room</dt>
-                        <dd class="col-sm-9 fw-semibold">@Model.SelectedRoom?.Building — Room @Model.SelectedRoom?.RoomNumber</dd>
+                        <dd class="col-sm-9 fw-semibold">@Model.SelectedRoom?.Building?.Name — Room @Model.SelectedRoom?.RoomNumber</dd>
                         <dt class="col-sm-3 text-secondary fw-normal">Date</dt>
                         <dd class="col-sm-9">@Model.StartDate.ToString("dddd, dd MMMM yyyy")</dd>
                         <dt class="col-sm-3 text-secondary fw-normal">Time</dt>
@@ -44,18 +44,10 @@
                 <div class="card-body p-4">
                     <h2 class="h5 fw-bold mb-4">Session details</h2>
                     <div class="row g-3">
-                        <div class="col-12 col-md-6">
-                            <label asp-for="CourseCode" class="form-label">Course</label>
-                            <select asp-for="CourseCode" class="form-select">
-                                <option value="">Select a course</option>
-                                @foreach (var course in Model.Courses)
-                                {
-                                    <option value="@course.CourseCode">@course.CourseCode - @course.Name</option>
-                                }
-                            </select>
-                            <span asp-validation-for="CourseCode" class="text-danger"></span>
+                        <div class="col-12">
+                            <partial name="_CoursePicker" model="Model" />
                         </div>
-                        <div class="col-12 col-md-6">
+                        <div class="col-12">
                             <label asp-for="Topic" class="form-label"></label>
                             <input asp-for="Topic" class="form-control" />
                             <span asp-validation-for="Topic" class="text-danger"></span>

@@ -1,0 +1,50 @@
+@model StudyRoomBooking.Models.BookingFormViewModel
+
+<fieldset class="course-picker" data-course-picker>
+    <legend class="h6 fw-bold mb-3">Choose a course</legend>
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-end gap-2 mb-3">
+        <div class="flex-grow-1">
+            <label for="courseSearch" class="form-label">Search courses by course code or name</label>
+            <input id="courseSearch" type="search" class="form-control" autocomplete="off"
+                   placeholder="Search by code or name" data-course-search />
+        </div>
+        <span class="small text-secondary pb-sm-2" role="status" aria-live="polite" data-course-count></span>
+    </div>
+
+    <div class="course-picker-grid" data-course-list>
+        @for (var index = 0; index < Model.Courses.Count; index++)
+        {
+            var course = Model.Courses[index];
+            var inputId = $"course-option-{index}";
+            <div data-course-card data-course-search-text="@($"{course.CourseCode} {course.Name}")"
+                 class="@(index >= 4 ? "d-none" : "")">
+                <input asp-for="CourseCode" type="radio" id="@inputId" value="@course.CourseCode" class="visually-hidden"
+                       required />
+                <label for="@inputId" class="course-option">
+                    <span class="course-option-text">
+                        <span class="course-option-code">@course.CourseCode</span>
+                        <strong>@course.Name</strong>
+                    </span>
+                    <span class="course-option-check" aria-hidden="true">✓</span>
+                </label>
+            </div>
+        }
+    </div>
+
+    @if (Model.Courses.Count == 0)
+    {
+        <p class="text-secondary mb-0">No courses are available yet.</p>
+    }
+    else
+    {
+        <p class="text-secondary small mb-0 mt-3" data-course-empty hidden>No matching courses. Try another code or name.
+        </p>
+        @if (Model.Courses.Count > 4)
+        {
+            <button type="button" class="btn btn-outline-secondary btn-sm mt-3" data-course-load-more>
+                Load 4 more courses
+            </button>
+        }
+    }
+    <span asp-validation-for="CourseCode" class="text-danger d-block mt-2"></span>
+</fieldset>

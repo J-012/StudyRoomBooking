@@ -1,7 +1,7 @@
 @model StudyRoomBooking.Models.Course
 
 @{
-    ViewData["Title"] = "Edit Course";
+    ViewData["Title"] = "Create Course";
 }
 
 <div class="row justify-content-center py-5">
@@ -10,19 +10,19 @@
         <nav aria-label="breadcrumb" class="mb-3">
             <ol class="breadcrumb mb-0 small">
                 <li class="breadcrumb-item">
-                    <a asp-controller="Courses" asp-action="Index">Courses</a>
+                    <a asp-controller="Courses" asp-action="AdminIndex">Courses</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">
-                    Edit
+                    Create
                 </li>
             </ol>
         </nav>
 
         <div class="mb-4">
             <span class="section-eyebrow">Course management</span>
-            <h1 class="h2 fw-bold mt-1 mb-2">Edit Course</h1>
+            <h1 class="h2 fw-bold mt-1 mb-2">Create Course</h1>
             <p class="text-secondary-emphasis mb-0">
-                Update the details for @Model.CourseCode.
+                Add a new course that students can select when booking study rooms.
                 Fields marked with <span class="text-danger">*</span> are required.
             </p>
         </div>
@@ -30,10 +30,7 @@
         <div asp-validation-summary="ModelOnly"
              class="text-danger mb-3"></div>
 
-        <form asp-controller="Courses"
-              asp-action="Edit"
-              asp-route-courseCode="@Model.CourseCode"
-              method="post">
+        <form asp-controller="Courses" asp-action="AdminCreate" method="post">
 
             <div class="card mb-4">
                 <div class="card-body p-4">
@@ -48,7 +45,8 @@
 
                             <input asp-for="CourseCode"
                                    class="form-control"
-                                   maxlength="20" readonly />
+                                   placeholder="e.g. DATA1500"
+                                   maxlength="20" />
 
                             <span asp-validation-for="CourseCode"
                                   class="text-danger small"></span>
@@ -61,6 +59,7 @@
 
                             <input asp-for="Name"
                                    class="form-control"
+                                   placeholder="e.g. Databases"
                                    maxlength="100" />
 
                             <span asp-validation-for="Name"
@@ -75,7 +74,8 @@
                             <textarea asp-for="Description"
                                       class="form-control"
                                       rows="4"
-                                      maxlength="500"></textarea>
+                                      maxlength="500"
+                                      placeholder="Write a short description of the course..."></textarea>
 
                             <span asp-validation-for="Description"
                                   class="text-danger small"></span>
@@ -91,14 +91,14 @@
 
             <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end">
                 <a asp-controller="Courses"
-                   asp-action="Index"
+                   asp-action="AdminIndex"
                    class="btn btn-light px-4">
                     Cancel
                 </a>
 
                 <button type="submit" class="btn btn-primary px-4">
-                    <i class="bi bi-check-lg me-1"></i>
-                    Save Changes
+                    <i class="bi bi-plus-lg me-1"></i>
+                    Create Course
                 </button>
             </div>
 

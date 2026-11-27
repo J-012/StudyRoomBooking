@@ -17,6 +17,29 @@ namespace StudyRoomBooking.Mvc.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
 
+            modelBuilder.Entity("StudyRoomBooking.Models.Amenity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Amenities");
+                });
+
             modelBuilder.Entity("StudyRoomBooking.Models.Booking", b =>
                 {
                     b.Property<int>("BookingId")
@@ -79,6 +102,29 @@ namespace StudyRoomBooking.Mvc.Migrations
                     b.ToTable("BookingParticipants");
                 });
 
+            modelBuilder.Entity("StudyRoomBooking.Models.Building", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Buildings");
+                });
+
             modelBuilder.Entity("StudyRoomBooking.Models.Course", b =>
                 {
                     b.Property<string>("CourseCode")
@@ -124,10 +170,8 @@ namespace StudyRoomBooking.Mvc.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Building")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                    b.Property<int>("BuildingId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Capacity")
                         .HasColumnType("INTEGER");
@@ -139,58 +183,75 @@ namespace StudyRoomBooking.Mvc.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BuildingId");
+
                     b.ToTable("Rooms");
 
                     b.HasData(
                         new
                         {
                             Id = 1,
-                            Building = "Pilestredet 35",
+                            BuildingId = 1,
                             Capacity = 6,
                             RoomNumber = "101"
                         },
                         new
                         {
                             Id = 2,
-                            Building = "Pilestredet 35",
+                            BuildingId = 1,
                             Capacity = 6,
                             RoomNumber = "102"
                         },
                         new
                         {
                             Id = 3,
-                            Building = "Pilestredet 35",
+                            BuildingId = 1,
                             Capacity = 12,
                             RoomNumber = "103"
                         },
                         new
                         {
                             Id = 4,
-                            Building = "Pilestredet 35",
+                            BuildingId = 1,
                             Capacity = 6,
                             RoomNumber = "201"
                         },
                         new
                         {
                             Id = 5,
-                            Building = "Pilestredet 35",
+                            BuildingId = 1,
                             Capacity = 6,
                             RoomNumber = "202"
                         },
                         new
                         {
                             Id = 6,
-                            Building = "Pilestredet 32",
+                            BuildingId = 2,
                             Capacity = 8,
                             RoomNumber = "101"
                         },
                         new
                         {
                             Id = 7,
-                            Building = "Pilestredet 32",
+                            BuildingId = 2,
                             Capacity = 8,
                             RoomNumber = "102"
                         });
+                });
+
+            modelBuilder.Entity("StudyRoomBooking.Models.RoomAmenity", b =>
+                {
+                    b.Property<int>("RoomId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("AmenityId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("RoomId", "AmenityId");
+
+                    b.HasIndex("AmenityId");
+
+                    b.ToTable("RoomAmenities");
                 });
 
             modelBuilder.Entity("StudyRoomBooking.Models.User", b =>
@@ -278,9 +339,49 @@ namespace StudyRoomBooking.Mvc.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("StudyRoomBooking.Models.Room", b =>
+                {
+                    b.HasOne("StudyRoomBooking.Models.Building", "Building")
+                        .WithMany("Rooms")
+                        .HasForeignKey("BuildingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Building");
+                });
+
+            modelBuilder.Entity("StudyRoomBooking.Models.RoomAmenity", b =>
+                {
+                    b.HasOne("StudyRoomBooking.Models.Amenity", "Amenity")
+                        .WithMany("RoomAmenities")
+                        .HasForeignKey("AmenityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("StudyRoomBooking.Models.Room", "Room")
+                        .WithMany("RoomAmenities")
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Amenity");
+
+                    b.Navigation("Room");
+                });
+
+            modelBuilder.Entity("StudyRoomBooking.Models.Amenity", b =>
+                {
+                    b.Navigation("RoomAmenities");
+                });
+
             modelBuilder.Entity("StudyRoomBooking.Models.Booking", b =>
                 {
                     b.Navigation("Participants");
+                });
+
+            modelBuilder.Entity("StudyRoomBooking.Models.Building", b =>
+                {
+                    b.Navigation("Rooms");
                 });
 
             modelBuilder.Entity("StudyRoomBooking.Models.Course", b =>
@@ -296,6 +397,8 @@ namespace StudyRoomBooking.Mvc.Migrations
             modelBuilder.Entity("StudyRoomBooking.Models.Room", b =>
                 {
                     b.Navigation("Bookings");
+
+                    b.Navigation("RoomAmenities");
                 });
 
             modelBuilder.Entity("StudyRoomBooking.Models.User", b =>
