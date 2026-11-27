@@ -140,57 +140,6 @@ namespace StudyRoomBooking.Mvc.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Rooms");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Building = "Pilestredet 35",
-                            Capacity = 6,
-                            RoomNumber = "101"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Building = "Pilestredet 35",
-                            Capacity = 6,
-                            RoomNumber = "102"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Building = "Pilestredet 35",
-                            Capacity = 12,
-                            RoomNumber = "103"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Building = "Pilestredet 35",
-                            Capacity = 6,
-                            RoomNumber = "201"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Building = "Pilestredet 35",
-                            Capacity = 6,
-                            RoomNumber = "202"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Building = "Pilestredet 32",
-                            Capacity = 8,
-                            RoomNumber = "101"
-                        },
-                        new
-                        {
-                            Id = 7,
-                            Building = "Pilestredet 32",
-                            Capacity = 8,
-                            RoomNumber = "102"
-                        });
                 });
 
             modelBuilder.Entity("StudyRoomBooking.Models.User", b =>
