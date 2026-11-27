@@ -13,117 +13,109 @@ public class BookingRepository : IBookingRepository
         _context = context;
     }
 
-    public async Task<List<StudySession>> GetAllAsync()
-    {
-        return await _context.StudySessions
+    // Sessions with everything BookingDto needs. Shared by all read methods.
+    private IQueryable<StudySession> SessionsWithDetails =>
+        _context.StudySessions
             .Include(session => session.Room)
                 .ThenInclude(room => room!.Building)
             .Include(session => session.Organizer)
-            .Include(session => session.Participants)
+            .Include(session => session.Participants);
+
+    // Sessions that overlap the time range [startTime, endTime).
+    // Two ranges overlap when each one starts before the other ends.
+    private IQueryable<StudySession> Overlapping(
+        DateTime startTime,
+        DateTime endTime,
+        int? excludedSessionId) =>
+        _context.StudySessions.Where(session =>
+            startTime < session.EndTime
+            && endTime > session.StartTime
+            && (excludedSessionId == null || session.Id != excludedSessionId));
+
+    public Task<List<StudySession>> GetAllAsync(string? userId) =>
+        SessionsWithDetails
             .AsNoTracking()
+            .Where(session => userId == null
+                || session.OrganizerUserId == userId
+                || session.Participants.Any(participant => participant.UserId == userId))
             .OrderBy(session => session.StartTime)
             .ToListAsync();
-    }
 
-    public async Task<List<StudySession>> GetUpcomingAsync()
+    public Task<List<StudySession>> GetUpcomingAsync()
     {
         DateTime now = DateTime.Now;
 
-        return await _context.StudySessions
-            .Include(session => session.Room)
-                .ThenInclude(room => room!.Building)
-            .Include(session => session.Organizer)
-            .Include(session => session.Participants)
+        return SessionsWithDetails
             .AsNoTracking()
             .Where(session => session.EndTime >= now)
             .OrderBy(session => session.StartTime)
             .ToListAsync();
     }
 
-    public async Task<StudySession?> GetByIdAsync(int id)
-    {
-        return await _context.StudySessions
-            .Include(session => session.Room)
-                .ThenInclude(room => room!.Building)
-            .Include(session => session.Organizer)
-            .Include(session => session.Participants)
-            .FirstOrDefaultAsync(session => session.Id == id);
-    }
+    public Task<StudySession?> GetByIdAsync(int id) =>
+        SessionsWithDetails.FirstOrDefaultAsync(session => session.Id == id);
 
     public async Task<StudySession> AddAsync(StudySession session)
     {
-        await _context.StudySessions.AddAsync(session);
-
+        _context.StudySessions.Add(session);
         await _context.SaveChangesAsync();
 
-        StudySession? createdSession = await GetByIdAsync(session.Id);
-
-        return createdSession ?? session;
+        // Reload so Room, Building and Organizer are filled in for the response.
+        return (await GetByIdAsync(session.Id))!;
     }
 
-    public async Task SaveChangesAsync()
-    {
-        await _context.SaveChangesAsync();
-    }
+    public Task SaveChangesAsync() => _context.SaveChangesAsync();
 
     public async Task DeleteAsync(StudySession session)
     {
         _context.StudySessions.Remove(session);
-
         await _context.SaveChangesAsync();
     }
 
     public async Task AddParticipantAsync(SessionParticipant participant)
     {
-        await _context.SessionParticipants.AddAsync(participant);
-
+        _context.SessionParticipants.Add(participant);
         await _context.SaveChangesAsync();
     }
 
-    public async Task RemoveParticipantAsync(
-        SessionParticipant participant)
+    public async Task RemoveParticipantAsync(SessionParticipant participant)
     {
         _context.SessionParticipants.Remove(participant);
-
         await _context.SaveChangesAsync();
     }
 
-    public async Task<int> CountActiveBookingsForUserAsync(
-        string organizerUserId)
+    public Task<int> CountActiveBookingsForUserAsync(string organizerUserId)
     {
         DateTime now = DateTime.Now;
 
-        return await _context.StudySessions
-            .CountAsync(session =>
-                session.OrganizerUserId == organizerUserId
-                && session.EndTime >= now
-            );
+        return _context.StudySessions.CountAsync(session =>
+            session.OrganizerUserId == organizerUserId
+            && session.EndTime >= now);
     }
 
-    public async Task<bool> HasUpcomingBookingsForRoomAsync(int roomId)
+    public Task<bool> HasUpcomingBookingsForRoomAsync(int roomId)
     {
         DateTime now = DateTime.Now;
 
-        return await _context.StudySessions
-            .AnyAsync(session =>
-                session.RoomId == roomId
-                && session.EndTime >= now
-            );
+        return _context.StudySessions.AnyAsync(session =>
+            session.RoomId == roomId
+            && session.EndTime >= now);
     }
 
-    public async Task<bool> HasConflictAsync(
+    public Task<bool> HasConflictAsync(
         int roomId,
         DateTime startTime,
         DateTime endTime,
-        int? excludedSessionId)
-    {
-        return await _context.StudySessions
-            .AnyAsync(session =>
-                session.RoomId == roomId
-                && (!excludedSessionId.HasValue
-                    || session.Id != excludedSessionId.Value)
-                && startTime < session.EndTime
-                && endTime > session.StartTime
-            );
-    }
+        int? excludedSessionId) =>
+        Overlapping(startTime, endTime, excludedSessionId)
+            .AnyAsync(session => session.RoomId == roomId);
+
+    public Task<List<int>> GetBookedRoomIdsAsync(
+        DateTime startTime,
+        DateTime endTime,
+        int? excludedSessionId) =>
+        Overlapping(startTime, endTime, excludedSessionId)
+            .Select(session => session.RoomId)
+            .Distinct()
+            .ToListAsync();
 }

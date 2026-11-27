@@ -1,7 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using StudyRoomBooking.Api.Models;
 
@@ -9,21 +8,18 @@ namespace StudyRoomBooking.Api.Services;
 
 public class TokenService : ITokenService
 {
-    private readonly IConfiguration _configuration;
-    private readonly UserManager<ApplicationUser> _userManager;
+    private const int TokenLifetimeHours = 8;
 
-    public TokenService(
-        IConfiguration configuration,
-        UserManager<ApplicationUser> userManager)
+    private readonly IConfiguration _configuration;
+
+    public TokenService(IConfiguration configuration)
     {
         _configuration = configuration;
-        _userManager = userManager;
     }
 
-    public async Task<string> CreateTokenAsync(ApplicationUser user)
+    public string CreateToken(ApplicationUser user, IEnumerable<string> roles)
     {
-        IList<string> roles = await _userManager.GetRolesAsync(user);
-
+        // "sub" holds the user id; BookingsController reads it back from here.
         List<Claim> claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
@@ -31,27 +27,18 @@ public class TokenService : ITokenService
             new Claim("fullName", user.FullName)
         };
 
-        foreach (string role in roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-        }
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
-        string key = _configuration["Jwt:Key"]!;
-        string issuer = _configuration["Jwt:Issuer"]!;
-        string audience = _configuration["Jwt:Audience"]!;
-
-        SymmetricSecurityKey securityKey =
-            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
-
-        SigningCredentials credentials =
-            new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+        // Same key, issuer and audience as the validation set up in Program.cs.
+        SymmetricSecurityKey key =
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
 
         JwtSecurityToken token = new JwtSecurityToken(
-            issuer: issuer,
-            audience: audience,
+            issuer: _configuration["Jwt:Issuer"],
+            audience: _configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(8),
-            signingCredentials: credentials
+            expires: DateTime.UtcNow.AddHours(TokenLifetimeHours),
+            signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);

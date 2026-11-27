@@ -8,14 +8,9 @@ public interface IAmenityRepository
 
     Task<Amenity?> GetByIdAsync(int id);
 
-    Task<List<Amenity>> GetByIdsAsync(
-        List<int> ids
-    );
+    Task<List<Amenity>> GetByIdsAsync(List<int> ids);
 
-    Task<bool> ExistsByNameAsync(
-        string name,
-        int? excludedId = null
-    );
+    Task<bool> ExistsByNameAsync(string name, int? excludedId = null);
 
     Task<Amenity> AddAsync(Amenity amenity);
 

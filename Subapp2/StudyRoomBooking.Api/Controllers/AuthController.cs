@@ -24,6 +24,7 @@ public class AuthController : ControllerBase
         _logger = logger;
     }
 
+    // New users are always students.
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto registerDto)
     {
@@ -35,11 +36,11 @@ public class AuthController : ControllerBase
             StudentNumber = registerDto.StudentNumber
         };
 
-        IdentityResult result =
-            await _userManager.CreateAsync(user, registerDto.Password);
+        IdentityResult result = await _userManager.CreateAsync(user, registerDto.Password);
 
         if (!result.Succeeded)
         {
+            // email already taken or password too weak.
             foreach (IdentityError error in result.Errors)
             {
                 ModelState.AddModelError(string.Empty, error.Description);
@@ -48,55 +49,40 @@ public class AuthController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        await _userManager.AddToRoleAsync(user, "Student");
+        await _userManager.AddToRoleAsync(user, Roles.Student);
 
         _logger.LogInformation("New user registered: {Email}", user.Email);
 
-        string token = await _tokenService.CreateTokenAsync(user);
-
-        return Ok(new AuthResponseDto
-        {
-            Token = token,
-            Email = user.Email!,
-            FullName = user.FullName,
-            Role = "Student"
-        });
+        return Ok(await CreateAuthResponseAsync(user));
     }
-
+    // LOGIN 
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponseDto>> Login(LoginDto loginDto)
     {
-        ApplicationUser? user =
-            await _userManager.FindByEmailAsync(loginDto.Email);
+        ApplicationUser? user = await _userManager.FindByEmailAsync(loginDto.Email);
 
-        if (user == null)
+        if (user == null || !await _userManager.CheckPasswordAsync(user, loginDto.Password))
         {
-            _logger.LogWarning("Login failed: unknown email {Email}", loginDto.Email);
+            _logger.LogWarning("Login failed for {Email}", loginDto.Email);
             return Unauthorized("Invalid email or password.");
         }
-
-        bool passwordValid =
-            await _userManager.CheckPasswordAsync(user, loginDto.Password);
-
-        if (!passwordValid)
-        {
-            _logger.LogWarning("Login failed: wrong password for {Email}", loginDto.Email);
-            return Unauthorized("Invalid email or password.");
-        }
-
-        IList<string> roles = await _userManager.GetRolesAsync(user);
-        string role = roles.FirstOrDefault() ?? "Student";
-
-        string token = await _tokenService.CreateTokenAsync(user);
 
         _logger.LogInformation("User logged in: {Email}", user.Email);
 
-        return Ok(new AuthResponseDto
+        return Ok(await CreateAuthResponseAsync(user));
+    }
+
+    // Shared by register and login.
+    private async Task<AuthResponseDto> CreateAuthResponseAsync(ApplicationUser user)
+    {
+        IList<string> roles = await _userManager.GetRolesAsync(user);
+
+        return new AuthResponseDto
         {
-            Token = token,
+            Token = _tokenService.CreateToken(user, roles),
             Email = user.Email!,
             FullName = user.FullName,
-            Role = role
-        });
+            Role = roles.FirstOrDefault() ?? Roles.Student
+        };
     }
 }

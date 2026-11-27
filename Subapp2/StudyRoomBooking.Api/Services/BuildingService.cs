@@ -15,84 +15,41 @@ public class BuildingService : IBuildingService
 
     public async Task<List<BuildingDto>> GetAllAsync()
     {
-        List<Building> buildings =
-            await _buildingRepository.GetAllAsync();
+        List<Building> buildings = await _buildingRepository.GetAllAsync();
 
-        List<BuildingDto> buildingDtos = new List<BuildingDto>();
-
-        foreach (Building building in buildings)
-        {
-            buildingDtos.Add(ToDto(building));
-        }
-
-        return buildingDtos;
+        return buildings.Select(building => building.ToDto()).ToList();
     }
 
     public async Task<BuildingDto?> GetByIdAsync(int id)
     {
-        Building? building =
-            await _buildingRepository.GetByIdAsync(id);
+        Building? building = await _buildingRepository.GetByIdAsync(id);
 
-        if (building == null)
-        {
-            return null;
-        }
-
-        return ToDto(building);
+        return building?.ToDto();
     }
 
-    public async Task<BuildingDto> CreateAsync(
-        CreateBuildingDto buildingDto)
+    public async Task<BuildingDto> CreateAsync(BuildingRequestDto buildingDto)
     {
-        string name = buildingDto.Name.Trim();
-
-        bool alreadyExists =
-            await _buildingRepository.ExistsByNameAsync(name);
-
-        if (alreadyExists)
-        {
-            throw new ArgumentException(
-                "A building with this name already exists."
-            );
-        }
-
         Building building = new Building
         {
-            Name = name,
+            Name = await ValidateNameAsync(buildingDto.Name, null),
             Address = buildingDto.Address?.Trim()
         };
 
-        Building createdBuilding =
-            await _buildingRepository.AddAsync(building);
+        Building createdBuilding = await _buildingRepository.AddAsync(building);
 
-        return ToDto(createdBuilding);
+        return createdBuilding.ToDto();
     }
 
-    public async Task<bool> UpdateAsync(
-        int id,
-        UpdateBuildingDto buildingDto)
+    public async Task<bool> UpdateAsync(int id, BuildingRequestDto buildingDto)
     {
-        Building? building =
-            await _buildingRepository.GetByIdAsync(id);
+        Building? building = await _buildingRepository.GetByIdAsync(id);
 
         if (building == null)
         {
             return false;
         }
 
-        string name = buildingDto.Name.Trim();
-
-        bool alreadyExists =
-            await _buildingRepository.ExistsByNameAsync(name, id);
-
-        if (alreadyExists)
-        {
-            throw new ArgumentException(
-                "A building with this name already exists."
-            );
-        }
-
-        building.Name = name;
+        building.Name = await ValidateNameAsync(buildingDto.Name, id);
         building.Address = buildingDto.Address?.Trim();
 
         await _buildingRepository.SaveChangesAsync();
@@ -102,25 +59,17 @@ public class BuildingService : IBuildingService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        Building? building =
-            await _buildingRepository.GetByIdAsync(id);
+        Building? building = await _buildingRepository.GetByIdAsync(id);
 
         if (building == null)
         {
             return false;
         }
 
-        // Rooms reference their building with DeleteBehavior.Restrict,
-        // so the database would reject this delete. Stop it here with
-        // a message the admin can act on.
-        bool hasRooms =
-            await _buildingRepository.HasRoomsAsync(id);
-
-        if (hasRooms)
+        // Rooms reference their building with DeleteBehavior.Restrict
+        if (await _buildingRepository.HasRoomsAsync(id))
         {
-            throw new ArgumentException(
-                "This building still has rooms. Move or delete the rooms first."
-            );
+            throw new ArgumentException("This building still has rooms. Move or delete the rooms first.");
         }
 
         await _buildingRepository.DeleteAsync(building);
@@ -128,13 +77,16 @@ public class BuildingService : IBuildingService
         return true;
     }
 
-    private BuildingDto ToDto(Building building)
+    // Returns the trimmed name, or throws if another building already uses it.
+    private async Task<string> ValidateNameAsync(string name, int? excludedId)
     {
-        return new BuildingDto
+        string trimmedName = name.Trim();
+
+        if (await _buildingRepository.ExistsByNameAsync(trimmedName, excludedId))
         {
-            Id = building.Id,
-            Name = building.Name,
-            Address = building.Address
-        };
+            throw new ArgumentException("A building with this name already exists.");
+        }
+
+        return trimmedName;
     }
 }
