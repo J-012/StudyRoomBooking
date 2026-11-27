@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { register } from '../api/authApi'
 import { useAuth } from '../context/useAuth'
 
+import { isValidEmail, validateRegistrationPassword } from '../utils/authValidation'
 import { errorText } from '../utils/errorHandling'
 
 /** Registration form for new student accounts. */
@@ -37,13 +38,11 @@ function RegisterPage() {
             problems.push('Studentnummer kan være maks 20 tegn.')
         }
 
-        if (!/^\S+@\S+\.\S+$/.test(email)) {
+        if (!isValidEmail(email)) {
             problems.push('Oppgi en gyldig e-postadresse.')
         }
 
-        if (password.length < 6) {
-            problems.push('Passordet må være minst 6 tegn.')
-        }
+        problems.push(...validateRegistrationPassword(password))
 
         if (password !== confirmPassword) {
             problems.push('Passordene er ikke like.')
@@ -71,9 +70,9 @@ function RegisterPage() {
             setErrors([])
 
             const auth = await register({
-                fullName,
-                studentNumber,
-                email,
+                fullName: fullName.trim(),
+                studentNumber: studentNumber.trim(),
+                email: email.trim(),
                 password,
             })
 
@@ -148,7 +147,7 @@ function RegisterPage() {
                         onChange={(e) => setPassword(e.target.value)}
                     />
                     <div className="form-text">
-                        Minst 6 tegn.
+                        Minst 6 tegn, én liten bokstav (a–z) og ett tall (0–9).
                     </div>
                 </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import {
@@ -10,14 +10,14 @@ import {
 import type { Booking } from '../types/Booking'
 
 import SessionCard from '../components/SessionCard'
+import { useAsyncData } from '../hooks/useAsyncData'
 import { errorText } from '../utils/errorHandling'
 
 import './SessionsPage.css'
 
 /** Lists open study sessions and handles participation. */
 function SessionsPage() {
-    const [sessions, setSessions] = useState<Booking[]>([])
-    const [loading, setLoading] = useState(true)
+    const { data, loading, error: loadError, refresh } = useAsyncData(getOpenSessions, 'Kunne ikke hente økter.')
     const [error, setError] = useState('')
 
     // Search filters
@@ -27,34 +27,10 @@ function SessionsPage() {
     // Tracks the session being joined or left.
     const [busyId, setBusyId] = useState<number | null>(null)
 
-    /** Refreshes the list and participant counts from the API. */
-    async function loadSessions() {
-        try {
-            setSessions(await getOpenSessions())
-        } catch (error) {
-            setError(errorText(error, 'Kunne ikke hente økter.'))
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    // Initial load is cancelled when the page unmounts.
-    useEffect(() => {
-        let cancelled = false
-        getOpenSessions().then(data => {
-            if (!cancelled) setSessions(data)
-        }).catch(error => {
-            if (!cancelled) setError(errorText(error, 'Kunne ikke hente økter.'))
-        }).finally(() => {
-            if (!cancelled) setLoading(false)
-        })
-        return () => { cancelled = true }
-    }, [])
-
     const filteredSessions = useMemo(() => {
         const query = search.trim().toLowerCase()
 
-        return sessions.filter((session) => {
+        return (data ?? []).filter((session) => {
             if (
                 query &&
                 !session.subject.toLowerCase().includes(query) &&
@@ -72,7 +48,7 @@ function SessionsPage() {
 
             return true
         })
-    }, [sessions, search, onlyWithSpace])
+    }, [data, search, onlyWithSpace])
 
     /** Joins or leaves a session and reloads its server-side state. */
     async function changeParticipation(
@@ -80,7 +56,7 @@ function SessionsPage() {
         action: (id: number) => Promise<void>,
         fallback: string
     ) {
-        if (busyId !== null) return
+        if (busyId !== null || loading || loadError) return
         try {
             setBusyId(session.id)
             setError('')
@@ -90,7 +66,7 @@ function SessionsPage() {
             setError(errorText(error, fallback))
         } finally {
             // Reload even after a failure: another student may have filled the last seat.
-            await loadSessions()
+            refresh()
             setBusyId(null)
         }
     }
@@ -154,7 +130,12 @@ function SessionsPage() {
 
             {loading ? (
                 <p className="text-secondary">Henter økter…</p>
-            ) : sessions.length === 0 ? (
+            ) : loadError ? (
+                <div className="error-message" role="alert">
+                    {loadError}{' '}
+                    <button type="button" className="btn btn-sm btn-light" onClick={refresh}>Prøv igjen</button>
+                </div>
+            ) : data?.length === 0 ? (
                 <div className="card">
                     <div className="card-body text-center py-5">
                         <p className="fw-semibold mb-1">

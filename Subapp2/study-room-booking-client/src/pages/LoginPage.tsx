@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import { login } from '../api/authApi'
 import { useAuth } from '../context/useAuth'
+import { isValidEmail } from '../utils/authValidation'
 import { errorText } from '../utils/errorHandling'
 
 /** Login form for existing student and administrator accounts. */
@@ -21,7 +22,7 @@ function LoginPage() {
     function validate(): string[] {
         const problems: string[] = []
 
-        if (!/^\S+@\S+\.\S+$/.test(email)) {
+        if (!isValidEmail(email)) {
             problems.push('Oppgi en gyldig e-postadresse.')
         }
 
@@ -50,7 +51,7 @@ function LoginPage() {
         try {
             setErrors([])
 
-            const auth = await login({ email, password })
+            const auth = await login({ email: email.trim(), password })
 
             setAuth(auth)
             navigate('/')
