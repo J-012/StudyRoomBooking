@@ -8,10 +8,7 @@ public interface IBuildingRepository
 
     Task<Building?> GetByIdAsync(int id);
 
-    Task<bool> ExistsByNameAsync(
-        string name,
-        int? excludedId = null
-    );
+    Task<bool> ExistsByNameAsync(string name, int? excludedId = null);
 
     Task<bool> HasRoomsAsync(int buildingId);
 

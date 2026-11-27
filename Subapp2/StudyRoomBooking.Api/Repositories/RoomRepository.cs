@@ -13,45 +13,33 @@ public class RoomRepository : IRoomRepository
         _context = context;
     }
 
-    public async Task<List<Room>> GetAllAsync()
-    {
-        return await _context.Rooms
+    // Rooms with everything RoomDto needs. Shared by all read methods.
+    private IQueryable<Room> RoomsWithDetails =>
+        _context.Rooms
             .Include(room => room.Building)
             .Include(room => room.RoomAmenities)
-                .ThenInclude(
-                    roomAmenity => roomAmenity.Amenity
-                )
+                .ThenInclude(roomAmenity => roomAmenity.Amenity);
+
+    public Task<List<Room>> GetAllAsync() =>
+        RoomsWithDetails
             .AsNoTracking()
             .OrderBy(room => room.Building!.Name)
             .ThenBy(room => room.RoomNumber)
             .ToListAsync();
-    }
 
-    public async Task<Room?> GetByIdAsync(int id)
-    {
-        return await _context.Rooms
-            .Include(room => room.Building)
-            .Include(room => room.RoomAmenities)
-                .ThenInclude(
-                    roomAmenity => roomAmenity.Amenity
-                )
-            .FirstOrDefaultAsync(
-                room => room.Id == id
-            );
-    }
+    public Task<Room?> GetByIdAsync(int id) =>
+        RoomsWithDetails.FirstOrDefaultAsync(room => room.Id == id);
 
     public async Task<Room> AddAsync(Room room)
     {
-        await _context.Rooms.AddAsync(room);
+        _context.Rooms.Add(room);
         await _context.SaveChangesAsync();
 
-        return room;
+        // Reload so Building and Amenities are filled in for the response.
+        return (await GetByIdAsync(room.Id))!;
     }
 
-    public async Task SaveChangesAsync()
-    {
-        await _context.SaveChangesAsync();
-    }
+    public Task SaveChangesAsync() => _context.SaveChangesAsync();
 
     public async Task DeleteAsync(Room room)
     {

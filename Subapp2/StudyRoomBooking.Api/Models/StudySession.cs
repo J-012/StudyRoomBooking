@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace StudyRoomBooking.Api.Models;
 
+// A booking of a room. Called "booking" in the API and the client.
 public class StudySession
 {
     public int Id { get; set; }
@@ -21,19 +22,17 @@ public class StudySession
     [Required]
     public DateTime EndTime { get; set; }
 
-    // One room can have many study sessions.
     public int RoomId { get; set; }
 
     [ForeignKey(nameof(RoomId))]
     public Room? Room { get; set; }
 
-    // The logged-in user who created the booking.
-    // Nullable so older database rows still work after the migration.
+    // The user who created the booking. Nullable so that deleting a user
     public string? OrganizerUserId { get; set; }
 
     [ForeignKey(nameof(OrganizerUserId))]
     public ApplicationUser? Organizer { get; set; }
 
-    // Many-to-many participation through SessionParticipant.
+    // Other users who have joined the session.
     public List<SessionParticipant> Participants { get; set; } = new();
 }

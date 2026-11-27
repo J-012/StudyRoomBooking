@@ -4,6 +4,7 @@ namespace StudyRoomBooking.Api.Repositories;
 
 public interface IRoomRepository
 {
+    // Sorted by building name, then room number.
     Task<List<Room>> GetAllAsync();
 
     Task<Room?> GetByIdAsync(int id);
