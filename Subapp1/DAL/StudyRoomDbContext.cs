@@ -26,60 +26,6 @@ namespace StudyRoomBooking.Models
                 .HasMaxLength(20);
 
             modelBuilder
-                .Entity<Room>()
-                .HasData(
-                    new Room
-                    {
-                        Id = 1,
-                        RoomNumber = "101",
-                        Building = "Pilestredet 35",
-                        Capacity = 6,
-                    },
-                    new Room
-                    {
-                        Id = 2,
-                        RoomNumber = "102",
-                        Building = "Pilestredet 35",
-                        Capacity = 6,
-                    },
-                    new Room
-                    {
-                        Id = 3,
-                        RoomNumber = "103",
-                        Building = "Pilestredet 35",
-                        Capacity = 12,
-                    },
-                    new Room
-                    {
-                        Id = 4,
-                        RoomNumber = "201",
-                        Building = "Pilestredet 35",
-                        Capacity = 6,
-                    },
-                    new Room
-                    {
-                        Id = 5,
-                        RoomNumber = "202",
-                        Building = "Pilestredet 35",
-                        Capacity = 6,
-                    },
-                    new Room
-                    {
-                        Id = 6,
-                        RoomNumber = "101",
-                        Building = "Pilestredet 32",
-                        Capacity = 8,
-                    },
-                    new Room
-                    {
-                        Id = 7,
-                        RoomNumber = "102",
-                        Building = "Pilestredet 32",
-                        Capacity = 8,
-                    }
-                );
-
-            modelBuilder
                 .Entity<Booking>()
                 .HasOne(booking => booking.User)
                 .WithMany(user => user.Bookings)
