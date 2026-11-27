@@ -37,6 +37,7 @@ namespace StudyRoomBooking.Mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(string userId, string password)
         {
+            // Authenticates the user
             var user = await _userService.AuthenticateAsync(userId, password);
 
             if (user is null)
@@ -45,6 +46,7 @@ namespace StudyRoomBooking.Mvc.Controllers
                 return View();
             }
 
+            // Creates user claims
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserId),
@@ -57,7 +59,7 @@ namespace StudyRoomBooking.Mvc.Controllers
                 claims,
                 CookieAuthenticationDefaults.AuthenticationScheme
             );
-
+            // Signs in the user and creates an authentication cookie
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(identity)
@@ -83,7 +85,8 @@ namespace StudyRoomBooking.Mvc.Controllers
             string password,
             string confirmPassword
         )
-        {
+        {  
+            // Validates the users registration information
             var result = await _userService.RegisterAsync(userId, name, password, email, confirmPassword);
 
             if (!result.Succeeded)
