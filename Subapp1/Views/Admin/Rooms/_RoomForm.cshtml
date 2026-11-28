@@ -1,0 +1,50 @@
+@model StudyRoomBooking.ViewModels.Admin.RoomFormViewModel
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="mb-3">
+    <label asp-for="RoomNumber" class="form-label">Room number</label>
+    <input asp-for="RoomNumber" class="form-control" placeholder="e.g. A101" />
+    <span asp-validation-for="RoomNumber" class="text-danger"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="BuildingId" class="form-label">Building</label>
+    <select asp-for="BuildingId" class="form-select">
+        <option value="0">Select a building</option>
+        @foreach (var building in Model.Buildings)
+        {
+            <option value="@building.Id">@building.Name</option>
+        }
+    </select>
+    <span asp-validation-for="BuildingId" class="text-danger"></span>
+    @if (Model.Buildings.Count == 0)
+    {
+        <p class="small text-secondary mt-2">No buildings yet. <a asp-controller="Buildings" asp-action="Create">Add one first</a>.</p>
+    }
+</div>
+<div class="mb-3">
+    <label asp-for="Capacity" class="form-label">Capacity</label>
+    <input asp-for="Capacity" type="number" min="1" max="100" class="form-control" />
+    <span asp-validation-for="Capacity" class="text-danger"></span>
+</div>
+<fieldset class="border rounded-3 p-3">
+    <legend class="float-none w-auto px-2 fs-6 fw-semibold">Amenities</legend>
+    @if (Model.Amenities.Count == 0)
+    {
+        @if (Model.Id > 0)
+        {
+            <p class="text-secondary small mb-0">No amenities yet. Create one in the catalog below, then select it here and save the room.</p>
+        }
+        else
+        {
+            <p class="text-secondary small mb-0">No amenities yet. <a href="@Url.Action("AdminIndex", "Rooms")#amenities">Add one on the admin Rooms page</a>.</p>
+        }
+    }
+    @foreach (var amenity in Model.Amenities)
+    {
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="AmenityIds" value="@amenity.Id"
+                   id="amenity-@amenity.Id" checked="@Model.AmenityIds.Contains(amenity.Id)" />
+            <label class="form-check-label" for="amenity-@amenity.Id">@amenity.Name</label>
+        </div>
+    }
+</fieldset>

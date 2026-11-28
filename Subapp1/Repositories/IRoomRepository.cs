@@ -26,7 +26,8 @@ public interface IRoomRepository
     Task<List<Room>> SearchAndFilterAsync(
         string? searchTerm,
         string? building,
-        int? minCapacity);
+        int? minCapacity,
+        int? amenityId);
 
     Task<List<Room>> GetRoomsWithBookingsAsync(
         DateTime startTime,
@@ -38,4 +39,9 @@ public interface IRoomRepository
         int? minCapacity,
         DateTime startTime,
         DateTime endTime);
+
+    Task<bool> BuildingExistsAsync(int buildingId);
+    Task<bool> HasBookingsAsync(int roomId);
+    Task<List<int>> GetValidAmenityIdsAsync(List<int> amenityIds);
+    Task SaveWithAmenitiesAsync(Room room, List<int> amenityIds);
 }

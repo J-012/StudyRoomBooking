@@ -38,15 +38,43 @@ public class RoomService : IRoomService
         return _roomRepository.DeleteAsync(room);
     }
 
+    public async Task<string?> SaveAsync(Room room, List<int> amenityIds)
+    {
+        if (!await _roomRepository.BuildingExistsAsync(room.BuildingId))
+            return "Select an existing building.";
+
+        // Normalize posted IDs before confirming every selected amenity still exists.
+        var selectedIds = amenityIds.Distinct().ToList();
+        var validIds = await _roomRepository.GetValidAmenityIdsAsync(selectedIds);
+        if (validIds.Count != selectedIds.Count)
+            return "One or more selected amenities no longer exist.";
+
+        await _roomRepository.SaveWithAmenitiesAsync(room, selectedIds);
+        return null;
+    }
+
+    public async Task<string?> DeleteForAdminAsync(int id)
+    {
+        var room = await _roomRepository.GetByIdAsync(id);
+        if (room is null) return "Room not found.";
+        if (await _roomRepository.HasBookingsAsync(id))
+            return "This room has bookings. Remove those bookings before deleting the room.";
+
+        await _roomRepository.DeleteAsync(room);
+        return null;
+    }
+
     public Task<List<Room>> SearchAndFilterAsync(
         string? searchTerm,
         string? building,
-        int? minCapacity)
+        int? minCapacity,
+        int? amenityId)
     {
         return _roomRepository.SearchAndFilterAsync(
             searchTerm,
             building,
-            minCapacity);
+            minCapacity,
+            amenityId);
     }
 
     public async Task<List<Room>> SearchAndFilterByAvailabilityAsync(

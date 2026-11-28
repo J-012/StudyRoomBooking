@@ -9,6 +9,7 @@ import {
 } from '../api/bookingsApi'
 
 import type { Booking, BookingRequest } from '../types/Booking'
+import { useAsyncData } from '../hooks/useAsyncData'
 import { useAvailableRooms } from '../hooks/useAvailableRooms'
 import { createEmptyForm, createFormFromParams } from '../utils/bookingForm'
 import { validateBookingTimes } from '../utils/bookingTime'
@@ -25,7 +26,6 @@ import './BookingsPage.css'
 
 /** Coordinates booking data, the form, and management actions. */
 function BookingsPage() {
-    const [bookings, setBookings] = useState<Booking[]>([])
     const [searchParams] = useSearchParams()
     const { isAdmin } = useAuth()
     const [form, setForm] = useState<BookingForm>(() =>
@@ -33,41 +33,14 @@ function BookingsPage() {
     )
     const [editingId, setEditingId] = useState<number | null>(null)
 
-    const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [showPast, setShowPast] = useState(false)
     const [now, setNow] = useState(Date.now)
 
-    // Loading errors belong to the list; input errors belong to the form.
-    const [loadError, setLoadError] = useState('')
+    // List loading, deletion and form validation have independent error states.
+    const { data, loading, error: loadError, refresh } = useAsyncData(getBookings, 'Kunne ikke hente bookinger.')
+    const [actionError, setActionError] = useState('')
     const [formError, setFormError] = useState('')
-
-    /** Refreshes the booking list after a successful mutation. */
-    async function loadData() {
-        try {
-            setLoadError('')
-            setBookings(await getBookings())
-        } catch (error) {
-            setLoadError(errorText(error, 'Kunne ikke hente bookinger.'))
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    // Initial load is cancelled when the page unmounts.
-    useEffect(() => {
-        let cancelled = false
-        getBookings().then(data => {
-            if (!cancelled) {
-                setBookings(data)
-            }
-        }).catch(error => {
-            if (!cancelled) setLoadError(errorText(error, 'Kunne ikke hente bookinger.'))
-        }).finally(() => {
-            if (!cancelled) setLoading(false)
-        })
-        return () => { cancelled = true }
-    }, [])
 
     // Keep the booking list current even when the user leaves the page open.
     useEffect(() => {
@@ -81,7 +54,7 @@ function BookingsPage() {
         ? form.roomId : 0
 
     const { upcoming, past } = useMemo(() => {
-        const sorted = [...bookings].sort(
+        const sorted = [...(data ?? [])].sort(
             (a, b) =>
                 new Date(a.startTime).getTime() -
                 new Date(b.startTime).getTime()
@@ -95,7 +68,7 @@ function BookingsPage() {
                 .filter((b) => new Date(b.endTime).getTime() < now)
                 .reverse(),
         }
-    }, [bookings, now])
+    }, [data, now])
 
     /** Updates a single typed field without mutating the form. */
     function updateField<K extends keyof BookingForm>(
@@ -109,6 +82,7 @@ function BookingsPage() {
     /** Validates the selected room and creates or updates a booking. */
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
+        if (saving || loading) return
 
         const timeError = validateBookingTimes(form.date, form.start, form.end)
         if (timeError) {
@@ -116,7 +90,7 @@ function BookingsPage() {
             return
         }
 
-        if (saving || roomsLoading || !availability.ready || selectedRoomId <= 0) {
+        if (roomsLoading || !availability.ready || selectedRoomId <= 0) {
             setFormError('Velg et ledig rom.')
             return
         }
@@ -137,6 +111,7 @@ function BookingsPage() {
         try {
             setSaving(true)
             setFormError('')
+            setActionError('')
 
             if (editingId === null) {
                 await createBooking(request)
@@ -147,7 +122,7 @@ function BookingsPage() {
             setForm(createEmptyForm())
             setEditingId(null)
             availability.refresh()
-            await loadData()
+            refresh()
         } catch (error) {
             setFormError(errorText(error, 'Kunne ikke lagre bookingen.'))
             availability.refresh()
@@ -182,20 +157,21 @@ function BookingsPage() {
 
     /** Confirms deletion and refreshes bookings and room availability. */
     async function handleDelete(id: number) {
-        if (saving || !window.confirm('Vil du slette denne bookingen?')) {
+        if (saving || loading || !window.confirm('Vil du slette denne bookingen?')) {
             return
         }
 
         setSaving(true)
+        setActionError('')
         try {
             await deleteBooking(id)
             availability.refresh()
             if (editingId === id) {
                 cancelEditing()
             }
-            await loadData()
+            refresh()
         } catch (error) {
-            setLoadError(errorText(error, 'Kunne ikke slette bookingen.'))
+            setActionError(errorText(error, 'Kunne ikke slette bookingen.'))
         } finally {
             setSaving(false)
         }
@@ -213,8 +189,8 @@ function BookingsPage() {
                 </p>
             </header>
 
-            {loadError && (
-                <div className="error-message mb-4" role="alert">{loadError}</div>
+            {actionError && (
+                <div className="error-message mb-4" role="alert">{actionError}</div>
             )}
 
             <div className="row g-4 g-lg-5">
@@ -230,7 +206,7 @@ function BookingsPage() {
                         availabilityError={availability.error}
                         refreshAvailability={availability.refresh}
                         availableRooms={availableRooms}
-                        saving={saving}
+                        saving={saving || loading}
                         formError={formError}
                         updateField={updateField}
                         handleSubmit={handleSubmit}
@@ -246,7 +222,7 @@ function BookingsPage() {
                                 ? 'Alle kommende økter'
                                 : 'Mine kommende økter'}
                         </h2>
-                        {!loading && (
+                        {!loading && !loadError && (
                             <span className="text-secondary small">
                                 {upcoming.length}{' '}
                                 {upcoming.length === 1 ? 'booking' : 'bookinger'}
@@ -260,6 +236,11 @@ function BookingsPage() {
                                 <li key={i} className="booking-row booking-skeleton loading-skeleton" aria-hidden="true" />
                             ))}
                         </ul>
+                    ) : loadError ? (
+                        <div className="error-message" role="alert">
+                            {loadError}{' '}
+                            <button type="button" className="btn btn-sm btn-light" onClick={refresh}>Prøv igjen</button>
+                        </div>
                     ) : upcoming.length === 0 ? (
                         <div className="empty-state">
                             <p className="fw-semibold text-body mb-1">
@@ -285,7 +266,7 @@ function BookingsPage() {
                         </ul>
                     )}
 
-                    {past.length > 0 && (
+                    {!loading && !loadError && past.length > 0 && (
                         <div className="mt-4">
                             <button
                                 type="button"

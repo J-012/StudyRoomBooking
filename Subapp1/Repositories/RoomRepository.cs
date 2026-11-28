@@ -15,13 +15,16 @@ public class RoomRepository : IRoomRepository
     // Get all rooms.
     public Task<List<Room>> GetAllAsync()
     {
-        return _context.Rooms.ToListAsync();
+        return _context.Rooms.Include(r => r.Building)
+            .Include(r => r.RoomAmenities).ThenInclude(ra => ra.Amenity).ToListAsync();
     }
 
     // Get a specific room by ID.
     public Task<Room?> GetByIdAsync(int id)
     {
-        return _context.Rooms.FirstOrDefaultAsync(room => room.Id == id);
+        return _context.Rooms.Include(r => r.Building)
+            .Include(r => r.RoomAmenities).ThenInclude(ra => ra.Amenity)
+            .FirstOrDefaultAsync(room => room.Id == id);
     }
 
     // Check whether a room exists by ID.
@@ -55,25 +58,26 @@ public class RoomRepository : IRoomRepository
     public async Task<List<Room>> SearchAndFilterAsync(
         string? searchTerm,
         string? building,
-        int? minCapacity)
+        int? minCapacity,
+        int? amenityId)
     {
-        var query = _context.Rooms.AsQueryable();
+        var query = _context.Rooms.AsNoTracking().AsSplitQuery().AsQueryable();
 
         // Search by room number or building.
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            searchTerm = searchTerm.Trim();
+            var term = searchTerm.Trim().ToLower();
 
             query = query.Where(room =>
-                room.RoomNumber.Contains(searchTerm) ||
-                room.Building.Contains(searchTerm));
+                room.RoomNumber.ToLower().Contains(term) ||
+                room.Building!.Name.ToLower().Contains(term));
         }
 
         // Filter by building.
         if (!string.IsNullOrWhiteSpace(building))
         {
             query = query.Where(room =>
-                room.Building == building);
+                room.Building!.Name == building);
         }
 
         // Filter by minimum capacity.
@@ -83,7 +87,18 @@ public class RoomRepository : IRoomRepository
                 room.Capacity >= minCapacity.Value);
         }
 
-        return await query.ToListAsync();
+        if (amenityId.HasValue)
+        {
+            query = query.Where(room =>
+                room.RoomAmenities.Any(link => link.AmenityId == amenityId.Value));
+        }
+
+        return await query
+            .Include(room => room.Building)
+            .Include(room => room.RoomAmenities).ThenInclude(link => link.Amenity)
+            .OrderBy(room => room.Building!.Name)
+            .ThenBy(room => room.RoomNumber)
+            .ToListAsync();
     }
 
     public async Task<List<Room>> GetRoomsWithBookingsAsync(
@@ -92,6 +107,8 @@ public class RoomRepository : IRoomRepository
     {
         return await _context.Rooms
             .AsNoTracking()
+            .AsSplitQuery()
+            .Include(r => r.Building)
             .Include(r => r.Bookings
                 .Where(b => b.StartTime < endTime &&
                             b.EndTime > startTime))
@@ -109,6 +126,7 @@ public class RoomRepository : IRoomRepository
     {
         var query = _context.Rooms
             .AsNoTracking()
+            .AsSplitQuery()
             .AsQueryable();
 
         // Search by room number or building.
@@ -118,7 +136,7 @@ public class RoomRepository : IRoomRepository
 
             query = query.Where(room =>
                 room.RoomNumber.Contains(searchTerm) ||
-                room.Building.Contains(searchTerm));
+                room.Building!.Name.Contains(searchTerm));
         }
 
         // Filter by building.
@@ -127,7 +145,7 @@ public class RoomRepository : IRoomRepository
             building = building.Trim();
 
             query = query.Where(room =>
-                room.Building == building);
+                room.Building!.Name == building);
         }
 
         // Filter by minimum capacity.
@@ -139,15 +157,40 @@ public class RoomRepository : IRoomRepository
 
         // Load bookings that overlap the selected time interval.
         return await query
+            .Include(room => room.Building)
+            .Include(room => room.RoomAmenities).ThenInclude(ra => ra.Amenity)
             .Include(room => room.Bookings
                 .Where(booking =>
                     booking.StartTime < endTime &&
                     booking.EndTime > startTime))
                 .ThenInclude(booking => booking.Participants)
                     .ThenInclude(bp => bp.Participant)
-            .OrderBy(room => room.Building)
+            .OrderBy(room => room.Building!.Name)
             .ThenBy(room => room.RoomNumber)
             .ToListAsync();
+    }
+
+    public Task<bool> BuildingExistsAsync(int buildingId) =>
+        _context.Buildings.AnyAsync(b => b.Id == buildingId);
+
+    public Task<bool> HasBookingsAsync(int roomId) =>
+        _context.Bookings.AnyAsync(b => b.RoomId == roomId);
+
+    public Task<List<int>> GetValidAmenityIdsAsync(List<int> amenityIds) =>
+        _context.Amenities.Where(a => amenityIds.Contains(a.Id))
+            .Select(a => a.Id).ToListAsync();
+
+    public async Task SaveWithAmenitiesAsync(Room room, List<int> amenityIds)
+    {
+        var selected = amenityIds.ToHashSet();
+        foreach (var link in room.RoomAmenities.Where(ra => !selected.Contains(ra.AmenityId)).ToList())
+            _context.RoomAmenities.Remove(link);
+
+        foreach (var id in selected.Except(room.RoomAmenities.Select(ra => ra.AmenityId)))
+            room.RoomAmenities.Add(new RoomAmenity { AmenityId = id });
+
+        if (room.Id == 0) _context.Rooms.Add(room);
+        await _context.SaveChangesAsync();
     }
 
 }

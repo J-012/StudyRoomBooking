@@ -1,0 +1,9 @@
+@model StudyRoomBooking.Models.Building
+@{ ViewData["Title"] = "Edit building"; }
+<div class="row justify-content-center py-5"><div class="col-12 col-md-8 col-lg-6"><div class="card border-0 shadow-sm"><div class="card-body p-4 p-md-5">
+    <h1 class="h3 fw-bold mb-4">Edit building</h1>
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post"><partial name="~/Views/Admin/Buildings/_Form.cshtml" model="Model" />
+        <div class="d-flex gap-2"><a asp-action="Index" class="btn btn-outline-secondary">Cancel</a><button class="btn btn-primary" type="submit">Save changes</button></div>
+    </form>
+</div></div></div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

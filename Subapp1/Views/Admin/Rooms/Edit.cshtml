@@ -1,0 +1,27 @@
+@model StudyRoomBooking.ViewModels.Admin.RoomFormViewModel
+@{ ViewData["Title"] = "Edit room"; }
+
+<div class="row justify-content-center py-5"><div class="col-12 col-lg-8">
+    <nav aria-label="Breadcrumb"><ol class="breadcrumb small mb-3"><li class="breadcrumb-item"><a asp-action="AdminIndex">Rooms</a></li><li class="breadcrumb-item active" aria-current="page">Edit @Model.RoomNumber</li></ol></nav>
+    @if (TempData["Success"] is string success) { <div class="alert alert-success" role="alert">@success</div> }
+    @if (TempData["Error"] is string error) { <div class="alert alert-danger" role="alert">@error</div> }
+    <div class="card border-0 shadow-sm"><div class="card-body p-4 p-md-5">
+        <h1 class="h3 fw-bold">Edit room</h1>
+        <p class="text-secondary">Choose existing amenities below, then save the room. Save room changes before managing the catalog.</p>
+        <form asp-action="AdminEdit" asp-route-id="@Model.Id" method="post">
+            <partial name="~/Views/Admin/Rooms/_RoomForm.cshtml" model="Model" />
+            <div class="d-flex gap-2 mt-4">
+                <a asp-action="AdminIndex" class="btn btn-outline-secondary">Cancel</a>
+                <button class="btn btn-primary" type="submit">Save changes</button>
+            </div>
+        </form>
+    </div></div>
+    <div class="mt-4">
+        @await Html.PartialAsync("~/Views/Admin/Rooms/_AmenityManager.cshtml", new StudyRoomBooking.ViewModels.Admin.AmenityManagerViewModel
+        {
+            Amenities = Model.Amenities,
+            ReturnRoomId = Model.Id
+        })
+    </div>
+</div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
