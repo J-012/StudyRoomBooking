@@ -36,4 +36,7 @@ public class Booking
     public Room? Room { get; set; }
 
     public List<BookingParticipant> Participants { get; set; } = new();
+
+    public bool IsPublic { get; set; } = true;
+
 }

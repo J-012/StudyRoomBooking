@@ -92,7 +92,6 @@ public class BookingServiceTests
         _participants.Verify(x => x.RemoveFromBookingAsync(membership), Times.Once);
     }
 
-    
     // NEGATIVE TESTS (6)
     [Fact]
     public async Task InvalidRoom_IsRejected()

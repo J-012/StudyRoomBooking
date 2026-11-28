@@ -11,6 +11,10 @@ public interface IParticipantRepository
     Task AddToBookingAsync(
         BookingParticipant bookingParticipant);
 
+    Task AddUsersToBookingAsync(
+        int bookingId,
+        IReadOnlyCollection<User> users);
+
     Task RemoveFromBookingAsync(
         BookingParticipant bookingParticipant);
 }

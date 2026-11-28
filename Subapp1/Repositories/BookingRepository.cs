@@ -46,7 +46,8 @@ public class BookingRepository : IBookingRepository
             .Include(booking => booking.Room)
             .Include(booking => booking.Participants)
                 .ThenInclude(participant => participant.Participant)
-            .Where(booking => booking.StartTime > now &&
+            .Where(booking => booking.IsPublic &&
+                booking.StartTime > now &&
                 booking.UserId != userId &&
                 !booking.Participants.Any(participant =>
                     participant.Participant.UserId == userId))

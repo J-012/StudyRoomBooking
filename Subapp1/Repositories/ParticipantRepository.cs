@@ -37,6 +37,31 @@ public class ParticipantRepository : IParticipantRepository
         await _context.SaveChangesAsync();
     }
 
+    public async Task AddUsersToBookingAsync(
+        int bookingId,
+        IReadOnlyCollection<User> users)
+    {
+        foreach (var user in users)
+        {
+            var participant = await _context.Participants
+                .FirstOrDefaultAsync(p => p.UserId == user.UserId);
+
+            if (participant is null)
+            {
+                participant = new Participant { UserId = user.UserId };
+                _context.Participants.Add(participant);
+            }
+
+            _context.BookingParticipants.Add(new BookingParticipant
+            {
+                BookingId = bookingId,
+                Participant = participant
+            });
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
     // Leave a booking.
     public async Task RemoveFromBookingAsync(
         BookingParticipant bookingParticipant)

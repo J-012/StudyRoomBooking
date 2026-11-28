@@ -152,6 +152,9 @@ namespace StudyRoomBooking.Models
                     .HasForeignKey(bp => bp.ParticipantId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+            modelBuilder.Entity<Booking>()
+                .Property(booking => booking.IsPublic)
+                .HasDefaultValue(true);
         }
     }
 }

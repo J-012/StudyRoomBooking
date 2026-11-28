@@ -241,74 +241,84 @@
 
                                                 var hasStarted = booking.StartTime <= DateTime.Now;
 
-                                                <div class="border rounded-3 p-3 mb-3">
-
-                                                    <div class="d-flex justify-content-between gap-2 mb-2">
-                                                        <span class="fw-semibold">
-                                                            @booking.Topic
-                                                        </span>
-
-                                                        <span class="badge bg-light text-dark border">
-                                                            @occupied / @room.Capacity
-                                                        </span>
+                                                @if (!booking.IsPublic && !isOwner && !hasJoined)
+                                                {
+                                                    <div class="border rounded-3 p-3 mb-3">
+                                                        <span class="fw-semibold">Private session</span>
+                                                        <p class="small text-secondary mb-0">This room is reserved.</p>
                                                     </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="border rounded-3 p-3 mb-3">
 
-                                                    <p class="small text-secondary mb-2">
-                                                        @booking.StartTime.ToString("dd MMM yyyy")
-                                                        ·
-                                                        @booking.StartTime.ToString("HH:mm")
-                                                        -
-                                                        @booking.EndTime.ToString("HH:mm")
-                                                    </p>
+                                                        <div class="d-flex justify-content-between gap-2 mb-2">
+                                                            <span class="fw-semibold">
+                                                                @booking.Topic
+                                                            </span>
 
-                                                    <p class="small text-secondary mb-3">
-                                                        Hosted by @booking.UserName
-                                                    </p>
+                                                            <span class="badge bg-light text-dark border">
+                                                                @occupied / @room.Capacity
+                                                            </span>
+                                                        </div>
 
-                                                    @if (isOwner)
-                                                    {
-                                                        <span class="btn btn-outline-secondary w-100 disabled">
-                                                            Your session
-                                                        </span>
-                                                    }
-                                                    else if (hasJoined)
-                                                    {
-                                                        <form asp-controller="Bookings" asp-action="Leave" asp-route-id="@booking.BookingId"
-                                                              method="post">
+                                                        <p class="small text-secondary mb-2">
+                                                            @booking.StartTime.ToString("dd MMM yyyy")
+                                                            ·
+                                                            @booking.StartTime.ToString("HH:mm")
+                                                            -
+                                                            @booking.EndTime.ToString("HH:mm")
+                                                        </p>
 
-                                                            <input type="hidden" name="returnToRooms" value="true" />
+                                                        <p class="small text-secondary mb-3">
+                                                            Hosted by @booking.UserName
+                                                        </p>
 
-                                                            <button type="submit" class="btn btn-outline-danger w-100">
-                                                                Leave session
+                                                        @if (isOwner)
+                                                        {
+                                                            <span class="btn btn-outline-secondary w-100 disabled">
+                                                                Your session
+                                                            </span>
+                                                        }
+                                                        else if (hasJoined)
+                                                        {
+                                                            <form asp-controller="Bookings" asp-action="Leave" asp-route-id="@booking.BookingId"
+                                                                  method="post">
+
+                                                                <input type="hidden" name="returnToRooms" value="true" />
+
+                                                                <button type="submit" class="btn btn-outline-danger w-100">
+                                                                    Leave session
+                                                                </button>
+                                                            </form>
+                                                        }
+                                                        else if (hasStarted)
+                                                        {
+                                                            <button class="btn btn-secondary w-100" disabled>
+                                                                Session started
                                                             </button>
-                                                        </form>
-                                                    }
-                                                    else if (hasStarted)
-                                                    {
-                                                        <button class="btn btn-secondary w-100" disabled>
-                                                            Session started
-                                                        </button>
-                                                    }
-                                                    else if (isFull)
-                                                    {
-                                                        <button class="btn btn-secondary w-100" disabled>
-                                                            Session full
-                                                        </button>
-                                                    }
-                                                    else
-                                                    {
-                                                        <form asp-controller="Bookings" asp-action="Join" asp-route-id="@booking.BookingId"
-                                                              method="post">
-
-                                                            <input type="hidden" name="returnToRooms" value="true" />
-
-                                                            <button type="submit" class="btn btn-primary w-100">
-                                                                Join session
+                                                        }
+                                                        else if (isFull)
+                                                        {
+                                                            <button class="btn btn-secondary w-100" disabled>
+                                                                Session full
                                                             </button>
-                                                        </form>
-                                                    }
+                                                        }
+                                                        else
+                                                        {
+                                                            <form asp-controller="Bookings" asp-action="Join" asp-route-id="@booking.BookingId"
+                                                                  method="post">
 
-                                                </div>
+                                                                <input type="hidden" name="returnToRooms" value="true" />
+
+                                                                <button type="submit" class="btn btn-primary w-100">
+                                                                    Join session
+                                                                </button>
+                                                            </form>
+                                                        }
+
+                                                    </div>
+                                                }
                                             }
                                         </div>
                                     }

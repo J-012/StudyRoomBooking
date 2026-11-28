@@ -29,4 +29,6 @@ public class BookingFormViewModel
     public TimeOnly StartClock { get; set; } = TimeOnly.FromDateTime(DateTime.Now);
 
     public TimeOnly EndClock { get; set; } = TimeOnly.FromDateTime(DateTime.Now.AddHours(1));
+
+    public bool IsPublic { get; set; } = true;
 }

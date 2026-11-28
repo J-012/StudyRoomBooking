@@ -10,6 +10,11 @@ public interface IBookingService
         int bookingId,
         string userId);
 
+    Task<JoinBookingResult> AddParticipantsAsync(
+        int bookingId,
+        string ownerUserId,
+        IReadOnlyCollection<User> users);
+
     Task<JoinBookingResult> LeaveAsync(
         int bookingId,
         string userId);

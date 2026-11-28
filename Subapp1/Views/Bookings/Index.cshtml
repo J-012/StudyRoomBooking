@@ -12,9 +12,13 @@
         <div>
             <h1 class="h2 fw-bold mb-1">My bookings</h1>
             <p class="text-secondary-emphasis mb-0">
-                @if (bookings.Count == 0)
+                @if (bookings.Count == 0 && Model.JoinedBookings.Count == 0)
                 {
-                    <span>You do not have any room reservations yet.</span>
+                    <span>You do not have any room reservations or joined sessions yet.</span>
+                }
+                else if (bookings.Count == 0)
+                {
+                    <span>You have joined @Model.JoinedBookings.Count @(Model.JoinedBookings.Count == 1 ? "session" : "sessions").</span>
                 }
                 else
                 {
@@ -34,7 +38,35 @@
         <div class="alert alert-danger" role="alert">@TempData["Error"]</div>
     }
 
-    @if (bookings.Count == 0)
+    @if (Model.JoinedBookings.Count > 0)
+    {
+        <section class="mb-4">
+            <h2 class="h4 fw-bold mb-3">Sessions you have joined</h2>
+            <div class="row g-3">
+                @foreach (var booking in Model.JoinedBookings.OrderBy(booking => booking.StartTime))
+                {
+                    <div class="col-12 col-lg-6">
+                        <article class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <h3 class="h6 fw-bold mb-2">@booking.Topic</h3>
+                                <p class="small text-secondary mb-2">Hosted by @booking.UserName</p>
+                                <p class="small mb-3">
+                                    @booking.StartTime.ToString("ddd, dd MMM · HH:mm")
+                                    – @booking.EndTime.ToString("HH:mm")
+                                    · Room @booking.RoomId
+                                </p>
+                                <form asp-action="Leave" asp-route-id="@booking.BookingId" method="post">
+                                    <button type="submit" class="btn btn-outline-danger w-100">Leave session</button>
+                                </form>
+                            </div>
+                        </article>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+    @if (bookings.Count == 0 && Model.JoinedBookings.Count == 0)
     {
         <div class="card shadow-sm">
             <div class="card-body py-5 text-center">
@@ -44,7 +76,7 @@
             </div>
         </div>
     }
-    else
+    else if (bookings.Count > 0)
     {
         <div class="d-none d-md-block card shadow-sm overflow-hidden">
             <div class="table-responsive">

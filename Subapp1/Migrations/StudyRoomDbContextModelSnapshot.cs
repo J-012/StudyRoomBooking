@@ -53,6 +53,11 @@ namespace StudyRoomBooking.Mvc.Migrations
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsPublic")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
                     b.Property<int>("RoomId")
                         .HasColumnType("INTEGER");
 
