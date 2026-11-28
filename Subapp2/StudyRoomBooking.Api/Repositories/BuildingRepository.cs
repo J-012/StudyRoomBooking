@@ -13,56 +13,36 @@ public class BuildingRepository : IBuildingRepository
         _context = context;
     }
 
-    public async Task<List<Building>> GetAllAsync()
-    {
-        return await _context.Buildings
+    public Task<List<Building>> GetAllAsync() =>
+        _context.Buildings
             .AsNoTracking()
             .OrderBy(building => building.Name)
             .ToListAsync();
-    }
 
-    public async Task<Building?> GetByIdAsync(int id)
-    {
-        return await _context.Buildings
-            .FirstOrDefaultAsync(building => building.Id == id);
-    }
+    public Task<Building?> GetByIdAsync(int id) =>
+        _context.Buildings.FirstOrDefaultAsync(building => building.Id == id);
 
-    public async Task<bool> ExistsByNameAsync(
-        string name,
-        int? excludedId = null)
-    {
-        return await _context.Buildings
-            .AnyAsync(building =>
-                building.Name.ToLower() == name.ToLower()
-                && (!excludedId.HasValue
-                    || building.Id != excludedId.Value)
-            );
-    }
+    public Task<bool> ExistsByNameAsync(string name, int? excludedId = null) =>
+        _context.Buildings.AnyAsync(building =>
+            building.Name.ToLower() == name.ToLower()
+            && (excludedId == null || building.Id != excludedId));
 
-    public async Task<bool> HasRoomsAsync(int buildingId)
-    {
-        return await _context.Rooms
-            .AnyAsync(room => room.BuildingId == buildingId);
-    }
+    public Task<bool> HasRoomsAsync(int buildingId) =>
+        _context.Rooms.AnyAsync(room => room.BuildingId == buildingId);
 
     public async Task<Building> AddAsync(Building building)
     {
-        await _context.Buildings.AddAsync(building);
-
+        _context.Buildings.Add(building);
         await _context.SaveChangesAsync();
 
         return building;
     }
 
-    public async Task SaveChangesAsync()
-    {
-        await _context.SaveChangesAsync();
-    }
+    public Task SaveChangesAsync() => _context.SaveChangesAsync();
 
     public async Task DeleteAsync(Building building)
     {
         _context.Buildings.Remove(building);
-
         await _context.SaveChangesAsync();
     }
 }

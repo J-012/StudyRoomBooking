@@ -1,0 +1,154 @@
+@model StudyRoomBooking.ViewModels.Admin.AdminRoomsViewModel
+@{
+    ViewData["Title"] = "Manage rooms";
+    var hasFilters = !string.IsNullOrWhiteSpace(Model.SearchTerm)
+        || !string.IsNullOrWhiteSpace(Model.Building)
+        || Model.MinCapacity.HasValue
+        || Model.AmenityId.HasValue;
+}
+
+<div class="py-4 py-md-5">
+    <nav aria-label="Breadcrumb">
+        <ol class="breadcrumb small mb-3">
+            <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Index">Admin</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Rooms</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-end gap-3 mb-4">
+        <div>
+            <h1 class="h2 fw-bold mb-1">Manage rooms</h1>
+            <p class="text-secondary mb-0">Find a room, update its details, or manage amenities.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-area="" asp-controller="Rooms" asp-action="Index" class="btn btn-outline-secondary">Public view</a>
+            <a asp-action="AdminCreate" class="btn btn-primary">Add room</a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] is string success)
+    {
+        <div class="alert alert-success" role="alert">@success</div>
+    }
+    @if (TempData["Error"] is string error)
+    {
+        <div class="alert alert-danger" role="alert">@error</div>
+    }
+
+    <form asp-action="AdminIndex" method="get" class="card mb-4" role="search">
+        <div class="card-body p-3 p-md-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-6 col-xl-4">
+                    <label asp-for="SearchTerm" class="form-label">Search rooms</label>
+                    <input asp-for="SearchTerm" type="search" class="form-control" maxlength="100" placeholder="Room number or building" />
+                </div>
+                <div class="col-6 col-md-3 col-xl-2">
+                    <label asp-for="Building" class="form-label">Building</label>
+                    <select asp-for="Building" class="form-select">
+                        <option value="">All buildings</option>
+                        @foreach (var building in Model.Buildings)
+                        {
+                            <option value="@building.Name">@building.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-6 col-md-3 col-xl-2">
+                    <label asp-for="MinCapacity" class="form-label">Minimum seats</label>
+                    <input asp-for="MinCapacity" type="number" min="1" max="100" class="form-control" placeholder="Any" />
+                </div>
+                <div class="col-12 col-md-6 col-xl-2">
+                    <label asp-for="AmenityId" class="form-label">Amenity</label>
+                    <select asp-for="AmenityId" class="form-select">
+                        <option value="">All amenities</option>
+                        @foreach (var amenity in Model.Amenities)
+                        {
+                            <option value="@amenity.Id">@amenity.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-6 col-xl-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">Search</button>
+                    @if (hasFilters)
+                    {
+                        <a asp-action="AdminIndex" class="btn btn-outline-secondary">Clear</a>
+                    }
+                </div>
+            </div>
+            <div asp-validation-summary="All" class="text-danger small mt-2"></div>
+        </div>
+    </form>
+
+    <section aria-labelledby="room-list-heading" class="mb-5">
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+            <h2 id="room-list-heading" class="h5 fw-bold mb-0">Rooms</h2>
+            <span class="text-secondary small">@Model.TotalCount @(Model.TotalCount == 1 ? "room" : "rooms") found</span>
+        </div>
+
+        @if (Model.TotalCount == 0)
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <h3 class="h5 fw-bold">@(hasFilters ? "No matching rooms" : "No rooms yet")</h3>
+                    <p class="text-secondary mb-3">@(hasFilters ? "Try a different search or clear the filters." : "Add your first room to get started.")</p>
+                    <a asp-action="@(hasFilters ? "AdminIndex" : "AdminCreate")" class="btn btn-primary">@(hasFilters ? "Clear filters" : "Add room")</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var room in Model.Rooms)
+                {
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="card room-card h-100">
+                            <div class="card-body p-3 p-md-4">
+                                <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                                    <div class="room-number">
+                                        <span class="small text-secondary d-block mb-1">STUDY ROOM</span>
+                                        <h3 class="h4 fw-bold mb-0">@room.RoomNumber</h3>
+                                    </div>
+                                    <span class="room-capacity"><strong>@room.Capacity</strong><span class="small">@(room.Capacity == 1 ? "seat" : "seats")</span></span>
+                                </div>
+                                <div class="border-top pt-3">
+                                    <span class="small text-secondary d-block mb-1">Building</span>
+                                    <span class="fw-semibold d-block mb-3">@room.Building?.Name</span>
+                                    @if (room.RoomAmenities.Count == 0)
+                                    {
+                                        <span class="small text-secondary">No amenities</span>
+                                    }
+                                    else
+                                    {
+                                        <div class="d-flex flex-wrap gap-1">
+                                            @foreach (var link in room.RoomAmenities.OrderBy(link => link.Amenity?.Name))
+                                            {
+                                                <span class="badge text-bg-light border">@link.Amenity?.Name</span>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <div class="card-footer d-flex gap-2 px-3 px-md-4 pb-3 pb-md-4 pt-0">
+                                <a asp-action="AdminEdit" asp-route-id="@room.Id" class="btn btn-outline-secondary flex-grow-1">Edit</a>
+                                <form asp-action="AdminDelete" asp-route-id="@room.Id" method="post" onsubmit="return confirm('Delete this room? Rooms with bookings cannot be deleted.');">
+                                    <button type="submit" class="btn btn-outline-danger">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            @if (Model.Rooms.Count < Model.TotalCount)
+            {
+                <div class="text-center mt-4">
+                    <p class="small text-secondary mb-2">Showing @Model.Rooms.Count of @Model.TotalCount rooms</p>
+                    <a class="btn btn-outline-secondary" href="@Url.Action("AdminIndex", "Rooms", new { searchTerm = Model.SearchTerm, building = Model.Building, minCapacity = Model.MinCapacity, amenityId = Model.AmenityId, show = Model.Rooms.Count + 9 })#room-list-heading">Show more rooms</a>
+                </div>
+            }
+        }
+    </section>
+
+    @await Html.PartialAsync("~/Views/Admin/Rooms/_AmenityManager.cshtml", new StudyRoomBooking.ViewModels.Admin.AmenityManagerViewModel
+    {
+        Amenities = Model.Amenities
+    })
+</div>

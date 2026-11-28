@@ -14,6 +14,10 @@ namespace StudyRoomBooking.Models
         public DbSet<Participant> Participants { get; set; } = null!;
 
         public DbSet<BookingParticipant> BookingParticipants { get; set; } = null!;
+        public DbSet<Building> Buildings => Set<Building>();
+        public DbSet<Amenity> Amenities => Set<Amenity>();
+        public DbSet<RoomAmenity> RoomAmenities => Set<RoomAmenity>();
+        public DbSet<Course> Courses { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -24,6 +28,77 @@ namespace StudyRoomBooking.Models
                 .Property(user => user.Role)
                 .HasConversion<string>()
                 .HasMaxLength(20);
+
+            modelBuilder
+                .Entity<Room>()
+                .HasData(
+                    new Room
+                    {
+                        Id = 1,
+                        RoomNumber = "101",
+                        BuildingId = 1,
+                        Capacity = 6,
+                    },
+                    new Room
+                    {
+                        Id = 2,
+                        RoomNumber = "102",
+                        BuildingId = 1,
+                        Capacity = 6,
+                    },
+                    new Room
+                    {
+                        Id = 3,
+                        RoomNumber = "103",
+                        BuildingId = 1,
+                        Capacity = 12,
+                    },
+                    new Room
+                    {
+                        Id = 4,
+                        RoomNumber = "201",
+                        BuildingId = 1,
+                        Capacity = 6,
+                    },
+                    new Room
+                    {
+                        Id = 5,
+                        RoomNumber = "202",
+                        BuildingId = 1,
+                        Capacity = 6,
+                    },
+                    new Room
+                    {
+                        Id = 6,
+                        RoomNumber = "101",
+                        BuildingId = 2,
+                        Capacity = 8,
+                    },
+                    new Room
+                    {
+                        Id = 7,
+                        RoomNumber = "102",
+                        BuildingId = 2,
+                        Capacity = 8,
+                    }
+                );
+
+            modelBuilder.Entity<Building>(entity =>
+            {
+                entity.HasIndex(b => b.Name).IsUnique();
+                entity.HasMany(b => b.Rooms).WithOne(r => r.Building)
+                    .HasForeignKey(r => r.BuildingId).OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Amenity>().HasIndex(a => a.Name).IsUnique();
+            modelBuilder.Entity<RoomAmenity>(entity =>
+            {
+                entity.HasKey(ra => new { ra.RoomId, ra.AmenityId });
+                entity.HasOne(ra => ra.Room).WithMany(r => r.RoomAmenities)
+                    .HasForeignKey(ra => ra.RoomId).OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(ra => ra.Amenity).WithMany(a => a.RoomAmenities)
+                    .HasForeignKey(ra => ra.AmenityId).OnDelete(DeleteBehavior.Cascade);
+            });
 
             modelBuilder
                 .Entity<Booking>()
@@ -78,7 +153,5 @@ namespace StudyRoomBooking.Models
                     .OnDelete(DeleteBehavior.Cascade);
             });
         }
-
-        public DbSet<Course> Courses { get; set; } = null!;
     }
 }

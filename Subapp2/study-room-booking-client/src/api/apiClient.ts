@@ -3,18 +3,21 @@ import { clearStoredAuth, readStoredAuth } from '../utils/authStorage'
 /** Extracts both custom errors and ASP.NET validation problem details. */
 async function getErrorMessage(response: Response, fallback: string): Promise<string> {
     try {
-        const data = await response.json()
-        if (typeof data?.message === 'string' && data.message) return data.message
+        const body: unknown = await response.json()
+        if (typeof body === 'string' && body.trim()) return body
+        if (typeof body !== 'object' || body === null) return fallback
+        const data = body as Record<string, unknown>
+        if (typeof data.message === 'string' && data.message) return data.message
 
-        if (data?.errors && typeof data.errors === 'object') {
+        if (data.errors && typeof data.errors === 'object') {
             const messages = Object.values(data.errors).flatMap(value =>
                 Array.isArray(value) ? value.filter(item => typeof item === 'string') : []
             )
             if (messages.length) return messages.join(' ')
         }
 
-        if (typeof data?.detail === 'string' && data.detail) return data.detail
-        if (typeof data?.title === 'string' && data.title) return data.title
+        if (typeof data.detail === 'string' && data.detail) return data.detail
+        if (typeof data.title === 'string' && data.title) return data.title
     } catch {
         // Proxy failures and empty responses may not contain JSON.
     }
@@ -43,8 +46,12 @@ export async function apiRequest(
 
     // Login failures must stay on the login form instead of reloading the page.
     if (response.status === 401 && !anonymous) {
-        clearStoredAuth()
-        window.location.href = '/login'
+        const current = readStoredAuth()
+        // A delayed response from an old session must not log out a newer session.
+        if (!current || current.token === auth?.token) {
+            clearStoredAuth()
+            window.location.href = '/login'
+        }
         throw new Error('Logg inn på nytt for å fortsette.')
     }
 

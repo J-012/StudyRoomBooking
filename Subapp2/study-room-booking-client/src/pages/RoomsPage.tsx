@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { createRoom, deleteRoom, getRooms, updateRoom } from '../api/roomsApi'
 import { getAmenities } from '../api/amenitiesApi'
 import { getBuildings } from '../api/buildingsApi'
-import type { Amenity } from '../types/Amenity'
-import type { Building } from '../types/Building'
 import type { Room, RoomRequest } from '../types/Room'
+import { useAsyncData } from '../hooks/useAsyncData'
 import { errorText } from '../utils/errorHandling'
 import AmenityBadges from '../components/AmenityBadges'
 
@@ -16,37 +15,22 @@ const emptyForm: RoomRequest = {
     amenityIds: [],
 }
 
+/** Loads room data together with its selectable relationships. */
+async function loadRoomData() {
+    const [rooms, buildings, amenities] = await Promise.all([getRooms(), getBuildings(), getAmenities()])
+    return { rooms, buildings, amenities }
+}
+
 /** Admin page for room management, including building and amenity relationships. */
 export default function RoomsPage() {
-    const [rooms, setRooms] = useState<Room[]>([])
-    const [amenities, setAmenities] = useState<Amenity[]>([])
-    const [buildings, setBuildings] = useState<Building[]>([])
     const [form, setForm] = useState<RoomRequest>(emptyForm)
     const [editingId, setEditingId] = useState<number | null>(null)
-    const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState('')
-    const [loaded, setLoaded] = useState(false)
-
-    // Load all three collections together so the form cannot submit incomplete relationships.
-    useEffect(() => {
-        let cancelled = false
-        Promise.all([getRooms(), getBuildings(), getAmenities()])
-            .then(([roomData, buildingData, amenityData]) => {
-                if (cancelled) return
-                setRooms(roomData)
-                setBuildings(buildingData)
-                setAmenities(amenityData)
-                setLoaded(true)
-            })
-            .catch(error => {
-                if (!cancelled) setError(errorText(error, 'Could not load room data.'))
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false)
-            })
-        return () => { cancelled = true }
-    }, [])
+    const { data, loading, error: loadError, refresh } = useAsyncData(loadRoomData, 'Could not load room data.')
+    const rooms = data?.rooms ?? []
+    const buildings = data?.buildings ?? []
+    const amenities = data?.amenities ?? []
 
     /** Resets the form to create mode. */
     function cancelEditing() {
@@ -79,7 +63,7 @@ export default function RoomsPage() {
     /** Validates input before saving; the API independently validates all relationships. */
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        if (saving || !loaded) return
+        if (saving || loading || !data) return
         if (!form.roomNumber.trim()) {
             setError('Room number is required.')
             return
@@ -100,7 +84,7 @@ export default function RoomsPage() {
             if (editingId === null) await createRoom(request)
             else await updateRoom(editingId, request)
             cancelEditing()
-            setRooms(await getRooms())
+            refresh()
         } catch (error) {
             setError(errorText(error, 'Could not save room.'))
         } finally {
@@ -110,13 +94,13 @@ export default function RoomsPage() {
 
     /** Deletes a confirmed room and updates the list after the API succeeds. */
     async function handleDelete(id: number) {
-        if (saving || !window.confirm('Delete this room?')) return
+        if (saving || loading || !data || !window.confirm('Delete this room?')) return
         setSaving(true)
         setError('')
         try {
             await deleteRoom(id)
             if (editingId === id) cancelEditing()
-            setRooms(await getRooms())
+            refresh()
         } catch (error) {
             setError(errorText(error, 'Could not delete room.'))
         } finally {
@@ -130,11 +114,16 @@ export default function RoomsPage() {
                 <span className="section-eyebrow">Facilities</span>
                 <h1 className="h2 fw-bold mt-1 mb-2">Study Rooms</h1>
                 <p className="text-secondary-emphasis mb-0">
-                    {rooms.length > 0 ? `${rooms.length} ${rooms.length === 1 ? 'room' : 'rooms'} available for booking.` : 'Browse the rooms that are available to book.'}
+                    {data && rooms.length > 0 ? `${rooms.length} ${rooms.length === 1 ? 'room' : 'rooms'} available for booking.` : 'Browse the rooms that are available to book.'}
                 </p>
             </header>
             {error && <div className="error-message mb-4" role="alert">{error}</div>}
-            {loading ? <p className="text-secondary">Loading rooms...</p> : loaded && (
+            {loading ? <p className="text-secondary">Loading rooms...</p> : loadError ? (
+                <div className="error-message mb-4" role="alert">
+                    {loadError}{' '}
+                    <button type="button" className="btn btn-sm btn-light" onClick={refresh}>Try again</button>
+                </div>
+            ) : (
                 <>
                     <div className="card mb-5">
                         <div className="card-body p-4">

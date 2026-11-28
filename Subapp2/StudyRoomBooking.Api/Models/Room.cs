@@ -14,6 +14,7 @@ public class Room
     public int BuildingId { get; set; }
     public Building? Building { get; set; }
 
+    // Max number of people in a session, organizer included.
     [Range(1, 100)]
     public int Capacity { get; set; }
 

@@ -27,19 +27,9 @@ public class RoomService : IRoomService
     {
         List<Room> rooms = await _roomRepository.GetAllAsync();
 
-        List<RoomDto> roomDtos = new List<RoomDto>();
-
-        foreach (Room room in rooms)
-        {
-            roomDtos.Add(ToDto(room));
-        }
-
-        return roomDtos;
+        return rooms.Select(room => room.ToDto()).ToList();
     }
 
-    // Returnerer rom som ikke har noen booking som overlapper med
-    // tidsrommet. excludedSessionId brukes når en booking endres,
-    // så den ikke kolliderer med seg selv.
     public async Task<List<RoomDto>> GetAvailableAsync(
         DateTime startTime,
         DateTime endTime,
@@ -47,34 +37,18 @@ public class RoomService : IRoomService
     {
         if (endTime <= startTime)
         {
-            throw new ArgumentException(
-                "The end time must be after the start time."
-            );
+            throw new ArgumentException("The end time must be after the start time.");
         }
+
+        // One query for the booked rooms
+        List<int> bookedRoomIds =
+            await _bookingRepository.GetBookedRoomIdsAsync(startTime, endTime, excludedSessionId);
 
         List<Room> rooms = await _roomRepository.GetAllAsync();
 
-        List<RoomDto> availableRooms = new List<RoomDto>();
-
-        foreach (Room room in rooms)
-        {
-            bool hasConflict =
-                await _bookingRepository.HasConflictAsync(
-                    room.Id,
-                    startTime,
-                    endTime,
-                    excludedSessionId
-                );
-
-            if (!hasConflict)
-            {
-                availableRooms.Add(ToDto(room));
-            }
-        }
-
-        return availableRooms
-            .OrderBy(room => room.Building)
-            .ThenBy(room => room.RoomNumber)
+        return rooms
+            .Where(room => !bookedRoomIds.Contains(room.Id))
+            .Select(room => room.ToDto())
             .ToList();
     }
 
@@ -82,57 +56,21 @@ public class RoomService : IRoomService
     {
         Room? room = await _roomRepository.GetByIdAsync(id);
 
-        if (room == null)
-        {
-            return null;
-        }
-
-        return ToDto(room);
+        return room?.ToDto();
     }
 
-    public async Task<RoomDto> CreateAsync(CreateRoomDto roomDto)
+    public async Task<RoomDto> CreateAsync(RoomRequestDto roomDto)
     {
-        Building? building =
-            await _buildingRepository.GetByIdAsync(roomDto.BuildingId);
+        Room room = new Room();
 
-        if (building == null)
-        {
-            throw new ArgumentException(
-                "Selected building does not exist."
-            );
-        }
-
-        List<int> amenityIds =
-            await ValidateAmenityIdsAsync(roomDto.AmenityIds);
-
-        Room room = new Room
-        {
-            RoomNumber = roomDto.RoomNumber,
-            BuildingId = roomDto.BuildingId,
-            Capacity = roomDto.Capacity
-        };
-
-        foreach (int amenityId in amenityIds)
-        {
-            room.RoomAmenities.Add(
-                new RoomAmenity
-                {
-                    AmenityId = amenityId
-                }
-            );
-        }
+        await ApplyAsync(room, roomDto);
 
         Room createdRoom = await _roomRepository.AddAsync(room);
 
-        Room? completeRoom =
-            await _roomRepository.GetByIdAsync(createdRoom.Id);
-
-        return ToDto(completeRoom!);
+        return createdRoom.ToDto();
     }
 
-    public async Task<bool> UpdateAsync(
-        int id,
-        UpdateRoomDto roomDto)
+    public async Task<bool> UpdateAsync(int id, RoomRequestDto roomDto)
     {
         Room? room = await _roomRepository.GetByIdAsync(id);
 
@@ -141,35 +79,7 @@ public class RoomService : IRoomService
             return false;
         }
 
-        Building? building =
-            await _buildingRepository.GetByIdAsync(roomDto.BuildingId);
-
-        if (building == null)
-        {
-            throw new ArgumentException(
-                "Selected building does not exist."
-            );
-        }
-
-        List<int> amenityIds =
-            await ValidateAmenityIdsAsync(roomDto.AmenityIds);
-
-        room.RoomNumber = roomDto.RoomNumber;
-        room.BuildingId = roomDto.BuildingId;
-        room.Capacity = roomDto.Capacity;
-
-        room.RoomAmenities.Clear();
-
-        foreach (int amenityId in amenityIds)
-        {
-            room.RoomAmenities.Add(
-                new RoomAmenity
-                {
-                    RoomId = room.Id,
-                    AmenityId = amenityId
-                }
-            );
-        }
+        await ApplyAsync(room, roomDto);
 
         await _roomRepository.SaveChangesAsync();
 
@@ -185,19 +95,10 @@ public class RoomService : IRoomService
             return false;
         }
 
-        // Deleting a room cascades to its bookings. Refuse while students
-        // still have upcoming bookings there, so they do not lose them
-        // without warning. Bookings that have already ended are removed
-        // together with the room.
-        bool hasUpcomingBookings =
-            await _bookingRepository
-                .HasUpcomingBookingsForRoomAsync(id);
-
-        if (hasUpcomingBookings)
+        // Deleting a room cascades to its bookings.
+        if (await _bookingRepository.HasUpcomingBookingsForRoomAsync(id))
         {
-            throw new ArgumentException(
-                "This room has upcoming bookings. Delete or move the bookings first."
-            );
+            throw new ArgumentException("This room has upcoming bookings. Delete or move the bookings first.");
         }
 
         await _roomRepository.DeleteAsync(room);
@@ -205,55 +106,33 @@ public class RoomService : IRoomService
         return true;
     }
 
-    private RoomDto ToDto(Room room)
+    // Shared by create and update: validates the request and copies it onto the room.
+    private async Task ApplyAsync(Room room, RoomRequestDto roomDto)
     {
-        RoomDto roomDto = new RoomDto
+        if (await _buildingRepository.GetByIdAsync(roomDto.BuildingId) == null)
         {
-            Id = room.Id,
-            RoomNumber = room.RoomNumber,
-            BuildingId = room.BuildingId,
-            Building = room.Building?.Name ?? string.Empty,
-            Capacity = room.Capacity
-        };
+            throw new ArgumentException("Selected building does not exist.");
+        }
 
-        foreach (RoomAmenity roomAmenity in room.RoomAmenities)
+        List<int> amenityIds = roomDto.AmenityIds.Distinct().ToList();
+
+        if (amenityIds.Count > 0)
         {
-            if (roomAmenity.Amenity != null)
+            List<Amenity> amenities = await _amenityRepository.GetByIdsAsync(amenityIds);
+
+            if (amenities.Count != amenityIds.Count)
             {
-                roomDto.Amenities.Add(
-                    new AmenityDto
-                    {
-                        Id = roomAmenity.Amenity.Id,
-                        Name = roomAmenity.Amenity.Name,
-                        Description = roomAmenity.Amenity.Description
-                    }
-                );
+                throw new ArgumentException("One or more selected amenities do not exist.");
             }
         }
 
-        return roomDto;
-    }
+        room.RoomNumber = roomDto.RoomNumber;
+        room.BuildingId = roomDto.BuildingId;
+        room.Capacity = roomDto.Capacity;
 
-    private async Task<List<int>> ValidateAmenityIdsAsync(
-        List<int> amenityIds)
-    {
-        List<int> uniqueIds = amenityIds.Distinct().ToList();
-
-        if (uniqueIds.Count == 0)
-        {
-            return uniqueIds;
-        }
-
-        List<Amenity> amenities =
-            await _amenityRepository.GetByIdsAsync(uniqueIds);
-
-        if (amenities.Count != uniqueIds.Count)
-        {
-            throw new ArgumentException(
-                "One or more selected amenities do not exist."
-            );
-        }
-
-        return uniqueIds;
+        // Replace the whole amenity list with the one from the request.
+        room.RoomAmenities.Clear();
+        room.RoomAmenities.AddRange(
+            amenityIds.Select(amenityId => new RoomAmenity { AmenityId = amenityId }));
     }
 }
