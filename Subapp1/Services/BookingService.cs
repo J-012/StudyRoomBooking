@@ -8,6 +8,7 @@ public class BookingService : IBookingService
     private readonly IBookingRepository _bookingRepository;
     private readonly IRoomRepository _roomRepository;
     private readonly IParticipantRepository _participantRepository;
+
     // Constructor for BookingService.
     public BookingService(
         IBookingRepository bookingRepository,
@@ -96,6 +97,12 @@ public class BookingService : IBookingService
                 "You have already joined this session.");
         }
 
+        if (!booking.IsPublic)
+        {
+            return JoinBookingResult.Failure(
+                "This session is not available to join.");
+        }
+
         // Booking owner counts as one participant.
         int occupiedSeats = booking.Participants.Count + 1;
 
@@ -137,6 +144,86 @@ public class BookingService : IBookingService
 
         return JoinBookingResult.Success();
     }
+
+    public async Task<JoinBookingResult> AddParticipantsAsync(
+        int bookingId,
+        string ownerUserId,
+        IReadOnlyCollection<User> users)
+    {
+        if (string.IsNullOrWhiteSpace(ownerUserId))
+        {
+            return JoinBookingResult.Failure(
+                "You must be logged in to add session participants.");
+        }
+
+        var booking = await _bookingRepository.GetWithParticipantsAsync(bookingId);
+        if (booking is null || booking.UserId != ownerUserId)
+        {
+            return JoinBookingResult.Failure("Session not found.");
+        }
+
+        if (booking.IsPublic)
+        {
+            return JoinBookingResult.Failure(
+                "Make the session private before adding participants.");
+        }
+
+        if (booking.EndTime <= DateTime.Now)
+        {
+            return JoinBookingResult.Failure(
+                "You cannot add participants after the session has ended.");
+        }
+
+        if (booking.Room is null)
+        {
+            return JoinBookingResult.Failure("Room not found.");
+        }
+
+        var requestedUsers = users
+            .Where(user => !string.IsNullOrWhiteSpace(user.UserId))
+            .GroupBy(user => user.UserId.Trim(), StringComparer.Ordinal)
+            .Select(group => group.First())
+            .ToList();
+
+        if (requestedUsers.Count == 0)
+        {
+            return JoinBookingResult.Failure(
+                "Enter at least one User ID.");
+        }
+
+        if (requestedUsers.Any(user => user.UserId == booking.UserId))
+        {
+            return JoinBookingResult.Failure(
+                "The session owner is already part of the session.");
+        }
+
+        var existingUserIds = booking.Participants
+            .Select(participant => participant.Participant.UserId)
+            .ToHashSet(StringComparer.Ordinal);
+        var newUsers = requestedUsers
+            .Where(user => !existingUserIds.Contains(user.UserId))
+            .ToList();
+
+        if (newUsers.Count == 0)
+        {
+            return JoinBookingResult.Failure(
+                "Those users are already in the session.");
+        }
+
+        int occupiedSeats = booking.Participants.Count + 1;
+        if (occupiedSeats + newUsers.Count > booking.Room.Capacity)
+        {
+            return JoinBookingResult.Failure(
+                "There are not enough seats for all selected users.");
+        }
+
+        await _participantRepository.AddUsersToBookingAsync(
+            bookingId,
+            newUsers);
+
+        return JoinBookingResult.Success();
+    }
+
     // Leave a booking.
     public async Task<JoinBookingResult> LeaveAsync(
     int bookingId,

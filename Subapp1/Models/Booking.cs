@@ -33,11 +33,10 @@ public class Booking
 
     public User? User { get; set; }
 
-    public bool IsPublic { get; set; } = true;
-
     public Room? Room { get; set; }
 
     public List<BookingParticipant> Participants { get; set; } = new();
 
-    public List<BookingInvitation> Invitations { get; set; } = new();
+    public bool IsPublic { get; set; } = true;
+
 }

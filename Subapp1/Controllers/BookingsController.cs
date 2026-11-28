@@ -102,7 +102,7 @@ public class BookingsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("CourseCode,Topic,RoomId,StartDate,StartClock,EndClock")] BookingFormViewModel viewModel)
+    public async Task<IActionResult> Create([Bind("CourseCode,Topic,RoomId,StartDate,StartClock,EndClock,IsPublic")] BookingFormViewModel viewModel)
     {
         var user = await GetCurrentUserAsync();
 
@@ -160,6 +160,7 @@ public class BookingsController : Controller
         {
             BookingId = booking.BookingId,
 
+            IsPublic = booking.IsPublic,
             CourseCode = booking.CourseCode ?? string.Empty,
             Topic = booking.Topic,
             RoomId = booking.RoomId,
@@ -231,6 +232,7 @@ public class BookingsController : Controller
         existingBooking.RoomId = candidate.RoomId;
         existingBooking.StartTime = candidate.StartTime;
         existingBooking.EndTime = candidate.EndTime;
+        existingBooking.IsPublic = viewModel.IsPublic;
 
         await _bookingRepository.SaveChangesAsync();
 
@@ -302,7 +304,7 @@ public class BookingsController : Controller
         {
             UserId = user.UserId,
             UserName = user.Name,
-
+            IsPublic = viewModel.IsPublic,
             CourseCode = viewModel.CourseCode.Trim().ToUpperInvariant(),
             Topic = viewModel.Topic,
             RoomId = viewModel.RoomId,
@@ -402,6 +404,74 @@ public class BookingsController : Controller
         return returnToRooms
             ? RedirectToAction("Index", "Rooms")
             : RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddParticipants(int id, string? userIds)
+    {
+        var ownerUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(ownerUserId))
+        {
+            return Challenge();
+        }
+
+        if (await _bookingRepository.GetByIdForUserAsync(id, ownerUserId) is null)
+        {
+            return NotFound();
+        }
+
+        if (userIds is not null && userIds.Length > 2000)
+        {
+            TempData["Error"] = "Enter no more than 2,000 characters of User IDs.";
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        var requestedUserIds = (userIds ?? string.Empty)
+            .Split(
+                new[] { ',', ';', '\r', '\n' },
+                StringSplitOptions.RemoveEmptyEntries |
+                    StringSplitOptions.TrimEntries)
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
+        var users = new List<User>();
+        foreach (var requestedUserId in requestedUserIds)
+        {
+            var user = await _userRepository.GetByUserIdAsync(requestedUserId);
+            if (user is null)
+            {
+                TempData["Error"] = $"User ID '{requestedUserId}' was not found.";
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+
+            users.Add(user);
+        }
+
+        var result = await _bookingService.AddParticipantsAsync(
+            id,
+            ownerUserId,
+            users);
+
+        if (result.IsSuccess)
+        {
+            TempData["Success"] = "Users were added to the private session.";
+            _logger.LogInformation(
+                "Owner {UserId} added participants to booking {BookingId}.",
+                ownerUserId,
+                id);
+        }
+        else
+        {
+            TempData["Error"] = result.Error ?? "Unable to add participants.";
+            _logger.LogWarning(
+                "Owner {UserId} could not add participants to booking {BookingId}: {Reason}",
+                ownerUserId,
+                id,
+                result.Error);
+        }
+
+        return RedirectToAction(nameof(Edit), new { id });
     }
 
 }

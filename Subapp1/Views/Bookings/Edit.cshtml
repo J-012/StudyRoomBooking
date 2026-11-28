@@ -9,6 +9,15 @@
 
         <h1 class="h2 fw-bold mb-4">Edit Study Session</h1>
 
+        @if (TempData["Success"] is not null)
+        {
+            <div class="alert alert-success" role="alert">@TempData["Success"]</div>
+        }
+        @if (TempData["Error"] is not null)
+        {
+            <div class="alert alert-danger" role="alert">@TempData["Error"]</div>
+        }
+
         <form asp-action="Edit" asp-route-id="@Model.BookingId" method="post">
 
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -26,6 +35,22 @@
             </div>
         </form>
 
+        @if (!Model.IsPublic)
+        {
+            <form asp-action="AddParticipants"
+                  asp-route-id="@Model.BookingId"
+                  method="post"
+                  class="card mt-4">
+                <div class="card-body">
+                    <label for="userIds" class="form-label">Add users by User ID</label>
+                    <textarea id="userIds" name="userIds" class="form-control" rows="3"
+                              maxlength="2000"
+                              placeholder="Separate IDs with commas or new lines"></textarea>
+                    <div class="form-text">Users will be added to the session immediately.</div>
+                    <button type="submit" class="btn btn-primary mt-3">Add users</button>
+                </div>
+            </form>
+        }
     </div>
 </div>
 

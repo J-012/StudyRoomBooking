@@ -56,6 +56,22 @@
                 <input asp-for="EndClock" type="time" step="900" class="form-control" />
             </div>
 
+            <div class="col-12">
+                <fieldset>
+                    <legend class="form-label">Session visibility</legend>
+                    <div class="form-check">
+                        <input asp-for="IsPublic" type="radio" value="true"
+                               id="publicSession" class="form-check-input" />
+                        <label for="publicSession" class="form-check-label">Public</label>
+                    </div>
+                    <div class="form-check">
+                        <input asp-for="IsPublic" type="radio" value="false"
+                               id="privateSession" class="form-check-input" />
+                        <label for="privateSession" class="form-check-label">Private</label>
+                    </div>
+                </fieldset>
+            </div>
+
         </div>
     </div>
 </div>
