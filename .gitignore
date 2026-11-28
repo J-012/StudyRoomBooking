@@ -441,3 +441,9 @@ FodyWeavers.xsd
 # wwwroot/lib/<lib>/dist and MUST be tracked. Without the exception below they
 # are silently dropped from the repo and every page renders unstyled.
 !**/wwwroot/lib/**/dist/
+
+# Local SQLite database files
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
