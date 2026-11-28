@@ -25,4 +25,6 @@ public class User
     public List<Booking> Bookings { get; set; } = new();
 
     public Participant? Participant { get; set; }
+
+    public List<BookingInvitation> BookingInvitations { get; set; } = new();
 }
